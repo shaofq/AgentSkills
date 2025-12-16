@@ -28,7 +28,8 @@ async def main() -> None:
 
     # Register the agent skill
     toolkit.register_agent_skill(
-          "./skill/pptx",
+        "./skill/amis-code-assistant",
+        # "./skill/pptx",
         # "./skill/analyzing-agentscope-library",
     )
 
@@ -41,10 +42,10 @@ async def main() -> None:
 """,  # noqa: E501
         model=DashScopeChatModel(
             api_key="sk-547e87e8934f4737b972199090958ff2",
-            #os.environ.get("DASHSCOPE_API_KEY"),
+            # os.environ.get("DASHSCOPE_API_KEY"),
             model_name="qwen3-max",
             enable_thinking=False,
-            stream=True,
+            stream=True,  # 流式输出
         ),
         formatter=DashScopeChatFormatter(),
         toolkit=toolkit,
@@ -66,13 +67,13 @@ async def main() -> None:
     )
 
     print(
-        "\n\033[1;32mResponse to Question 'How to create a simple PowerPoint presentation?':\033[0m",
+        "\n\033[1;32mResponse to Question 'Generate amis code':\033[0m",
     )
-    # Test pptx skill - 创建PPT
+    # Test amis-code-assistant skill - 生成amis代码
     await agent(
         Msg(
             "user",
-            "请使用 template.pptx 作为模板，创建一个关于智能体产品介绍的PPT,PPT完全保留了原模板的设计风格和布局，只是将内容替换为智能体产品的相关信息.",
+            "请帮我生成一个用户管理页面的amis配置，需要包含用户列表、新增用户、编辑用户和删除用户功能。",
             "user",
         ),
     )

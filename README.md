@@ -4,6 +4,9 @@ conda activate aicodeskill
 # 运行
 python main.py
 
+#执行push
+git push origin main
+
 
 # Agent Skills in AgentScope
 

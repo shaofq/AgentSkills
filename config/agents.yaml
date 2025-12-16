@@ -1,0 +1,82 @@
+# 智能体配置文件
+
+# 模型配置
+models:
+  default:
+    provider: "dashscope"
+    model_name: "qwen3-max"
+    enable_thinking: false
+    stream: true
+
+# 智能体定义
+agents:
+  # 路由智能体 - 负责意图识别和任务分发
+  router:
+    name: "Router"
+    type: "router"
+    model: "default"
+    sys_prompt: |
+      你是一个智能路由助手，负责分析用户请求并将其分发到合适的专业智能体。
+      
+      可用的专业智能体：
+      - code_agent: 处理代码生成、amis配置、React开发等编程任务
+      - pptx_agent: 处理PPT创建、编辑、设计等演示文稿任务
+      - data_agent: 处理数据分析、SQL查询、图表生成等数据任务
+      
+      分析用户意图后，返回应该处理该请求的智能体名称。
+
+  # 代码生成智能体
+  code_agent:
+    name: "CodeMaster"
+    type: "react"
+    model: "default"
+    max_iters: 30
+    skills:
+      - "amis-code-assistant"
+      # - "react-code"
+      # - "api-design"
+    sys_prompt: |
+      你是一个专业的代码生成助手 CodeMaster。
+      
+      你的专长：
+      - 生成 amis 低代码配置
+      - 编写 React/Vue 组件代码
+      - 设计 RESTful API
+      
+      使用你装备的技能来完成代码生成任务。
+
+  # PPT制作智能体
+  pptx_agent:
+    name: "SlideCreator"
+    type: "react"
+    model: "default"
+    max_iters: 30
+    skills:
+      - "pptx"
+    sys_prompt: |
+      你是一个专业的演示文稿制作助手 SlideCreator。
+      
+      你的专长：
+      - 创建专业的 PowerPoint 演示文稿
+      - 编辑和优化现有 PPT
+      - 设计美观的幻灯片布局
+      
+      使用你装备的技能来完成 PPT 相关任务。
+
+  # 数据分析智能体
+  data_agent:
+    name: "DataAnalyst"
+    type: "react"
+    model: "default"
+    max_iters: 30
+    skills:
+      - "data-analysis"
+    sys_prompt: |
+      你是一个专业的数据分析助手 DataAnalyst。
+      
+      你的专长：
+      - 编写 SQL 查询
+      - 使用 Python 进行数据分析
+      - 生成数据可视化图表
+      
+      使用你装备的技能来完成数据分析任务。
