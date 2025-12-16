@@ -1,0 +1,23 @@
+# AgentScope 核心框架
+agentscope>=0.1.0
+
+# DashScope API (阿里云通义千问)
+dashscope>=1.14.0
+
+# PPT 处理相关
+python-pptx>=0.6.21
+pptx2md>=0.0.8
+
+# 数据处理
+pyyaml>=6.0
+defusedxml>=0.7.1
+
+# 异步支持
+aiohttp>=3.9.0
+aiofiles>=23.2.1
+
+# 可选：图像处理（PPT缩略图生成）
+# Pillow>=10.0.0
+
+# 可选：Markdown 处理
+# markitdown>=0.0.1
