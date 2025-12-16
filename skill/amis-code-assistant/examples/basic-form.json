@@ -1,0 +1,63 @@
+{
+  "type": "page",
+  "title": "基础表单示例",
+  "body": {
+    "type": "form",
+    "api": "/api/submit",
+    "body": [
+      {
+        "type": "input-text",
+        "name": "username",
+        "label": "用户名",
+        "required": true,
+        "placeholder": "请输入用户名"
+      },
+      {
+        "type": "input-password",
+        "name": "password",
+        "label": "密码",
+        "required": true
+      },
+      {
+        "type": "input-text",
+        "name": "email",
+        "label": "邮箱",
+        "validations": {
+          "isEmail": true
+        }
+      },
+      {
+        "type": "input-text",
+        "name": "phone",
+        "label": "手机号",
+        "validations": {
+          "matchRegexp": "/^1[3-9]\\d{9}$/"
+        },
+        "validationErrors": {
+          "matchRegexp": "请输入正确的手机号"
+        }
+      },
+      {
+        "type": "select",
+        "name": "gender",
+        "label": "性别",
+        "options": [
+          {"label": "男", "value": "male"},
+          {"label": "女", "value": "female"}
+        ]
+      },
+      {
+        "type": "input-date",
+        "name": "birthday",
+        "label": "生日",
+        "format": "YYYY-MM-DD"
+      },
+      {
+        "type": "textarea",
+        "name": "remark",
+        "label": "备注",
+        "rows": 3
+      }
+    ]
+  }
+}

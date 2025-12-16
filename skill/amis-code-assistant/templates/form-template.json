@@ -1,0 +1,25 @@
+{
+  "type": "page",
+  "title": "表单页面",
+  "body": {
+    "type": "form",
+    "api": "/api/submit",
+    "mode": "horizontal",
+    "horizontal": {
+      "left": 2,
+      "right": 10
+    },
+    "body": [],
+    "actions": [
+      {
+        "type": "submit",
+        "label": "提交",
+        "level": "primary"
+      },
+      {
+        "type": "reset",
+        "label": "重置"
+      }
+    ]
+  }
+}
