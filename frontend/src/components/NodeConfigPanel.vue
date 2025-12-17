@@ -158,8 +158,9 @@ const availableSkills = [
   'amis-code-assistant',
   'pptx',
   'data-analysis',
-  'react-code',
-  'sql-query',
+  'company-policy-qa',
+  // 'react-code',
+  // 'sql-query',
 ]
 
 const availableModels = [

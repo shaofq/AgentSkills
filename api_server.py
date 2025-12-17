@@ -142,6 +142,16 @@ async def get_agents():
             model="qwen3-max",
             maxIters=30,
         ),
+        AgentConfig(
+            id="policy_qa_agent",
+            name="PolicyQA",
+            type="policy",
+            description="制度问答智能体 - 解答公司规章制度问题",
+            systemPrompt="你是岸基科技公司的制度问答助手，专门负责解答员工关于公司规章制度的各类问题。",
+            skills=["company-policy-qa"],
+            model="qwen3-max",
+            maxIters=10,
+        ),
     ]
 
 
@@ -150,8 +160,8 @@ async def get_skills():
     """获取可用的技能列表"""
     skill_dir = "./skill"
     if os.path.exists(skill_dir):
-        return [d for d in os.listdir(skill_dir) if os.path.isdir(os.path.join(skill_dir, d))]
-    return ["amis-code-assistant", "pptx", "data-analysis"]
+        return [d for d in os.listdir(skill_dir) if os.path.isdir(os.path.join(skill_dir, d)) and not d.startswith('.')]
+    return ["amis-code-assistant", "pptx", "data-analysis", "company-policy-qa"]
 
 
 @app.get("/api/workflows", response_model=List[Workflow])
