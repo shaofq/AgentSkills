@@ -28,3 +28,13 @@ cd frontend && npm run dev
 python run_workflow.py workflow.json "你的输入内容"
 ## 交互模式
 python run_workflow.py workflow.json -i
+
+# Skill_Seekers使用并生成skills
+---git clone https://github.com/yusufkaraaslan/Skill_Seekers.git
+cd /Users/shaoqiang/work/workspace/lowcodeUI/Skill_Seekers
+pip install -r requirements.txt
+# 方法一：使用通配符处理所有PDF
+skill-seekers pdf --pdf dosc/bc.pdf --name agknowdoc 
+
+# 方法二：处理单个PDF
+python3 cli/pdf_scraper.py --pdf "~/docs/your_document.pdf" --name 项目文档 --output_dir "./skills"

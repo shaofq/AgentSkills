@@ -1,0 +1,22 @@
+{
+  "name": "company-policy-qa",
+  "display_name": "岸基科技公司制度问答",
+  "description": "基于岸基科技公司各项制度文档的问答智能体，能够解答员工关于公司规章制度、薪酬福利、考勤假期、财务报销、电脑补贴等方面的问题。",
+  "version": "1.0.0",
+  "author": "岸基科技",
+  "tags": ["制度", "问答", "员工手册", "财务", "HR", "人事"],
+  "capabilities": [
+    "制度查询",
+    "政策解读",
+    "流程指导",
+    "计算辅助"
+  ],
+  "instructions": "SKILL.md",
+  "knowledge_base": [
+    "docs/员工手册V3.2.md",
+    "docs/财务制度V3.2.md",
+    "docs/自行购置电脑补贴制度V2.0.md"
+  ],
+  "created_at": "2025-12-17",
+  "updated_at": "2025-12-17"
+}

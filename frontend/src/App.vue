@@ -7,10 +7,12 @@ import Sidebar from './components/Sidebar.vue'
 import NodeConfigPanel from './components/NodeConfigPanel.vue'
 import Toolbar from './components/Toolbar.vue'
 import LeftMenu from './components/LeftMenu.vue'
+import PolicyQADialog from './components/PolicyQADialog.vue'
 
 // 当前选中的菜单
 const activeMenu = ref('chat')
 const showConfigPanel = ref(false)
+const showPolicyQA = ref(false)
 
 // 是否显示工作流模式
 const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
@@ -36,6 +38,11 @@ const currentAgent = computed(() => {
     'data-agent': { 
       name: '数据分析', 
       description: ['数据分析和可视化助手。', '支持 SQL 查询、图表生成、报表分析。'], 
+      model: 'qwen3-max' 
+    },
+    'policy-qa': { 
+      name: '制度问答', 
+      description: ['公司制度问答助手。', '解答员工手册、财务制度、电脑补贴等问题。'], 
       model: 'qwen3-max' 
     },
   }
@@ -118,18 +125,48 @@ async function onSubmit(evt: string) {
   messages.value.push({ from: 'model', content: '', loading: true })
   
   try {
-    // 调用后端 API 执行工作流或智能体
-    const response = await fetch('/api/chat', {
+    // 根据当前菜单选择不同的 API
+    let apiUrl = '/api/chat'
+    let requestBody: Record<string, string> = { message: evt }
+    
+    if (activeMenu.value === 'policy-qa') {
+      // 制度问答使用专门的 API
+      apiUrl = 'http://localhost:8000/api/policy-qa/sync'
+      requestBody = { question: evt }
+    }
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: evt }),
+      body: JSON.stringify(requestBody),
     })
     
     if (response.ok) {
       const data = await response.json()
+      let content = ''
+      
+      if (activeMenu.value === 'policy-qa') {
+        // 制度问答 API 返回 answer 字段
+        let answer = data.answer || '抱歉，未能找到相关制度信息。'
+        // 如果 answer 是 JSON 字符串，尝试解析并提取 text 字段
+        try {
+          if (typeof answer === 'string' && answer.startsWith('[')) {
+            const parsed = JSON.parse(answer)
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].text) {
+              answer = parsed[0].text
+            }
+          }
+        } catch {
+          // 解析失败，使用原始内容
+        }
+        content = answer
+      } else {
+        content = data.response || '处理完成'
+      }
+      
       messages.value[messages.value.length - 1] = {
         from: 'model',
-        content: data.response || '处理完成',
+        content,
         loading: false,
       }
     } else {
@@ -274,6 +311,23 @@ async function onSubmit(evt: string) {
         </div>
       </template>
     </div>
+
+    <!-- 制度问答浮动按钮 -->
+    <button
+      @click="showPolicyQA = true"
+      class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-40 group"
+      title="制度问答"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="absolute right-16 bg-gray-800 text-white text-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+        制度问答
+      </span>
+    </button>
+
+    <!-- 制度问答对话框 -->
+    <PolicyQADialog :visible="showPolicyQA" @close="showPolicyQA = false" />
   </div>
 </template>
 

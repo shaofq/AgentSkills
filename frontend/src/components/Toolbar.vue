@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useWorkflowStore } from '@/stores/workflow'
+import WorkflowTestDialog from './WorkflowTestDialog.vue'
 
 const store = useWorkflowStore()
 const workflowName = ref('未命名工作流')
 const isRunning = ref(false)
+const showTestDialog = ref(false)
 
 function handleSave() {
   const workflow = store.exportWorkflow()
@@ -109,6 +111,16 @@ async function handleRun() {
       <div class="w-px h-6 bg-gray-300 mx-1"></div>
       
       <button 
+        @click="showTestDialog = true"
+        class="px-4 py-1.5 text-sm text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-md transition-all flex items-center gap-1"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        测试
+      </button>
+      
+      <button 
         @click="handleRun"
         :disabled="isRunning"
         class="px-4 py-1.5 text-sm text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-md transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -125,4 +137,7 @@ async function handleRun() {
       </button>
     </div>
   </div>
+  
+  <!-- 测试对话框 -->
+  <WorkflowTestDialog v-if="showTestDialog" @close="showTestDialog = false" />
 </template>

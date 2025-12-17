@@ -21,6 +21,7 @@ const menuItems: MenuItem[] = [
   { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent' },
   { id: 'pptx-agent', name: 'PPT助手', icon: 'icon-file', type: 'agent' },
   { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent' },
+  { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
 ]
 
