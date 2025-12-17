@@ -99,6 +99,12 @@ const inputFootIcons = [
   { icon: 'icon-add', text: '附件' },
 ]
 
+// 格式化内容（后端已处理格式化，这里只做简单处理）
+function formatContent(content: string): string {
+  if (!content) return ''
+  return content
+}
+
 // 新建对话
 function newConversation() {
   startPage.value = true
@@ -227,9 +233,10 @@ async function onSubmit(evt: string) {
               />
               <McBubble
                 v-else
-                :content="msg.content"
+                :content="formatContent(msg.content)"
                 :avatarConfig="{ imgSrc: 'https://matechat.gitcode.com/logo.svg' }"
                 :loading="msg.loading"
+                class="model-bubble"
               />
             </template>
           </div>
@@ -337,16 +344,33 @@ async function onSubmit(evt: string) {
   flex-direction: column;
   gap: 8px;
   overflow: auto;
-  padding: 16px;
+  padding: 16px 0;
 }
 
 .messages-wrapper {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
+}
+
+/* 用户消息靠右对齐 */
+.messages-wrapper :deep(.mc-bubble[align="right"]) {
+  justify-content: flex-end;
+}
+
+/* AI 消息靠左对齐 */
+.messages-wrapper .model-bubble {
+  justify-content: flex-start;
+}
+
+/* 消息气泡宽度控制 */
+.messages-wrapper :deep(.mc-bubble-content-container) {
+  max-width: 85%;
 }
 
 .shortcut-container {
@@ -415,5 +439,21 @@ async function onSubmit(evt: string) {
 
 .intro-prompt {
   max-width: 800px;
+}
+
+/* 确保消息内容换行正确显示 */
+.model-bubble :deep(.mc-bubble-content),
+.model-bubble :deep(.mc-bubble-content.filled) {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  line-height: 1.8 !important;
+}
+
+/* 全局样式备用 */
+.mc-bubble-content,
+.mc-bubble-content.filled {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  line-height: 1.8 !important;
 }
 </style>
