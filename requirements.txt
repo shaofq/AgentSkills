@@ -21,3 +21,8 @@ aiofiles>=23.2.1
 
 # 可选：Markdown 处理
 # markitdown>=0.0.1
+
+# API 服务
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Vue Flow 自定义样式 */
+.vue-flow__node {
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 0 !important;
+}
+
+/* 移除节点选中时的边框 */
+.vue-flow__node.selected,
+.vue-flow__node.selected .vue-flow__node-default,
+.vue-flow__node.selected .vue-flow__node-input,
+.vue-flow__node.selected .vue-flow__node-output {
+  outline: none !important;
+  border: none !important;
+}
+
+/* 移除所有 Vue Flow 节点的默认边框 */
+.vue-flow__node-default,
+.vue-flow__node-input,
+.vue-flow__node-output {
+  border: none !important;
+  outline: none !important;
+  width: auto !important;
+}
+
+.vue-flow__edge-path {
+  stroke-width: 2;
+}
+
+.vue-flow__handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
