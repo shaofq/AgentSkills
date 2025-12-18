@@ -31,9 +31,9 @@ const nodeTypes = {
   parallel: ParallelNode,
 }
 
-let nodeId = 0
+// 使用时间戳生成唯一 ID，避免导入流程后 ID 冲突
 function getId() {
-  return `node_${nodeId++}`
+  return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
 function onDragOver(event: DragEvent) {

@@ -1,0 +1,92 @@
+{
+  "menus": [
+    {
+      "id": "chat",
+      "name": "对话",
+      "icon": "icon-message",
+      "type": "chat",
+      "apiType": "chat",
+      "apiUrl": "/api/chat",
+      "workflowName": null,
+      "description": "通用对话助手，可以回答各种问题。支持多轮对话和上下文理解。",
+      "model": "deepseek-ai/DeepSeek-R1"
+    },
+    {
+      "id": "code-agent",
+      "name": "代码助手",
+      "icon": "icon-code",
+      "type": "agent",
+      "apiType": "workflow",
+      "apiUrl": "http://localhost:8000/api/workflow/run",
+      "workflowName": "code_assistant",
+      "description": "专业的代码生成和调试助手。支持 amis、React、Vue 等多种框架。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "pptx-agent",
+      "name": "PPT助手",
+      "icon": "icon-file",
+      "type": "agent",
+      "apiType": "workflow",
+      "apiUrl": "http://localhost:8000/api/workflow/run",
+      "workflowName": "pptx_assistant",
+      "description": "演示文稿制作助手。快速创建专业的 PowerPoint 演示文稿。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "data-agent",
+      "name": "数据分析",
+      "icon": "icon-data-storage",
+      "type": "agent",
+      "apiType": "workflow",
+      "apiUrl": "http://localhost:8000/api/workflow/run",
+      "workflowName": "data_flow",
+      "description": "数据分析和可视化助手。支持 SQL 查询、图表生成、报表分析。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "policy-qa",
+      "name": "制度问答",
+      "icon": "icon-help",
+      "type": "agent",
+      "apiType": "policy-qa",
+      "apiUrl": "http://localhost:8000/api/policy-qa/sync",
+      "workflowName": null,
+      "description": "公司制度问答助手。解答员工手册、财务制度、电脑补贴等问题。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "ocr-agent",
+      "name": "OCR识别",
+      "icon": "icon-base-info",
+      "type": "agent",
+       "apiType": "workflow",
+      "apiUrl": "http://localhost:8000/api/workflow/run",
+      "workflowName": "ocr_workflow",
+      "description": "OCR 文件识别助手。识别 PDF 和图片中的文字内容。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "workflow",
+      "name": "流程编排",
+      "icon": "icon-application",
+      "type": "workflow",
+      "apiType": null,
+      "apiUrl": null,
+      "workflowName": null,
+      "description": "可视化工作流编排工具",
+      "model": null
+    },
+    {
+      "id": "workflow-list",
+      "name": "流程查询",
+      "icon": "icon-merge-request2",
+      "type": "workflow",
+      "apiType": null,
+      "apiUrl": null,
+      "workflowName": null,
+      "description": "查询和管理已加载的工作流",
+      "model": null
+    }
+  ]
+}

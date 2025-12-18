@@ -1,22 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const emit = defineEmits<{
   (e: 'select', menu: string): void
+  (e: 'menuLoaded', menus: MenuItem[]): void
 }>()
 
 const props = defineProps<{
   activeMenu: string
 }>()
 
-interface MenuItem {
+export interface MenuItem {
   id: string
   name: string
   icon: string
   type: 'agent' | 'workflow' | 'chat'
+  apiType?: string | null
+  apiUrl?: string | null
+  workflowName?: string | null
+  description?: string
+  model?: string | null
 }
 
-const menuItems: MenuItem[] = [
+const menuItems = ref<MenuItem[]>([
   { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat' },
   { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent' },
   { id: 'pptx-agent', name: 'PPT助手', icon: 'icon-file', type: 'agent' },
@@ -24,7 +30,37 @@ const menuItems: MenuItem[] = [
   { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
   { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow' },
-]
+])
+
+async function loadMenuBindings() {
+  try {
+    const response = await fetch('http://localhost:8000/api/menu-bindings')
+    if (response.ok) {
+      const data = await response.json()
+      if (data.menus && data.menus.length > 0) {
+        menuItems.value = data.menus.map((menu: any) => ({
+          id: menu.id,
+          name: menu.name,
+          icon: menu.icon,
+          type: menu.type,
+          apiType: menu.apiType,
+          apiUrl: menu.apiUrl,
+          workflowName: menu.workflowName,
+          description: menu.description,
+          model: menu.model,
+        }))
+        emit('menuLoaded', menuItems.value)
+        console.log('[LeftMenu] 加载菜单配置成功:', menuItems.value.length, '个菜单项')
+      }
+    }
+  } catch (err) {
+    console.error('[LeftMenu] 加载菜单配置失败:', err)
+  }
+}
+
+onMounted(() => {
+  loadMenuBindings()
+})
 
 const collapsed = ref(true)
 const isHovering = ref(false)

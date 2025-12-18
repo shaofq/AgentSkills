@@ -10,45 +10,69 @@ import LeftMenu from './components/LeftMenu.vue'
 import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
 
+// 菜单配置类型
+interface MenuConfig {
+  id: string
+  name: string
+  icon: string
+  type: 'agent' | 'workflow' | 'chat'
+  apiType?: string | null
+  apiUrl?: string | null
+  workflowName?: string | null
+  description?: string
+  model?: string | null
+}
+
 // 当前选中的菜单
 const activeMenu = ref('chat')
 const showConfigPanel = ref(false)
 const showPolicyQA = ref(false)
+// 默认菜单配置（当后端未返回时使用）
+const defaultMenuConfigs: MenuConfig[] = [
+  { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat', apiType: 'chat', apiUrl: '/api/chat', workflowName: null, description: '通用对话助手，可以回答各种问题。', model: 'deepseek-ai/DeepSeek-R1' },
+  { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'code_assistant', description: '专业的代码生成和调试助手。', model: 'qwen3-max' },
+  { id: 'pptx-agent', name: 'PPT助手', icon: 'icon-file', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'pptx_assistant', description: '演示文稿制作助手。', model: 'qwen3-max' },
+  { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'data_flow', description: '数据分析和可视化助手。', model: 'qwen3-max' },
+  { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent', apiType: 'policy-qa', apiUrl: 'http://localhost:8000/api/policy-qa/sync', workflowName: null, description: '公司制度问答助手。', model: 'qwen3-max' },
+  { id: 'ocr-agent', name: 'OCR识别', icon: 'icon-base-info', type: 'agent', apiType: 'ocr', apiUrl: 'http://localhost:8000/api/ocr/recognize', workflowName: null, description: 'OCR 文件识别助手。', model: 'qwen3-max' },
+  { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
+  { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '查询和管理已加载的工作流', model: null },
+]
+const menuConfigs = ref<MenuConfig[]>(defaultMenuConfigs)
 
 // 是否显示工作流模式
 const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
 const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 
-// 当前智能体信息
+// 菜单加载完成回调
+function handleMenuLoaded(menus: MenuConfig[]) {
+  menuConfigs.value = menus
+  console.log('[App] 菜单配置已加载:', menus.length, '个菜单项')
+}
+
+// 获取当前菜单配置（优先从加载的配置中查找，否则使用默认配置）
+const currentMenuConfig = computed(() => {
+  const config = menuConfigs.value.find(m => m.id === activeMenu.value)
+  if (config) return config
+  return defaultMenuConfigs.find(m => m.id === activeMenu.value)
+})
+
+// 当前智能体信息（从菜单配置中获取）
 const currentAgent = computed(() => {
-  const agents: Record<string, { name: string; description: string[]; model: string }> = {
-    'chat': { 
-      name: '智能对话', 
-      description: ['通用对话助手，可以回答各种问题。', '支持多轮对话和上下文理解。'], 
-      model: 'deepseek-ai/DeepSeek-R1' 
-    },
-    'code-agent': { 
-      name: '代码助手', 
-      description: ['专业的代码生成和调试助手。', '支持 amis、React、Vue 等多种框架。'], 
-      model: 'qwen3-max' 
-    },
-    'pptx-agent': { 
-      name: 'PPT助手', 
-      description: ['演示文稿制作助手。', '快速创建专业的 PowerPoint 演示文稿。'], 
-      model: 'qwen3-max' 
-    },
-    'data-agent': { 
-      name: '数据分析', 
-      description: ['数据分析和可视化助手。', '支持 SQL 查询、图表生成、报表分析。'], 
-      model: 'qwen3-max' 
-    },
-    'policy-qa': { 
-      name: '制度问答', 
-      description: ['公司制度问答助手。', '解答员工手册、财务制度、电脑补贴等问题。'], 
-      model: 'qwen3-max' 
-    },
+  const menu = currentMenuConfig.value
+  if (menu) {
+    return {
+      name: menu.name,
+      description: menu.description ? [menu.description] : ['欢迎使用'],
+      model: menu.model || 'qwen3-max'
+    }
   }
-  return agents[activeMenu.value] || agents['chat']
+  // 默认值
+  return {
+    name: '智能对话',
+    description: ['通用对话助手，可以回答各种问题。', '支持多轮对话和上下文理解。'],
+    model: 'deepseek-ai/DeepSeek-R1'
+  }
 })
 
 // 对话相关状态
@@ -133,26 +157,30 @@ async function onSubmit(evt: string) {
   messages.value.push({ from: 'model', content: '', loading: true })
   
   try {
-    // 根据当前菜单选择不同的 API
+    // 根据当前菜单配置选择 API
+    const menuConfig = currentMenuConfig.value
     let apiUrl = '/api/chat'
     let requestBody: Record<string, any> = { message: evt }
     
-    if (activeMenu.value === 'policy-qa') {
-      // 制度问答使用专门的 API
-      apiUrl = 'http://localhost:8000/api/policy-qa/sync'
-      requestBody = { question: evt }
-    } else if (activeMenu.value === 'code-agent') {
-      // 代码助手使用工作流 API
-      apiUrl = 'http://localhost:8000/api/workflow/run'
-      requestBody = { workflow_name: 'code_assistant', input: evt }
-    } else if (activeMenu.value === 'pptx-agent') {
-      // PPT助手使用工作流 API
-      apiUrl = 'http://localhost:8000/api/workflow/run'
-      requestBody = { workflow_name: 'pptx_assistant', input: evt }
-    } else if (activeMenu.value === 'data-agent') {
-      // 数据分析使用工作流 API
-      apiUrl = 'http://localhost:8000/api/workflow/run'
-      requestBody = { workflow_name: 'data_flow', input: evt }
+    if (menuConfig) {
+      const apiType = menuConfig.apiType
+      if (apiType === 'workflow' && menuConfig.workflowName) {
+        // 使用工作流 API
+        apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/workflow/run'
+        requestBody = { workflow_name: menuConfig.workflowName, input: evt }
+      } else if (apiType === 'policy-qa') {
+        // 制度问答 API
+        apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/policy-qa/sync'
+        requestBody = { question: evt }
+      } else if (apiType === 'ocr') {
+        // OCR 识别 API
+        apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/ocr/recognize'
+        requestBody = { file_path: evt, dpi: 144, prompt_mode: 'prompt_layout_all_en' }
+      } else if (apiType === 'chat') {
+        // 通用对话 API
+        apiUrl = menuConfig.apiUrl || '/api/chat'
+        requestBody = { message: evt }
+      }
     }
     
     const response = await fetch(apiUrl, {
@@ -165,7 +193,8 @@ async function onSubmit(evt: string) {
       const data = await response.json()
       let content = ''
       
-      if (activeMenu.value === 'policy-qa') {
+      const apiType = menuConfig?.apiType
+      if (apiType === 'policy-qa') {
         // 制度问答 API 返回 answer 字段
         let answer = data.answer || '抱歉，未能找到相关制度信息。'
         // 如果 answer 是 JSON 字符串，尝试解析并提取 text 字段
@@ -180,8 +209,11 @@ async function onSubmit(evt: string) {
           // 解析失败，使用原始内容
         }
         content = answer
+      } else if (apiType === 'ocr') {
+        // OCR 识别 API 返回 text 字段
+        content = data.text || data.answer || 'OCR 识别完成'
       } else {
-        content = data.response || '处理完成'
+        content = data.response || data.answer || '处理完成'
       }
       
       messages.value[messages.value.length - 1] = {
@@ -210,7 +242,7 @@ async function onSubmit(evt: string) {
 <template>
   <div class="h-screen w-screen flex">
     <!-- 左侧菜单 -->
-    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" />
+    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" />
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden">

@@ -26,6 +26,7 @@ from agents.router import RouterAgent
 from agents.policy_qa_agent import PolicyQAAgent
 from agents.code_agent import CodeAgent
 from agents.pptx_agent import PPTXAgent
+from agents.ocr_agent import OCRAgent
 
 app = FastAPI(title="智能体编排系统 API", version="1.0.0")
 
@@ -42,6 +43,22 @@ API_KEY = os.environ.get("DASHSCOPE_API_KEY", "sk-547e87e8934f4737b972199090958f
 workflows_db: Dict[str, dict] = {}
 executions_db: Dict[str, dict] = {}
 predefined_workflows: Dict[str, dict] = {}
+menu_bindings: List[dict] = []
+
+def load_menu_bindings():
+    """加载菜单绑定配置"""
+    global menu_bindings
+    config_path = "./config/menu_bindings.json"
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                menu_bindings = config.get("menus", [])
+                print(f"[MenuBindings] 加载菜单绑定配置: {len(menu_bindings)} 个菜单项")
+        except Exception as e:
+            print(f"[MenuBindings] 加载菜单绑定配置失败: {e}")
+    else:
+        print(f"[MenuBindings] 配置文件不存在: {config_path}")
 
 def load_predefined_workflows():
     """加载预定义工作流"""
@@ -60,6 +77,7 @@ def load_predefined_workflows():
                     print(f"[Workflow] 加载工作流失败 {filename}: {e}")
 
 load_predefined_workflows()
+load_menu_bindings()
 
 # 验证工作流是否加载成功
 print(f"[Startup] 工作流加载完成，共 {len(predefined_workflows)} 个: {list(predefined_workflows.keys())}")
@@ -400,6 +418,38 @@ class PredefinedWorkflowRequest(BaseModel):
     input: str
 
 
+@app.get("/api/menu-bindings")
+async def get_menu_bindings():
+    """获取菜单绑定配置"""
+    return {"menus": menu_bindings}
+
+
+class MenuBindingUpdate(BaseModel):
+    menuId: str
+    workflowName: Optional[str] = None
+
+
+@app.post("/api/menu-bindings")
+async def update_menu_binding(request: MenuBindingUpdate):
+    """更新菜单绑定的工作流"""
+    global menu_bindings
+    
+    for menu in menu_bindings:
+        if menu.get("id") == request.menuId:
+            menu["workflowName"] = request.workflowName
+            # 保存到配置文件
+            config_path = "./config/menu_bindings.json"
+            try:
+                with open(config_path, 'w', encoding='utf-8') as f:
+                    json.dump({"menus": menu_bindings}, f, ensure_ascii=False, indent=2)
+                print(f"[MenuBindings] 更新菜单 {request.menuId} 绑定工作流: {request.workflowName}")
+                return {"success": True, "message": "更新成功"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"保存配置失败: {e}")
+    
+    raise HTTPException(status_code=404, detail=f"菜单 {request.menuId} 不存在")
+
+
 @app.get("/api/workflows/debug")
 async def debug_workflows():
     """调试：查看 predefined_workflows 的原始内容"""
@@ -411,23 +461,36 @@ async def debug_workflows():
 
 
 @app.get("/api/workflowsquery")
-async def get_workflows():
-    """获取所有已加载的预定义工作流列表"""
-    print(f"\n[API /api/workflows] 被调用")
-    print(f"[API] predefined_workflows 内存地址: {id(predefined_workflows)}")
-    print(f"[API] predefined_workflows 长度: {len(predefined_workflows)}")
-    print(f"[API] predefined_workflows 键: {list(predefined_workflows.keys())}")
+async def get_workflows_query():
+    """获取所有已加载的预定义工作流列表，包含绑定的菜单信息"""
+    print(f"\n[API /api/workflowsquery] 被调用")
     workflows = []
+    
+    # 构建工作流名称到菜单的映射
+    workflow_to_menus = {}
+    for menu in menu_bindings:
+        wf_name = menu.get("workflowName")
+        if wf_name:
+            if wf_name not in workflow_to_menus:
+                workflow_to_menus[wf_name] = []
+            workflow_to_menus[wf_name].append({
+                "id": menu.get("id"),
+                "name": menu.get("name"),
+                "icon": menu.get("icon")
+            })
+    
     for workflow_name, workflow in predefined_workflows.items():
+        bound_menus = workflow_to_menus.get(workflow_name, [])
         workflow_info = {
             "name": workflow_name,
-            "title": workflow.get("name", workflow_name),  # 使用 workflow 中的 name 字段作为 title
+            "title": workflow.get("name", workflow_name),
             "description": workflow.get("description", ""),
             "nodeCount": len(workflow.get("nodes", [])),
-            "edgeCount": len(workflow.get("edges", []))
+            "edgeCount": len(workflow.get("edges", [])),
+            "boundMenus": bound_menus
         }
-        print(f"[API] 工作流 {workflow_name}: {workflow_info}")
         workflows.append(workflow_info)
+    
     print(f"[API] 返回 {len(workflows)} 个工作流")
     return {"workflows": workflows, "total": len(workflows)}
 
@@ -763,6 +826,80 @@ async def policy_qa_sync(request: PolicyQARequest):
         print(f"[PolicyQA] 处理后答案: {answer[:100] if answer else 'empty'}...")
         
         return {"success": True, "answer": answer}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== OCR 识别智能体 API ====================
+
+class OCRRequest(BaseModel):
+    file_path: str
+    dpi: int = 144
+    prompt_mode: str = "prompt_layout_all_en"
+
+
+# 全局 OCR 智能体实例
+ocr_agent = None
+
+
+def get_ocr_agent():
+    """获取或创建 OCR 智能体"""
+    global ocr_agent
+    if ocr_agent is None:
+        try:
+            print("[OCR] 正在创建智能体...")
+            ocr_agent = OCRAgent(
+                api_key=API_KEY,
+                model_name="qwen3-max",
+                max_iters=10,
+            )
+            print("[OCR] 智能体创建成功")
+        except Exception as e:
+            import traceback
+            print(f"[OCR] 智能体创建失败: {e}")
+            traceback.print_exc()
+            raise
+    
+    return ocr_agent
+
+
+@app.post("/api/ocr/recognize")
+async def ocr_recognize(request: OCRRequest):
+    """OCR 识别 API"""
+    try:
+        print(f"[OCR] 收到识别请求: {request.file_path}")
+        agent = get_ocr_agent()
+        
+        # 调用 OCR 识别
+        result = await agent.recognize_file(
+            file_path=request.file_path,
+            dpi=request.dpi,
+            prompt_mode=request.prompt_mode
+        )
+        
+        print(f"[OCR] 识别完成: {len(result) if result else 0} 字符")
+        return {"success": True, "text": result}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ocr/chat")
+async def ocr_chat(request: PolicyQARequest):
+    """OCR 智能体对话 API（支持自动检测文件路径）"""
+    try:
+        print(f"[OCR] 收到对话: {request.question}")
+        agent = get_ocr_agent()
+        response = await agent(Msg("user", request.question, "user"))
+        answer = response.content if hasattr(response, "content") else str(response)
+        
+        print(f"[OCR] 响应: {answer[:100] if answer else 'empty'}...")
+        return {"success": True, "answer": answer}
+        
     except Exception as e:
         import traceback
         traceback.print_exc()

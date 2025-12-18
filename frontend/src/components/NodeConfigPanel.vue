@@ -159,6 +159,7 @@ const availableSkills = [
   'pptx',
   'data-analysis',
   'company-policy-qa',
+  'ocr-file-reader',
   // 'react-code',
   // 'sql-query',
 ]

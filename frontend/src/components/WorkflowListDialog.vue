@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+interface BoundMenu {
+  id: string
+  name: string
+  icon: string
+}
+
 interface Workflow {
   name: string
   title: string
   description: string
   nodeCount: number
   edgeCount: number
+  boundMenus: BoundMenu[]
 }
 
 const workflows = ref<Workflow[]>([])
@@ -108,15 +115,33 @@ onMounted(() => {
         <div class="workflow-name text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
           {{ workflow.name }}
         </div>
+
+        <!-- 绑定的功能菜单 -->
+        <div v-if="workflow.boundMenus && workflow.boundMenus.length > 0" class="bound-menus mt-3 pt-3 border-t border-gray-100">
+          <div class="text-xs text-gray-500 mb-2">绑定功能:</div>
+          <div class="flex flex-wrap gap-2">
+            <span 
+              v-for="menu in workflow.boundMenus" 
+              :key="menu.id"
+              class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+            >
+              <i :class="menu.icon" class="text-sm"></i>
+              {{ menu.name }}
+            </span>
+          </div>
+        </div>
+        <div v-else class="bound-menus mt-3 pt-3 border-t border-gray-100">
+          <div class="text-xs text-gray-400 italic">未绑定功能菜单</div>
+        </div>
       </div>
     </div>
 
-    <div v-if="workflows.length > 0" class="summary mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <!-- <div v-if="workflows.length > 0" class="summary mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <p class="text-sm text-blue-800">
         <i class="icon-info-circle mr-2"></i>
         共加载 <strong>{{ workflows.length }}</strong> 个工作流
       </p>
-    </div>
+    </div> -->
   </div>
 </template>
 

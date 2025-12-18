@@ -14,7 +14,7 @@ export interface InputVariable {
 export interface AgentConfig {
   id: string
   name: string
-  type: 'router' | 'code' | 'pptx' | 'data' | 'policy' | 'custom'
+  type: 'router' | 'code' | 'pptx' | 'data' | 'policy' | 'ocr' | 'custom'
   description: string
   systemPrompt: string
   skills: string[]

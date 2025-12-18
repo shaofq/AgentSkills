@@ -59,6 +59,16 @@ export const useWorkflowStore = defineStore('workflow', () => {
       model: 'qwen3-max',
       maxIters: 10,
     },
+    {
+      id: 'ocr_agent',
+      name: 'OCRReader',
+      type: 'ocr',
+      description: 'OCR文件识别智能体 - 识别PDF和图片中的文字',
+      systemPrompt: '你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。',
+      skills: ['ocr-file-reader'],
+      model: 'qwen3-max',
+      maxIters: 10,
+    },
   ]
 
   const selectedNode = computed(() => {
