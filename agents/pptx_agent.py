@@ -42,7 +42,7 @@ class PPTXAgent(BaseAgent):
         skills: list = None,
     ):
         """Initialize the PPTX agent."""
-        default_skills = ["./skills/pptx"]
+        default_skills = ["./skill/pptx"]
         
         super().__init__(
             name="SlideCreator",

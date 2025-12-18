@@ -8,6 +8,7 @@ import NodeConfigPanel from './components/NodeConfigPanel.vue'
 import Toolbar from './components/Toolbar.vue'
 import LeftMenu from './components/LeftMenu.vue'
 import PolicyQADialog from './components/PolicyQADialog.vue'
+import WorkflowListDialog from './components/WorkflowListDialog.vue'
 
 // 当前选中的菜单
 const activeMenu = ref('chat')
@@ -16,6 +17,7 @@ const showPolicyQA = ref(false)
 
 // 是否显示工作流模式
 const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
+const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 
 // 当前智能体信息
 const currentAgent = computed(() => {
@@ -133,12 +135,24 @@ async function onSubmit(evt: string) {
   try {
     // 根据当前菜单选择不同的 API
     let apiUrl = '/api/chat'
-    let requestBody: Record<string, string> = { message: evt }
+    let requestBody: Record<string, any> = { message: evt }
     
     if (activeMenu.value === 'policy-qa') {
       // 制度问答使用专门的 API
       apiUrl = 'http://localhost:8000/api/policy-qa/sync'
       requestBody = { question: evt }
+    } else if (activeMenu.value === 'code-agent') {
+      // 代码助手使用工作流 API
+      apiUrl = 'http://localhost:8000/api/workflow/run'
+      requestBody = { workflow_name: 'code_assistant', input: evt }
+    } else if (activeMenu.value === 'pptx-agent') {
+      // PPT助手使用工作流 API
+      apiUrl = 'http://localhost:8000/api/workflow/run'
+      requestBody = { workflow_name: 'pptx_assistant', input: evt }
+    } else if (activeMenu.value === 'data-agent') {
+      // 数据分析使用工作流 API
+      apiUrl = 'http://localhost:8000/api/workflow/run'
+      requestBody = { workflow_name: 'data_flow', input: evt }
     }
     
     const response = await fetch(apiUrl, {
@@ -200,8 +214,11 @@ async function onSubmit(evt: string) {
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- 流程查询模式 -->
+      <WorkflowListDialog v-if="isWorkflowListMode" />
+      
       <!-- 对话模式 -->
-      <template v-if="!isWorkflowMode">
+      <template v-else-if="!isWorkflowMode">
         <!-- 开始页面 -->
         <McLayoutContent 
           v-if="startPage" 

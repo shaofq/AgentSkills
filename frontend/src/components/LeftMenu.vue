@@ -23,6 +23,7 @@ const menuItems: MenuItem[] = [
   { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent' },
   { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
+  { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow' },
 ]
 
 const collapsed = ref(true)

@@ -24,6 +24,8 @@ from agents.base import BaseAgent
 from agents.simple import SimpleAgent
 from agents.router import RouterAgent
 from agents.policy_qa_agent import PolicyQAAgent
+from agents.code_agent import CodeAgent
+from agents.pptx_agent import PPTXAgent
 
 app = FastAPI(title="智能体编排系统 API", version="1.0.0")
 
@@ -39,6 +41,74 @@ API_KEY = os.environ.get("DASHSCOPE_API_KEY", "sk-547e87e8934f4737b972199090958f
 
 workflows_db: Dict[str, dict] = {}
 executions_db: Dict[str, dict] = {}
+predefined_workflows: Dict[str, dict] = {}
+
+def load_predefined_workflows():
+    """加载预定义工作流"""
+    workflow_dir = "./workflows"
+    if os.path.exists(workflow_dir):
+        for filename in os.listdir(workflow_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(workflow_dir, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        workflow = json.load(f)
+                        workflow_name = filename.replace('.json', '')
+                        predefined_workflows[workflow_name] = workflow
+                        print(f"[Workflow] 加载预定义工作流: {workflow_name}")
+                except Exception as e:
+                    print(f"[Workflow] 加载工作流失败 {filename}: {e}")
+
+load_predefined_workflows()
+
+# 验证工作流是否加载成功
+print(f"[Startup] 工作流加载完成，共 {len(predefined_workflows)} 个: {list(predefined_workflows.keys())}")
+
+
+def create_agent_from_config(config: dict, api_key: str):
+    """根据配置创建 Agent 实例"""
+    agent_type = config.get("type", "custom")
+    agent_id = config.get("id", "")
+    
+    # 使用预定义的 Agent 类
+    if agent_type == "code" or agent_id == "code_agent":
+        return CodeAgent(
+            api_key=api_key,
+            model_name=config.get("model", "qwen3-max"),
+            max_iters=config.get("maxIters", 30),
+        )
+    elif agent_type == "pptx" or agent_id == "pptx_agent":
+        return PPTXAgent(
+            api_key=api_key,
+            model_name=config.get("model", "qwen3-max"),
+            max_iters=config.get("maxIters", 30),
+        )
+    elif agent_type == "policy" or agent_id == "policy_qa_agent":
+        return PolicyQAAgent(
+            api_key=api_key,
+            model_name=config.get("model", "qwen3-max"),
+            max_iters=config.get("maxIters", 10),
+        )
+    elif agent_type == "router" or agent_id == "router":
+        # 在工作流中，router 类型的节点应该作为普通的分析智能体
+        # 而不是实际进行路由（因为工作流已经定义了执行顺序）
+        return SimpleAgent(
+            name=config.get("name", "Router"),
+            sys_prompt=config.get("systemPrompt", "你是一个智能路由助手，负责分析用户请求并提供建议。"),
+            api_key=api_key,
+            model_name=config.get("model", "qwen3-max"),
+        )
+    else:
+        # 自定义 Agent，使用 BaseAgent
+        skill_paths = [f"./skill/{s}" for s in config.get("skills", [])]
+        return BaseAgent(
+            name=config.get("name", agent_id),
+            sys_prompt=config.get("systemPrompt", ""),
+            skills=skill_paths,
+            api_key=api_key,
+            model_name=config.get("model", "qwen3-max"),
+            max_iters=config.get("maxIters", 30),
+        )
 
 
 class AgentConfig(BaseModel):
@@ -245,15 +315,8 @@ async def _run_workflow(execution_id: str, workflow: dict, user_input: str):
         for node in agent_nodes:
             config = node["data"].get("agentConfig", {})
             if config:
-                skill_paths = [f"./skill/{s}" for s in config.get("skills", [])]
-                agent = BaseAgent(
-                    name=config.get("name", node["id"]),
-                    sys_prompt=config.get("systemPrompt", ""),
-                    skills=skill_paths,
-                    api_key=API_KEY,
-                    model_name=config.get("model", "qwen3-max"),
-                    max_iters=config.get("maxIters", 30),
-                )
+                # 使用工厂函数创建 Agent
+                agent = create_agent_from_config(config, API_KEY)
                 agents[node["id"]] = agent
         
         execution_order = _get_execution_order(nodes, edges)
@@ -332,6 +395,100 @@ async def get_execution(execution_id: str):
     return executions_db[execution_id]
 
 
+class PredefinedWorkflowRequest(BaseModel):
+    workflow_name: str
+    input: str
+
+
+@app.get("/api/workflows/debug")
+async def debug_workflows():
+    """调试：查看 predefined_workflows 的原始内容"""
+    return {
+        "keys": list(predefined_workflows.keys()),
+        "count": len(predefined_workflows),
+        "raw": predefined_workflows
+    }
+
+
+@app.get("/api/workflowsquery")
+async def get_workflows():
+    """获取所有已加载的预定义工作流列表"""
+    print(f"\n[API /api/workflows] 被调用")
+    print(f"[API] predefined_workflows 内存地址: {id(predefined_workflows)}")
+    print(f"[API] predefined_workflows 长度: {len(predefined_workflows)}")
+    print(f"[API] predefined_workflows 键: {list(predefined_workflows.keys())}")
+    workflows = []
+    for workflow_name, workflow in predefined_workflows.items():
+        workflow_info = {
+            "name": workflow_name,
+            "title": workflow.get("name", workflow_name),  # 使用 workflow 中的 name 字段作为 title
+            "description": workflow.get("description", ""),
+            "nodeCount": len(workflow.get("nodes", [])),
+            "edgeCount": len(workflow.get("edges", []))
+        }
+        print(f"[API] 工作流 {workflow_name}: {workflow_info}")
+        workflows.append(workflow_info)
+    print(f"[API] 返回 {len(workflows)} 个工作流")
+    return {"workflows": workflows, "total": len(workflows)}
+
+
+@app.post("/api/workflow/run")
+async def run_predefined_workflow(request: PredefinedWorkflowRequest):
+    """执行预定义工作流（同步返回最终结果）"""
+    workflow_name = request.workflow_name
+    user_input = request.input
+    
+    if workflow_name not in predefined_workflows:
+        raise HTTPException(status_code=404, detail=f"预定义工作流 '{workflow_name}' 不存在")
+    
+    workflow = predefined_workflows[workflow_name]
+    
+    try:
+        nodes = workflow.get("nodes", [])
+        edges = workflow.get("edges", [])
+        
+        agent_nodes = [n for n in nodes if n["type"] == "agent"]
+        agents = {}
+        
+        for node in agent_nodes:
+            config = node["data"].get("agentConfig", {})
+            if config:
+                # 使用工厂函数创建 Agent，优先使用预定义的 Agent 类
+                agent = create_agent_from_config(config, API_KEY)
+                agents[node["id"]] = agent
+                print(f"[Workflow] 创建智能体: {node['id']} -> {agent.__class__.__name__}")
+        
+        execution_order = _get_execution_order(nodes, edges)
+        
+        current_input = user_input
+        final_output = ""
+        
+        for node_id in execution_order:
+            node = next((n for n in nodes if n["id"] == node_id), None)
+            if not node:
+                continue
+            
+            if node["type"] == "agent" and node_id in agents:
+                agent = agents[node_id]
+                print(f"[Workflow] 执行节点: {node_id}")
+                response = await agent(Msg("user", current_input, "user"))
+                output = response.content if hasattr(response, "content") else str(response)
+                print(f"[Workflow] 节点 {node_id} 输出: {output[:100] if output else 'empty'}...")
+                current_input = output
+                final_output = output
+            elif node["type"] == "input":
+                current_input = user_input
+            elif node["type"] == "output":
+                final_output = current_input
+        
+        return {"success": True, "response": final_output}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class WorkflowTestRequest(BaseModel):
     workflow: dict
     input: str
@@ -361,27 +518,8 @@ async def test_workflow(request: WorkflowTestRequest):
                     msg = f"初始化智能体: {config.get('name', node['id'])}"
                     yield f"data: {json.dumps({'type': 'log', 'nodeId': node['id'], 'nodeLabel': node_label, 'message': msg})}\n\n"
                     
-                    skills = config.get("skills", [])
-                    
-                    # 如果没有技能，使用 SimpleAgent（不带工具）
-                    if not skills or len(skills) == 0:
-                        agent = SimpleAgent(
-                            name=config.get("name", node["id"]),
-                            sys_prompt=config.get("systemPrompt", ""),
-                            api_key=API_KEY,
-                            model_name=config.get("model", "qwen3-max"),
-                        )
-                    else:
-                        # 有技能时使用 BaseAgent（带工具）
-                        skill_paths = [f"./skill/{s}" for s in skills]
-                        agent = BaseAgent(
-                            name=config.get("name", node["id"]),
-                            sys_prompt=config.get("systemPrompt", ""),
-                            skills=skill_paths,
-                            api_key=API_KEY,
-                            model_name=config.get("model", "qwen3-max"),
-                            max_iters=config.get("maxIters", 30),
-                        )
+                    # 使用工厂函数创建 Agent
+                    agent = create_agent_from_config(config, API_KEY)
                     agents[node["id"]] = agent
             
             # 构建邻接图
@@ -633,4 +771,13 @@ async def policy_qa_sync(request: PolicyQARequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # 启动前验证工作流加载状态
+    print("\n" + "="*50)
+    print("启动前验证:")
+    print(f"predefined_workflows 长度: {len(predefined_workflows)}")
+    print(f"predefined_workflows 键: {list(predefined_workflows.keys())}")
+    print(f"predefined_workflows 内存地址: {id(predefined_workflows)}")
+    print("="*50 + "\n")
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
