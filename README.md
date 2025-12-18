@@ -13,6 +13,7 @@
   <a href="./README_CN.md">中文文档</a>
 </p>
 
+
 ---
 
 ## 📖 Introduction
@@ -27,6 +28,10 @@ LowCode AI is a **visual agent orchestration platform** that enables users to bu
 - 📚 **Claude SKILL Support** - Markdown-based skill definitions, agents can equip multiple skills (amis code generation, PPT creation, OCR recognition, etc.)
 - � **Real-time Execution** - Streaming output, real-time execution monitoring
 - 💾 **Workflow Import/Export** - JSON format storage for easy sharing and reuse
+
+<p align="center">
+  <img src="./visualflow.png" alt="Visual Flow Editor" width="800" />
+</p>
 
 ---
 
