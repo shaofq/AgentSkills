@@ -44,18 +44,22 @@ API_KEY = os.environ.get("DASHSCOPE_API_KEY", "sk-547e87e8934f4737b972199090958f
 workflows_db: Dict[str, dict] = {}
 executions_db: Dict[str, dict] = {}
 predefined_workflows: Dict[str, dict] = {}
-menu_bindings: List[dict] = []
+menu_bindings_config: dict = {}  # 存储完整配置（支持分组格式）
 
 def load_menu_bindings():
     """加载菜单绑定配置"""
-    global menu_bindings
+    global menu_bindings_config
     config_path = "./config/menu_bindings.json"
     if os.path.exists(config_path):
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                menu_bindings = config.get("menus", [])
-                print(f"[MenuBindings] 加载菜单绑定配置: {len(menu_bindings)} 个菜单项")
+                menu_bindings_config = json.load(f)
+                # 统计菜单项数量
+                if "menuGroups" in menu_bindings_config:
+                    total = sum(len(g.get("menus", [])) for g in menu_bindings_config.get("menuGroups", []))
+                    print(f"[MenuBindings] 加载菜单绑定配置(分组格式): {total} 个菜单项")
+                elif "menus" in menu_bindings_config:
+                    print(f"[MenuBindings] 加载菜单绑定配置: {len(menu_bindings_config.get('menus', []))} 个菜单项")
         except Exception as e:
             print(f"[MenuBindings] 加载菜单绑定配置失败: {e}")
     else:
@@ -422,7 +426,7 @@ class PredefinedWorkflowRequest(BaseModel):
 @app.get("/api/menu-bindings")
 async def get_menu_bindings():
     """获取菜单绑定配置"""
-    return {"menus": menu_bindings}
+    return menu_bindings_config
 
 
 class MenuBindingUpdate(BaseModel):
@@ -433,16 +437,24 @@ class MenuBindingUpdate(BaseModel):
 @app.post("/api/menu-bindings")
 async def update_menu_binding(request: MenuBindingUpdate):
     """更新菜单绑定的工作流"""
-    global menu_bindings
+    global menu_bindings_config
     
-    for menu in menu_bindings:
+    # 支持分组格式
+    all_menus = []
+    if "menuGroups" in menu_bindings_config:
+        for group in menu_bindings_config.get("menuGroups", []):
+            all_menus.extend(group.get("menus", []))
+    else:
+        all_menus = menu_bindings_config.get("menus", [])
+    
+    for menu in all_menus:
         if menu.get("id") == request.menuId:
             menu["workflowName"] = request.workflowName
             # 保存到配置文件
             config_path = "./config/menu_bindings.json"
             try:
                 with open(config_path, 'w', encoding='utf-8') as f:
-                    json.dump({"menus": menu_bindings}, f, ensure_ascii=False, indent=2)
+                    json.dump(menu_bindings_config, f, ensure_ascii=False, indent=2)
                 print(f"[MenuBindings] 更新菜单 {request.menuId} 绑定工作流: {request.workflowName}")
                 return {"success": True, "message": "更新成功"}
             except Exception as e:
@@ -467,9 +479,17 @@ async def get_workflows_query():
     print(f"\n[API /api/workflowsquery] 被调用")
     workflows = []
     
+    # 获取所有菜单项（支持分组格式）
+    all_menus = []
+    if "menuGroups" in menu_bindings_config:
+        for group in menu_bindings_config.get("menuGroups", []):
+            all_menus.extend(group.get("menus", []))
+    else:
+        all_menus = menu_bindings_config.get("menus", [])
+    
     # 构建工作流名称到菜单的映射
     workflow_to_menus = {}
-    for menu in menu_bindings:
+    for menu in all_menus:
         wf_name = menu.get("workflowName")
         if wf_name:
             if wf_name not in workflow_to_menus:

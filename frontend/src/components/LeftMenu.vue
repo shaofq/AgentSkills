@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'select', menu: string): void
@@ -22,35 +22,80 @@ export interface MenuItem {
   model?: string | null
 }
 
-const menuItems = ref<MenuItem[]>([
-  { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat' },
-  { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent' },
-  { id: 'pptx-agent', name: 'PPT助手', icon: 'icon-file', type: 'agent' },
-  { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent' },
-  { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent' },
-  { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
-  { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow' },
+export interface MenuGroup {
+  id: string
+  name: string
+  menus: MenuItem[]
+}
+
+const menuGroups = ref<MenuGroup[]>([
+  {
+    id: 'user-functions',
+    name: '使用功能',
+    menus: [
+      { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat' },
+      { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent' },
+      { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent' },
+    ]
+  },
+  {
+    id: 'system-functions',
+    name: '系统功能',
+    menus: [
+      { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
+      { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow' },
+    ]
+  }
 ])
+
+// 扁平化的菜单列表，用于向父组件传递
+const allMenuItems = computed(() => {
+  return menuGroups.value.flatMap(group => group.menus)
+})
 
 async function loadMenuBindings() {
   try {
     const response = await fetch('http://localhost:8000/api/menu-bindings')
     if (response.ok) {
       const data = await response.json()
-      if (data.menus && data.menus.length > 0) {
-        menuItems.value = data.menus.map((menu: any) => ({
-          id: menu.id,
-          name: menu.name,
-          icon: menu.icon,
-          type: menu.type,
-          apiType: menu.apiType,
-          apiUrl: menu.apiUrl,
-          workflowName: menu.workflowName,
-          description: menu.description,
-          model: menu.model,
+      // 支持新的分组格式
+      if (data.menuGroups && data.menuGroups.length > 0) {
+        menuGroups.value = data.menuGroups.map((group: any) => ({
+          id: group.id,
+          name: group.name,
+          menus: group.menus.map((menu: any) => ({
+            id: menu.id,
+            name: menu.name,
+            icon: menu.icon,
+            type: menu.type,
+            apiType: menu.apiType,
+            apiUrl: menu.apiUrl,
+            workflowName: menu.workflowName,
+            description: menu.description,
+            model: menu.model,
+          }))
         }))
-        emit('menuLoaded', menuItems.value)
-        console.log('[LeftMenu] 加载菜单配置成功:', menuItems.value.length, '个菜单项')
+        emit('menuLoaded', allMenuItems.value)
+        console.log('[LeftMenu] 加载菜单配置成功:', allMenuItems.value.length, '个菜单项')
+      } else if (data.menus && data.menus.length > 0) {
+        // 兼容旧格式
+        menuGroups.value = [{
+          id: 'default',
+          name: '',
+          menus: data.menus.map((menu: any) => ({
+            id: menu.id,
+            name: menu.name,
+            icon: menu.icon,
+            type: menu.type,
+            apiType: menu.apiType,
+            apiUrl: menu.apiUrl,
+            workflowName: menu.workflowName,
+            description: menu.description,
+            model: menu.model,
+          }))
+        }]
+        emit('menuLoaded', allMenuItems.value)
+        console.log('[LeftMenu] 加载菜单配置成功(旧格式):', allMenuItems.value.length, '个菜单项')
       }
     }
   } catch (err) {
@@ -99,20 +144,32 @@ function selectMenu(item: MenuItem) {
 
     <!-- 菜单列表 -->
     <div class="menu-list flex-1 py-2 overflow-y-auto">
-      <div
-        v-for="item in menuItems"
-        :key="item.id"
-        @click="selectMenu(item)"
-        class="menu-item mx-2 mb-1 px-3 py-3 rounded-lg cursor-pointer transition-all flex items-center gap-3"
-        :class="[
-          activeMenu === item.id 
-            ? 'bg-blue-600 text-white' 
-            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-        ]"
-      >
-        <i :class="item.icon" class="text-lg"></i>
-        <span v-if="!collapsed || isHovering" class="text-sm">{{ item.name }}</span>
-      </div>
+      <template v-for="group in menuGroups" :key="group.id">
+        <!-- 分组标题 -->
+        <div 
+          v-if="group.name && (!collapsed || isHovering)" 
+          class="group-title mx-3 mt-3 mb-2 text-xs text-gray-500 font-medium uppercase tracking-wider"
+        >
+          {{ group.name }}
+        </div>
+        <div v-else-if="group.name" class="group-divider mx-3 my-2 border-t border-gray-700"></div>
+        
+        <!-- 分组菜单项 -->
+        <div
+          v-for="item in group.menus"
+          :key="item.id"
+          @click="selectMenu(item)"
+          class="menu-item mx-2 mb-1 px-3 py-3 rounded-lg cursor-pointer transition-all flex items-center gap-3"
+          :class="[
+            activeMenu === item.id 
+              ? 'bg-blue-600 text-white' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+          ]"
+        >
+          <i :class="item.icon" class="text-lg"></i>
+          <span v-if="!collapsed || isHovering" class="text-sm">{{ item.name }}</span>
+        </div>
+      </template>
     </div>
 
     <!-- 底部操作区 -->
@@ -139,11 +196,34 @@ function selectMenu(item: MenuItem) {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
 }
 
+.menu-list {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 transparent;
+  min-height: 0;
+}
+
+.menu-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-list::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 2px;
+}
+
 .menu-item {
   min-height: 44px;
 }
 
 .menu-header img {
   filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+}
+
+.group-title {
+  color: #9ca3af;
 }
 </style>
