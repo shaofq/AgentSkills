@@ -27,6 +27,7 @@ from agents.policy_qa_agent import PolicyQAAgent
 from agents.code_agent import CodeAgent
 from agents.pptx_agent import PPTXAgent
 from agents.ocr_agent import OCRAgent
+from agents.skill_creator_agent import SkillCreatorAgent
 
 app = FastAPI(title="智能体编排系统 API", version="1.0.0")
 
@@ -544,7 +545,7 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
             elif node["type"] == "output":
                 final_output = current_input
         
-        return {"success": True, "response": final_output}
+        return final_output
         
     except Exception as e:
         import traceback
@@ -898,6 +899,51 @@ async def ocr_chat(request: PolicyQARequest):
         answer = response.content if hasattr(response, "content") else str(response)
         
         print(f"[OCR] 响应: {answer[:100] if answer else 'empty'}...")
+        return {"success": True, "answer": answer}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== 技能创建智能体 API ====================
+
+# 全局技能创建智能体实例
+skill_creator_agent = None
+
+
+def get_skill_creator_agent():
+    """获取或创建技能创建智能体"""
+    global skill_creator_agent
+    if skill_creator_agent is None:
+        try:
+            print("[SkillCreator] 正在创建智能体...")
+            skill_creator_agent = SkillCreatorAgent(
+                api_key=API_KEY,
+                model_name="qwen3-max",
+                max_iters=30,
+            )
+            print("[SkillCreator] 智能体创建成功")
+        except Exception as e:
+            import traceback
+            print(f"[SkillCreator] 智能体创建失败: {e}")
+            traceback.print_exc()
+            raise
+    
+    return skill_creator_agent
+
+
+@app.post("/api/skill-creator/chat")
+async def skill_creator_chat(request: PolicyQARequest):
+    """技能创建智能体对话 API"""
+    try:
+        print(f"[SkillCreator] 收到请求: {request.question}")
+        agent = get_skill_creator_agent()
+        response = await agent(Msg("user", request.question, "user"))
+        answer = response.content if hasattr(response, "content") else str(response)
+        
+        print(f"[SkillCreator] 响应: {answer[:100] if answer else 'empty'}...")
         return {"success": True, "answer": answer}
         
     except Exception as e:

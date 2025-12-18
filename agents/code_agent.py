@@ -43,7 +43,7 @@ class CodeAgent(BaseAgent):
         skills: list = None,
     ):
         """Initialize the code agent."""
-        default_skills = ["./skill/amis-code-assistant"]
+        default_skills = ["./skill/amis-generator"]
         
         super().__init__(
             name="CodeMaster",

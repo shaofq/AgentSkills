@@ -1,5 +1,5 @@
 # 🤖 LowCode AI - 智能体可视化编排平台
-
+请帮我根据amisdocinfo目录中的说明文档，创建一个skill ，该skill主要能生成amis代码
 <p align="center">
   <strong>基于 AgentScope 的多智能体可视化编排系统</strong>
 </p>

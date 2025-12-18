@@ -160,6 +160,7 @@ const availableSkills = [
   'data-analysis',
   'company-policy-qa',
   'ocr-file-reader',
+  'skill-creator',
   // 'react-code',
   // 'sql-query',
 ]

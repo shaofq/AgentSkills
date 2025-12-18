@@ -22,28 +22,8 @@
       "description": "专业的代码生成和调试助手。支持 amis、React、Vue 等多种框架。",
       "model": "qwen3-max"
     },
-    {
-      "id": "pptx-agent",
-      "name": "PPT助手",
-      "icon": "icon-file",
-      "type": "agent",
-      "apiType": "workflow",
-      "apiUrl": "http://localhost:8000/api/workflow/run",
-      "workflowName": "pptx_assistant",
-      "description": "演示文稿制作助手。快速创建专业的 PowerPoint 演示文稿。",
-      "model": "qwen3-max"
-    },
-    {
-      "id": "data-agent",
-      "name": "数据分析",
-      "icon": "icon-data-storage",
-      "type": "agent",
-      "apiType": "workflow",
-      "apiUrl": "http://localhost:8000/api/workflow/run",
-      "workflowName": "data_flow",
-      "description": "数据分析和可视化助手。支持 SQL 查询、图表生成、报表分析。",
-      "model": "qwen3-max"
-    },
+    
+    
     {
       "id": "policy-qa",
       "name": "制度问答",
@@ -64,6 +44,17 @@
       "apiUrl": "http://localhost:8000/api/workflow/run",
       "workflowName": "ocr_workflow",
       "description": "OCR 文件识别助手。识别 PDF 和图片中的文字内容。",
+      "model": "qwen3-max"
+    },
+    {
+      "id": "skill-creator",
+      "name": "技能创建",
+      "icon": "icon-identity",
+      "type": "agent",
+      "apiType": "skill-creator",
+      "apiUrl": "http://localhost:8000/api/skill-creator/chat",
+      "workflowName": null,
+      "description": "技能创建助手。帮助创建新的 Skill 技能包，设计技能结构和编写 SKILL.md 文档。",
       "model": "qwen3-max"
     },
     {

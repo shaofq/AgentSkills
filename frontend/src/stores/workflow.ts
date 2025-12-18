@@ -69,6 +69,16 @@ export const useWorkflowStore = defineStore('workflow', () => {
       model: 'qwen3-max',
       maxIters: 10,
     },
+    {
+      id: 'skill_creator_agent',
+      name: 'SkillCreator',
+      type: 'skill-creator',
+      description: '技能创建智能体 - 创建新的Skill技能包',
+      systemPrompt: '你是一个专业的技能创建助手SkillCreator。你的专长是创建新的Skill技能包，设计技能结构和编写SKILL.md文档。',
+      skills: ['skill-creator'],
+      model: 'qwen3-max',
+      maxIters: 30,
+    },
   ]
 
   const selectedNode = computed(() => {

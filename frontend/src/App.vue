@@ -35,6 +35,7 @@ const defaultMenuConfigs: MenuConfig[] = [
   { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'data_flow', description: '数据分析和可视化助手。', model: 'qwen3-max' },
   { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent', apiType: 'policy-qa', apiUrl: 'http://localhost:8000/api/policy-qa/sync', workflowName: null, description: '公司制度问答助手。', model: 'qwen3-max' },
   { id: 'ocr-agent', name: 'OCR识别', icon: 'icon-base-info', type: 'agent', apiType: 'ocr', apiUrl: 'http://localhost:8000/api/ocr/recognize', workflowName: null, description: 'OCR 文件识别助手。', model: 'qwen3-max' },
+  { id: 'skill-creator', name: '技能创建', icon: 'icon-identity', type: 'agent', apiType: 'skill-creator', apiUrl: 'http://localhost:8000/api/skill-creator/chat', workflowName: null, description: '技能创建助手。', model: 'qwen3-max' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
   { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '查询和管理已加载的工作流', model: null },
 ]
@@ -176,6 +177,10 @@ async function onSubmit(evt: string) {
         // OCR 识别 API
         apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/ocr/recognize'
         requestBody = { file_path: evt, dpi: 144, prompt_mode: 'prompt_layout_all_en' }
+      } else if (apiType === 'skill-creator') {
+        // 技能创建 API
+        apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/skill-creator/chat'
+        requestBody = { question: evt }
       } else if (apiType === 'chat') {
         // 通用对话 API
         apiUrl = menuConfig.apiUrl || '/api/chat'
@@ -212,6 +217,33 @@ async function onSubmit(evt: string) {
       } else if (apiType === 'ocr') {
         // OCR 识别 API 返回 text 字段
         content = data.text || data.answer || 'OCR 识别完成'
+      } else if (apiType === 'skill-creator') {
+        // 技能创建 API 返回 answer 字段
+        content = data.answer || '技能创建完成'
+      } else if (apiType === 'workflow') {
+        // 工作流 API 返回可能是 JSON 数组
+        let response = data
+        try {
+          // 如果是数组，提取第一个元素的 text 字段
+          if (Array.isArray(response) && response.length > 0 && response[0].text) {
+            content = response[0].text
+          } else if (typeof response === 'string' && response.startsWith('[')) {
+            // 如果是 JSON 字符串，尝试解析
+            const parsed = JSON.parse(response)
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].text) {
+              content = parsed[0].text
+            } else {
+              content = response
+            }
+          } else if (response.response) {
+            content = response.response
+          } else {
+            content = JSON.stringify(response)
+          }
+        } catch {
+          content = typeof response === 'string' ? response : JSON.stringify(response)
+        }
+        content = content || '处理完成'
       } else {
         content = data.response || data.answer || '处理完成'
       }
@@ -280,13 +312,19 @@ async function onSubmit(evt: string) {
                 align="right"
                 :avatarConfig="{ imgSrc: 'https://matechat.gitcode.com/png/demo/userAvatar.svg' }"
               />
-              <McBubble
-                v-else
-                :content="formatContent(msg.content)"
-                :avatarConfig="{ imgSrc: 'https://matechat.gitcode.com/logo.svg' }"
-                :loading="msg.loading"
-                class="model-bubble"
-              />
+              <div v-else class="model-message">
+                <div class="model-avatar">
+                  <img src="https://matechat.gitcode.com/logo.svg" alt="AI" />
+                </div>
+                <div class="model-content">
+                  <McMarkdownCard v-if="!msg.loading" :content="formatContent(msg.content)" />
+                  <div v-else class="loading-indicator">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
+                </div>
+              </div>
             </template>
           </div>
         </McLayoutContent>
@@ -504,5 +542,98 @@ async function onSubmit(evt: string) {
   white-space: pre-wrap !important;
   word-break: break-word !important;
   line-height: 1.8 !important;
+}
+
+/* 模型消息样式 */
+.model-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.model-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.model-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.model-content {
+  flex: 1;
+  max-width: calc(100% - 48px);
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.model-content :deep(.mc-markdown-card) {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.model-content :deep(pre) {
+  background: #1e1e1e !important;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.model-content :deep(code) {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+.model-content :deep(p) {
+  margin-bottom: 12px;
+  line-height: 1.7;
+}
+
+.model-content :deep(h1),
+.model-content :deep(h2),
+.model-content :deep(h3) {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* 加载动画 */
+.loading-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.loading-indicator .dot {
+  width: 8px;
+  height: 8px;
+  background: #999;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-indicator .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-indicator .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 </style>
