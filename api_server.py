@@ -1079,7 +1079,7 @@ async def skill_creator_chat(request: PolicyQARequest):
         answer = response.content if hasattr(response, "content") else str(response)
         
         print(f"[SkillCreator] 响应: {answer[:100] if answer else 'empty'}...")
-        return {"success": True, "answer": answer}
+        return answer
         
     except Exception as e:
         import traceback
