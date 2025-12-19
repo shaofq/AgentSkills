@@ -273,9 +273,9 @@
         "height": 67
       },
       "computedPosition": {
-        "x": 886,
-        "y": 124.49999999999996,
-        "z": 0
+        "x": 964.3333333333334,
+        "y": 226.99999999999994,
+        "z": 1000
       },
       "handleBounds": {
         "source": null,
@@ -286,65 +286,20 @@
             "nodeId": "node_1766109070495_hzqmhswww",
             "position": "left",
             "x": -6.00006103515625,
-            "y": 27.5,
+            "y": 27.500012715657554,
             "width": 12,
             "height": 12
           }
         ]
       },
-      "selected": false,
+      "selected": true,
       "dragging": false,
       "resizing": false,
       "initialized": false,
       "isParent": false,
       "position": {
-        "x": 886,
-        "y": 124.49999999999996
-      },
-      "data": {
-        "label": "输出结果",
-        "icon": "📤",
-        "color": "bg-orange-500"
-      },
-      "events": {},
-      "sourcePosition": "right",
-      "targetPosition": "left"
-    },
-    {
-      "id": "node_1766109079178_bhcamqv1q",
-      "type": "output",
-      "dimensions": {
-        "width": 140,
-        "height": 67
-      },
-      "computedPosition": {
-        "x": 912.5,
-        "y": 338.66666666666663,
-        "z": 0
-      },
-      "handleBounds": {
-        "source": null,
-        "target": [
-          {
-            "id": null,
-            "type": "target",
-            "nodeId": "node_1766109079178_bhcamqv1q",
-            "position": "left",
-            "x": -5.999959309895834,
-            "y": 27.5,
-            "width": 12,
-            "height": 12
-          }
-        ]
-      },
-      "selected": false,
-      "dragging": false,
-      "resizing": false,
-      "initialized": false,
-      "isParent": false,
-      "position": {
-        "x": 912.5,
-        "y": 338.66666666666663
+        "x": 964.3333333333334,
+        "y": 226.99999999999994
       },
       "data": {
         "label": "输出结果",
@@ -932,9 +887,9 @@
           "height": 67
         },
         "computedPosition": {
-          "x": 886,
-          "y": 124.49999999999996,
-          "z": 0
+          "x": 964.3333333333334,
+          "y": 226.99999999999994,
+          "z": 1000
         },
         "handleBounds": {
           "source": null,
@@ -945,20 +900,20 @@
               "nodeId": "node_1766109070495_hzqmhswww",
               "position": "left",
               "x": -6.00006103515625,
-              "y": 27.5,
+              "y": 27.500012715657554,
               "width": 12,
               "height": 12
             }
           ]
         },
-        "selected": false,
+        "selected": true,
         "dragging": false,
         "resizing": false,
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 886,
-          "y": 124.49999999999996
+          "x": 964.3333333333334,
+          "y": 226.99999999999994
         },
         "data": {
           "label": "输出结果",
@@ -971,14 +926,14 @@
       },
       "sourceX": 811.0000406901042,
       "sourceY": 145.00000762939453,
-      "targetX": 879.9999389648438,
-      "targetY": 157.99999999999994
+      "targetX": 958.3332722981771,
+      "targetY": 260.5000127156575
     },
     {
-      "id": "edge_node_1766109063446_4hsf3gxd5_node_1766109079178_bhcamqv1q",
+      "id": "edge_node_1766109063446_4hsf3gxd5_node_1766109070495_hzqmhswww",
       "type": "default",
       "source": "node_1766109063446_4hsf3gxd5",
-      "target": "node_1766109079178_bhcamqv1q",
+      "target": "node_1766109070495_hzqmhswww",
       "sourceHandle": null,
       "targetHandle": null,
       "data": {},
@@ -1058,16 +1013,16 @@
         "targetPosition": "left"
       },
       "targetNode": {
-        "id": "node_1766109079178_bhcamqv1q",
+        "id": "node_1766109070495_hzqmhswww",
         "type": "output",
         "dimensions": {
           "width": 140,
           "height": 67
         },
         "computedPosition": {
-          "x": 912.5,
-          "y": 338.66666666666663,
-          "z": 0
+          "x": 964.3333333333334,
+          "y": 226.99999999999994,
+          "z": 1000
         },
         "handleBounds": {
           "source": null,
@@ -1075,23 +1030,23 @@
             {
               "id": null,
               "type": "target",
-              "nodeId": "node_1766109079178_bhcamqv1q",
+              "nodeId": "node_1766109070495_hzqmhswww",
               "position": "left",
-              "x": -5.999959309895834,
-              "y": 27.5,
+              "x": -6.00006103515625,
+              "y": 27.500012715657554,
               "width": 12,
               "height": 12
             }
           ]
         },
-        "selected": false,
+        "selected": true,
         "dragging": false,
         "resizing": false,
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 912.5,
-          "y": 338.66666666666663
+          "x": 964.3333333333334,
+          "y": 226.99999999999994
         },
         "data": {
           "label": "输出结果",
@@ -1104,10 +1059,10 @@
       },
       "sourceX": 810.0000406901042,
       "sourceY": 353.50002034505206,
-      "targetX": 906.5000406901041,
-      "targetY": 372.16666666666663
+      "targetX": 958.3332722981771,
+      "targetY": 260.5000127156575
     }
   ],
   "createdAt": "2025-12-19T02:14:31.791Z",
-  "updatedAt": "2025-12-19T02:14:31.791Z"
+  "updatedAt": "2025-12-19T02:44:08.924Z"
 }

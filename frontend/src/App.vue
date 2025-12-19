@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Button } from 'vue-devui/button'
 import 'vue-devui/button/style.css'
 import FlowCanvas from './components/FlowCanvas.vue'
@@ -9,6 +9,7 @@ import Toolbar from './components/Toolbar.vue'
 import LeftMenu from './components/LeftMenu.vue'
 import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
+import LoginDialog from './components/LoginDialog.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -74,6 +75,42 @@ const currentAgent = computed(() => {
     description: ['通用对话助手，可以回答各种问题。', '支持多轮对话和上下文理解。'],
     model: 'deepseek-ai/DeepSeek-R1'
   }
+})
+
+// 登录状态
+const isLoggedIn = ref(false)
+const currentUser = ref<{ username: string } | null>(null)
+
+// 检查登录状态
+function checkLoginStatus() {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      currentUser.value = user
+      isLoggedIn.value = true
+    } catch {
+      isLoggedIn.value = false
+    }
+  }
+}
+
+// 登录成功处理
+function handleLoginSuccess(user: { username: string }) {
+  currentUser.value = user
+  isLoggedIn.value = true
+}
+
+// 退出登录
+function handleLogout() {
+  localStorage.removeItem('user')
+  currentUser.value = null
+  isLoggedIn.value = false
+}
+
+// 组件挂载时检查登录状态
+onMounted(() => {
+  checkLoginStatus()
 })
 
 // 对话相关状态
@@ -272,9 +309,12 @@ async function onSubmit(evt: string) {
 </script>
 
 <template>
-  <div class="h-screen w-screen flex">
+  <!-- 登录对话框 -->
+  <LoginDialog v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
+  
+  <div v-else class="h-screen w-screen flex">
     <!-- 左侧菜单 -->
-    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" />
+    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" @logout="handleLogout" />
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden">

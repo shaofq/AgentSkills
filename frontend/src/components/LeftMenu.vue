@@ -4,7 +4,12 @@ import { ref, onMounted, computed } from 'vue'
 const emit = defineEmits<{
   (e: 'select', menu: string): void
   (e: 'menuLoaded', menus: MenuItem[]): void
+  (e: 'logout'): void
 }>()
+
+function handleLogout() {
+  emit('logout')
+}
 
 const props = defineProps<{
   activeMenu: string
@@ -186,6 +191,21 @@ function selectMenu(item: MenuItem) {
       <div class="flex items-center justify-around mt-3 pt-3 border-t border-gray-700">
         <i class="icon-language text-gray-400 hover:text-white cursor-pointer text-lg" title="语言"></i>
         <i class="icon-setting text-gray-400 hover:text-white cursor-pointer text-lg" title="设置"></i>
+        <svg 
+          class="w-5 h-5 text-gray-400 hover:text-red-400 cursor-pointer transition-colors" 
+          title="退出登录"
+          @click="handleLogout"
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="2" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
       </div>
     </div>
   </div>
