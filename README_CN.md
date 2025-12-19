@@ -1,5 +1,5 @@
 # 🤖 LowCode AI - 智能体可视化编排平台
-请帮我根据amisdocinfo目录中的说明文档，创建一个skill ，该skill主要能生成amis代码
+
 <p align="center">
   <strong>基于 AgentScope 的多智能体可视化编排系统</strong>
 </p>
@@ -221,7 +221,9 @@ pip install -r requirements.txt
 # 从 PDF 生成技能
 skill-seekers pdf --pdf docs/document.pdf --name my-skill
 ```
-
+帮我创建一个具有订舱技能的技能包，该技能包括：
+1、可以收集客户提交的订舱数据，调用订舱api接口把数据写入业务系统，api接口说明哪些是必填项、字段的字数、字段的类型要求等控制，如果提交的数据不符合规范要让客户进行调整
+2、可以为客户提供查询订舱状态的功能，客户可以通过提单号查询订舱状态
 ---
 
 ## 📄 License

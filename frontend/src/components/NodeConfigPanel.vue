@@ -26,6 +26,33 @@ const localConfig = ref({
   // 分类器节点配置
   classifierModel: 'qwen3-max',
   classifierCategories: [] as { id: string; name: string; description: string }[],
+  // 技能智能体配置
+  skillAgentSkills: [] as string[],
+  skillAgentModel: 'qwen3-max',
+  skillAgentMaxIters: 30,
+  skillAgentSystemPrompt: '',
+})
+
+// 可用技能列表（从后端加载）
+const availableSkillList = ref<{ name: string; path: string; description: string }[]>([])
+
+// 加载可用技能列表
+async function loadAvailableSkills() {
+  try {
+    const response = await fetch('http://localhost:8000/api/skills')
+    if (response.ok) {
+      const data = await response.json()
+      availableSkillList.value = data.skills || []
+    }
+  } catch (e) {
+    console.error('加载技能列表失败:', e)
+  }
+}
+
+// 组件挂载时加载技能列表
+import { onMounted } from 'vue'
+onMounted(() => {
+  loadAvailableSkills()
 })
 
 const activeTab = ref<'basic' | 'advanced' | 'variables'>('basic')
@@ -50,6 +77,33 @@ watch(selectedNode, (node) => {
       parallelDescription: '',
       classifierModel: 'qwen3-max',
       classifierCategories: [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
+    }
+  } else if (node?.data?.skillAgentConfig) {
+    // 技能智能体配置
+    const config = node.data.skillAgentConfig
+    localConfig.value = {
+      name: node.data.label,
+      systemPrompt: '',
+      skills: [],
+      model: 'qwen3-max',
+      maxIters: 30,
+      temperature: 0.7,
+      enableThinking: false,
+      stream: true,
+      customParams: [],
+      inputVariables: [],
+      conditionExpression: '',
+      parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
+      skillAgentSkills: config.skills || [],
+      skillAgentModel: config.model || 'qwen3-max',
+      skillAgentMaxIters: config.maxIters || 30,
+      skillAgentSystemPrompt: config.systemPrompt || '',
     }
   } else if (node?.data?.conditionConfig) {
     // 条件节点配置
@@ -69,6 +123,10 @@ watch(selectedNode, (node) => {
       parallelDescription: '',
       classifierModel: 'qwen3-max',
       classifierCategories: [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
     }
   } else if (node?.data?.classifierConfig) {
     // 分类器节点配置
@@ -88,6 +146,10 @@ watch(selectedNode, (node) => {
       parallelDescription: '',
       classifierModel: config.model || 'qwen3-max',
       classifierCategories: config.categories || [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
     }
   } else if (node) {
     localConfig.value = {
@@ -105,6 +167,10 @@ watch(selectedNode, (node) => {
       parallelDescription: '',
       classifierModel: 'qwen3-max',
       classifierCategories: [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
     }
   }
   activeTab.value = 'basic'
@@ -155,6 +221,20 @@ function handleSave() {
           classifierConfig: {
             model: localConfig.value.classifierModel,
             categories: localConfig.value.classifierCategories,
+          },
+        },
+      })
+    } else if (nodeType === 'skill-agent') {
+      // 技能智能体节点
+      store.updateNode(selectedNode.value.id, {
+        data: {
+          ...selectedNode.value.data,
+          label: localConfig.value.name,
+          skillAgentConfig: {
+            skills: localConfig.value.skillAgentSkills,
+            model: localConfig.value.skillAgentModel,
+            maxIters: localConfig.value.skillAgentMaxIters,
+            systemPrompt: localConfig.value.skillAgentSystemPrompt,
           },
         },
       })
@@ -393,6 +473,106 @@ const availableModels = [
                 <li>每个分类对应一个输出连接点</li>
                 <li>根据分类结果路由到不同的下游节点</li>
                 <li>分类描述越详细，分类越准确</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+      
+      <!-- 技能智能体配置 -->
+      <template v-if="selectedNode.type === 'skill-agent'">
+        <!-- 技能选择 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">选择技能 <span class="text-red-500">*</span></label>
+            <button 
+              @click="loadAvailableSkills"
+              class="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+            >刷新列表</button>
+          </div>
+          
+          <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
+            <div v-if="availableSkillList.length === 0" class="text-center py-4 text-gray-400 text-sm">
+              <p>暂无可用技能</p>
+              <p class="text-xs mt-1">请在 skill 目录下创建技能</p>
+            </div>
+            <label 
+              v-for="skill in availableSkillList" 
+              :key="skill.name"
+              class="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+              :class="{ 'bg-emerald-50 border border-emerald-200': localConfig.skillAgentSkills[0] === skill.name }"
+            >
+              <input 
+                type="radio" 
+                name="skillAgent"
+                :value="skill.name"
+                :checked="localConfig.skillAgentSkills[0] === skill.name"
+                @change="localConfig.skillAgentSkills = [skill.name]"
+                class="mt-0.5 border-gray-300 text-emerald-500 focus:ring-emerald-500"
+              />
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-700">{{ skill.name }}</div>
+                <div class="text-xs text-gray-500 truncate">{{ skill.description || '无描述' }}</div>
+              </div>
+            </label>
+          </div>
+          
+          <div v-if="localConfig.skillAgentSkills.length > 0" class="mt-2 text-xs text-gray-500">
+            已选择: {{ localConfig.skillAgentSkills[0] }}
+          </div>
+        </div>
+
+        <!-- 模型选择 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">模型</label>
+          <select 
+            v-model="localConfig.skillAgentModel"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+          >
+            <option v-for="model in availableModels" :key="model" :value="model">
+              {{ model }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 最大迭代次数 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">最大迭代次数</label>
+          <input 
+            v-model.number="localConfig.skillAgentMaxIters"
+            type="number"
+            min="1"
+            max="100"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+          />
+        </div>
+
+        <!-- 自定义系统提示词 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            系统提示词 <span class="text-gray-400 text-xs">(可选)</span>
+          </label>
+          <textarea 
+            v-model="localConfig.skillAgentSystemPrompt"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
+            placeholder="留空则根据选择的技能自动生成..."
+          ></textarea>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-emerald-700">
+              <p class="font-medium mb-1">技能智能体：</p>
+              <ul class="space-y-1 list-disc list-inside">
+                <li>选择一个或多个技能来增强智能体能力</li>
+                <li>技能会自动加载到智能体的工具集中</li>
+                <li>执行时会根据技能动态创建智能体</li>
+                <li>可自定义系统提示词或使用自动生成</li>
               </ul>
             </div>
           </div>

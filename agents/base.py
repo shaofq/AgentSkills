@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 """Base agent class for all specialized agents."""
-from typing import List, Optional
+import os
+from typing import List, Optional, Dict, Any
 from agentscope.agent import ReActAgent
 from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
 from agentscope.model import DashScopeChatModel
 from agentscope.tool import Toolkit, execute_shell_command, execute_python_code, view_text_file
+
+
+# 技能目录的基础路径
+SKILL_BASE_PATH = "./skill"
 
 
 class BaseAgent:
@@ -70,3 +75,196 @@ class BaseAgent:
     def sys_prompt(self):
         """Get the agent's system prompt."""
         return self.agent.sys_prompt
+
+
+def get_available_skills() -> List[Dict[str, Any]]:
+    """
+    获取所有可用的技能列表。
+    
+    Returns:
+        技能信息列表，每个技能包含 name, path, description
+    """
+    skills = []
+    
+    if not os.path.exists(SKILL_BASE_PATH):
+        return skills
+    
+    for skill_dir_name in os.listdir(SKILL_BASE_PATH):
+        skill_path = os.path.join(SKILL_BASE_PATH, skill_dir_name)
+        skill_md_path = os.path.join(skill_path, "SKILL.md")
+        
+        if os.path.isdir(skill_path) and os.path.exists(skill_md_path):
+            # 读取 SKILL.md 获取 name 和 description
+            skill_name = skill_dir_name  # 默认使用目录名
+            description = ""
+            try:
+                with open(skill_md_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    lines = content.strip().split("\n")
+                    
+                    # 解析 YAML frontmatter 格式 (--- 包裹的 YAML 块)
+                    in_frontmatter = False
+                    for line in lines:
+                        line_stripped = line.strip()
+                        
+                        if line_stripped == "---":
+                            if not in_frontmatter:
+                                in_frontmatter = True
+                                continue
+                            else:
+                                # frontmatter 结束
+                                break
+                        
+                        if in_frontmatter:
+                            # 解析 YAML 格式的 name 和 description
+                            if line_stripped.startswith("name:"):
+                                skill_name = line_stripped[5:].strip()
+                            elif line_stripped.startswith("description:"):
+                                description = line_stripped[12:].strip()
+                    
+                    # 如果没有 frontmatter，尝试旧的解析方式
+                    if not description:
+                        for line in lines:
+                            line_stripped = line.strip()
+                            if line_stripped.startswith("# "):
+                                description = line_stripped[2:].strip()
+                                break
+                            elif line_stripped and not line_stripped.startswith("---"):
+                                description = line_stripped[:100]
+                                break
+            except Exception:
+                pass
+            
+            skills.append({
+                "name": skill_name,
+                "path": skill_path,
+                "description": description,
+            })
+    
+    return skills
+
+
+def create_agent_by_skills(
+    name: str,
+    skill_names: List[str],
+    sys_prompt: Optional[str] = None,
+    api_key: str = "",
+    model_name: str = "qwen3-max",
+    max_iters: int = 30,
+) -> BaseAgent:
+    """
+    根据技能名称动态创建智能体的工厂函数。
+    
+    Args:
+        name: 智能体名称
+        skill_names: 技能名称列表（不需要完整路径，只需技能目录名）
+        sys_prompt: 系统提示词，如果不提供则自动生成
+        api_key: API 密钥
+        model_name: 模型名称
+        max_iters: 最大迭代次数
+        
+    Returns:
+        配置好的 BaseAgent 实例
+        
+    Example:
+        >>> agent = create_agent_by_skills(
+        ...     name="BookingAgent",
+        ...     skill_names=["booking-skill"],
+        ...     api_key="your-api-key",
+        ... )
+        >>> response = await agent(Msg("user", "我要订舱", "user"))
+    """
+    # 将技能名称转换为完整路径
+    skill_paths = []
+    skill_descriptions = []
+    
+    for skill_name in skill_names:
+        # 支持完整路径或仅技能名称
+        if os.path.isabs(skill_name) or skill_name.startswith("./"):
+            skill_path = skill_name
+        else:
+            skill_path = os.path.join(SKILL_BASE_PATH, skill_name)
+        
+        if os.path.exists(skill_path):
+            skill_paths.append(skill_path)
+            
+            # 读取技能描述用于生成系统提示词
+            skill_md_path = os.path.join(skill_path, "SKILL.md")
+            if os.path.exists(skill_md_path):
+                try:
+                    with open(skill_md_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        lines = content.strip().split("\n")
+                        for line in lines:
+                            line = line.strip()
+                            if line.startswith("# "):
+                                skill_descriptions.append(line[2:].strip())
+                                break
+                except Exception:
+                    skill_descriptions.append(skill_name)
+            else:
+                skill_descriptions.append(skill_name)
+        else:
+            print(f"[Warning] 技能路径不存在: {skill_path}")
+    
+    # 如果没有提供系统提示词，自动生成
+    if not sys_prompt:
+        if skill_descriptions:
+            skills_text = "、".join(skill_descriptions)
+            sys_prompt = f"""你是一个专业的智能助手 {name}，具备以下技能：
+{skills_text}
+
+请根据用户的需求，灵活运用你的技能来帮助用户完成任务。
+在回答时请保持专业、友好，并确保信息准确。"""
+        else:
+            sys_prompt = f"你是一个专业的智能助手 {name}，请帮助用户完成各种任务。"
+    
+    return BaseAgent(
+        name=name,
+        sys_prompt=sys_prompt,
+        skills=skill_paths,
+        api_key=api_key,
+        model_name=model_name,
+        max_iters=max_iters,
+    )
+
+
+def create_agent_from_config(config: Dict[str, Any], api_key: str = "") -> BaseAgent:
+    """
+    根据配置字典创建智能体。
+    
+    Args:
+        config: 智能体配置字典，包含以下字段：
+            - name: 智能体名称
+            - skills: 技能名称列表
+            - systemPrompt: 系统提示词（可选）
+            - model: 模型名称（可选，默认 qwen3-max）
+            - maxIters: 最大迭代次数（可选，默认 30）
+        api_key: API 密钥
+        
+    Returns:
+        配置好的 BaseAgent 实例
+        
+    Example:
+        >>> config = {
+        ...     "name": "BookingAgent",
+        ...     "skills": ["booking-skill"],
+        ...     "systemPrompt": "你是订舱助手",
+        ...     "model": "qwen3-max",
+        ... }
+        >>> agent = create_agent_from_config(config, api_key="your-key")
+    """
+    name = config.get("name", "Agent")
+    skills = config.get("skills", [])
+    sys_prompt = config.get("systemPrompt") or config.get("sys_prompt")
+    model_name = config.get("model") or config.get("model_name", "qwen3-max")
+    max_iters = config.get("maxIters") or config.get("max_iters", 30)
+    
+    return create_agent_by_skills(
+        name=name,
+        skill_names=skills,
+        sys_prompt=sys_prompt,
+        api_key=api_key,
+        model_name=model_name,
+        max_iters=max_iters,
+    )

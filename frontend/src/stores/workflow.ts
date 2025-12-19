@@ -93,7 +93,9 @@ export const useWorkflowStore = defineStore('workflow', () => {
   function updateNode(id: string, data: Partial<WorkflowNode>) {
     const index = nodes.value.findIndex(n => n.id === id)
     if (index !== -1) {
-      nodes.value[index] = { ...nodes.value[index], ...data }
+      // 使用深拷贝确保响应式更新
+      const updatedNode = JSON.parse(JSON.stringify({ ...nodes.value[index], ...data }))
+      nodes.value.splice(index, 1, updatedNode)
     }
   }
 

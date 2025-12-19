@@ -13,13 +13,18 @@ const nodeTypes = [
   },
   {
     category: '智能体',
-    items: store.predefinedAgents.map(agent => ({
-      type: 'agent',
-      label: agent.name,
-      icon: getAgentIcon(agent.type),
-      color: getAgentColor(agent.type),
-      agentConfig: agent,
-    }))
+    items: [
+      // 通用技能智能体
+      { type: 'skill-agent', label: '技能智能体', icon: '🎯', color: 'bg-emerald-500' },
+      // 预定义智能体
+      ...store.predefinedAgents.map(agent => ({
+        type: 'agent',
+        label: agent.name,
+        icon: getAgentIcon(agent.type),
+        color: getAgentColor(agent.type),
+        agentConfig: agent,
+      }))
+    ]
   },
   {
     category: '流程控制',

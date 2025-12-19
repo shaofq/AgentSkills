@@ -42,15 +42,23 @@ export interface ClassifierConfig {
   categories: ClassifierCategory[]
 }
 
+export interface SkillAgentConfig {
+  skills: string[]
+  model: string
+  maxIters: number
+  systemPrompt?: string
+}
+
 export interface WorkflowNode {
   id: string
-  type: 'agent' | 'input' | 'output' | 'condition' | 'parallel' | 'classifier'
+  type: 'agent' | 'input' | 'output' | 'condition' | 'parallel' | 'classifier' | 'skill-agent'
   position: { x: number; y: number }
   data: {
     label: string
     agentConfig?: AgentConfig
     conditionConfig?: ConditionConfig
     classifierConfig?: ClassifierConfig
+    skillAgentConfig?: SkillAgentConfig
     [key: string]: any
   }
 }

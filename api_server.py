@@ -20,7 +20,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from agentscope.message import Msg
-from agents.base import BaseAgent
+from agents.base import BaseAgent, get_available_skills, create_agent_by_skills
 from agents.simple import SimpleAgent
 from agents.router import RouterAgent
 from agents.policy_qa_agent import PolicyQAAgent
@@ -248,13 +248,6 @@ async def get_agents():
     ]
 
 
-@app.get("/api/skills", response_model=List[str])
-async def get_skills():
-    """获取可用的技能列表"""
-    skill_dir = "./skill"
-    if os.path.exists(skill_dir):
-        return [d for d in os.listdir(skill_dir) if os.path.isdir(os.path.join(skill_dir, d)) and not d.startswith('.')]
-    return ["amis-code-assistant", "pptx", "data-analysis", "company-policy-qa"]
 
 
 @app.get("/api/workflows", response_model=List[Workflow])
@@ -427,6 +420,13 @@ class PredefinedWorkflowRequest(BaseModel):
 async def get_menu_bindings():
     """获取菜单绑定配置"""
     return menu_bindings_config
+
+
+@app.get("/api/skills")
+async def get_skills():
+    """获取所有可用的技能列表"""
+    skills = get_available_skills()
+    return {"skills": skills, "total": len(skills)}
 
 
 class MenuBindingUpdate(BaseModel):
@@ -769,6 +769,37 @@ async def test_workflow(request: WorkflowTestRequest):
                             yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched_category['name'] if matched_category else 'None', 'input': input_data[:100]})}\n\n"
                         
                         output = input_data
+                    
+                    elif node_type == "skill-agent":
+                        # 技能智能体节点：根据配置的技能动态创建智能体
+                        skill_config = node.get("data", {}).get("skillAgentConfig", {})
+                        skills = skill_config.get("skills", [])
+                        model = skill_config.get("model", "qwen3-max")
+                        max_iters = skill_config.get("maxIters", 30)
+                        sys_prompt = skill_config.get("systemPrompt", "")
+                        
+                        if skills:
+                            # 使用工厂函数创建智能体
+                            skill_agent = create_agent_by_skills(
+                                name=node_label,
+                                skill_names=skills,
+                                sys_prompt=sys_prompt if sys_prompt else None,
+                                api_key=API_KEY,
+                                model_name=model,
+                                max_iters=max_iters,
+                            )
+                            
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'使用技能: {", ".join(skills)}'})}\n\n"
+                            
+                            response = await skill_agent(Msg("user", input_data, "user"))
+                            result = response.content if hasattr(response, "content") else str(response)
+                            # 处理返回值可能是列表的情况
+                            if isinstance(result, list):
+                                result = result[0].get("text", str(result[0])) if result else ""
+                            output = str(result)
+                        else:
+                            output = input_data
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': '警告: 未配置技能'})}\n\n"
                     
                     elif node_type == "parallel":
                         context["parallel_mode"] = True

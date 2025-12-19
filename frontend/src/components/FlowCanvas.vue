@@ -11,6 +11,7 @@ import OutputNode from './nodes/OutputNode.vue'
 import ConditionNode from './nodes/ConditionNode.vue'
 import ParallelNode from './nodes/ParallelNode.vue'
 import ClassifierNode from './nodes/ClassifierNode.vue'
+import SkillAgentNode from './nodes/SkillAgentNode.vue'
 
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -22,7 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useWorkflowStore()
-const { onConnect, addEdges, onNodesChange, onEdgesChange, applyNodeChanges, applyEdgeChanges } = useVueFlow()
+const { onConnect, addEdges, onNodesChange, onEdgesChange, applyNodeChanges, applyEdgeChanges, updateNode: vueFlowUpdateNode } = useVueFlow()
 
 const nodeTypes = {
   agent: AgentNode,
@@ -31,6 +32,7 @@ const nodeTypes = {
   condition: ConditionNode,
   parallel: ParallelNode,
   classifier: ClassifierNode,
+  'skill-agent': SkillAgentNode,
 }
 
 // 使用时间戳生成唯一 ID，避免导入流程后 ID 冲突
@@ -76,6 +78,13 @@ function onDrop(event: DragEvent) {
   } else if (item.type === 'condition') {
     nodeData.conditionConfig = {
       expression: '',
+    }
+  } else if (item.type === 'skill-agent') {
+    nodeData.skillAgentConfig = {
+      skills: [],
+      model: 'qwen3-max',
+      maxIters: 30,
+      systemPrompt: '',
     }
   }
   
@@ -125,7 +134,10 @@ onEdgesChange((changes) => {
 })
 
 watch(() => store.nodes, (newNodes) => {
-  // 同步节点变化
+  // 当 store 中的节点更新时，同步到 Vue Flow
+  newNodes.forEach(node => {
+    vueFlowUpdateNode(node.id, { data: node.data })
+  })
 }, { deep: true })
 </script>
 
