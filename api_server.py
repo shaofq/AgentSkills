@@ -560,6 +560,51 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
                 print(f"[Workflow] 节点 {node_id} 输出: {output[:100] if output else 'empty'}...")
                 current_input = output
                 final_output = output
+            elif node["type"] == "classifier":
+                # 分类器节点：使用 LLM 分析输入并选择分类
+                classifier_config = node["data"].get("classifierConfig", {})
+                categories = classifier_config.get("categories", [])
+                model = classifier_config.get("model", "qwen3-max")
+                
+                if categories:
+                    # 构建分类提示词
+                    category_list = "\n".join([f"{i+1}. {cat['name']}: {cat['description']}" for i, cat in enumerate(categories)])
+                    classify_prompt = f"""请分析以下用户输入，并从给定的分类中选择最匹配的一个。
+
+用户输入：{current_input}
+
+可选分类：
+{category_list}
+
+请只返回最匹配的分类名称，不要返回其他内容。"""
+                    
+                    # 使用 LLM 进行分类
+                    from agents.base import BaseAgent
+                    classifier_agent = BaseAgent(
+                        name="Classifier",
+                        sys_prompt="你是一个分类助手，根据用户输入选择最匹配的分类。只返回分类名称，不要返回其他内容。",
+                        api_key=API_KEY,
+                        model_name=model,
+                        max_iters=1,
+                    )
+                    response = await classifier_agent(Msg("user", classify_prompt, "user"))
+                    result = response.content if hasattr(response, "content") else str(response)
+                    result = result.strip()
+                    
+                    # 匹配分类
+                    matched_category = None
+                    for cat in categories:
+                        if cat["name"] in result or result in cat["name"]:
+                            matched_category = cat
+                            break
+                    
+                    if not matched_category and categories:
+                        matched_category = categories[0]  # 默认第一个分类
+                    
+                    print(f"[Workflow] 分类器结果: {result} -> 匹配分类: {matched_category['name'] if matched_category else 'None'}")
+                    
+                    # TODO: 根据分类结果路由到不同的下游节点
+                    # 当前简化处理：继续执行
             elif node["type"] == "input":
                 current_input = user_input
             elif node["type"] == "output":
@@ -674,6 +719,57 @@ async def test_workflow(request: WorkflowTestRequest):
                         yield f"data: {json.dumps({'type': 'condition_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': result, 'expression': condition_expr})}\n\n"
                         output = input_data
                         
+                    elif node_type == "classifier":
+                        # 分类器节点：使用 LLM 分析输入并选择分类
+                        classifier_config = node.get("data", {}).get("classifierConfig", {})
+                        categories = classifier_config.get("categories", [])
+                        model = classifier_config.get("model", "qwen3-max")
+                        
+                        if categories:
+                            # 构建分类提示词
+                            category_list = "\n".join([f"{i+1}. {cat['name']}: {cat['description']}" for i, cat in enumerate(categories)])
+                            classify_prompt = f"""请分析以下用户输入，并从给定的分类中选择最匹配的一个。
+
+用户输入：{input_data}
+
+可选分类：
+{category_list}
+
+请只返回最匹配的分类名称，不要返回其他内容。"""
+                            
+                            # 使用 LLM 进行分类
+                            from agents.base import BaseAgent
+                            classifier_agent = BaseAgent(
+                                name="Classifier",
+                                sys_prompt="你是一个分类助手，根据用户输入选择最匹配的分类。只返回分类名称，不要返回其他内容。",
+                                api_key=API_KEY,
+                                model_name=model,
+                                max_iters=1,
+                            )
+                            response = await classifier_agent(Msg("user", classify_prompt, "user"))
+                            result = response.content if hasattr(response, "content") else str(response)
+                            # 处理返回值可能是列表的情况
+                            if isinstance(result, list):
+                                result = result[0].get("text", str(result[0])) if result else ""
+                            result = str(result).strip()
+                            
+                            # 匹配分类
+                            matched_category = None
+                            for cat in categories:
+                                if cat["name"] in result or result in cat["name"]:
+                                    matched_category = cat
+                                    break
+                            
+                            if not matched_category and categories:
+                                matched_category = categories[0]  # 默认第一个分类
+                            
+                            context["classifier_result"] = matched_category["id"] if matched_category else None
+                            context["classifier_category_name"] = matched_category["name"] if matched_category else None
+                            
+                            yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched_category['name'] if matched_category else 'None', 'input': input_data[:100]})}\n\n"
+                        
+                        output = input_data
+                    
                     elif node_type == "parallel":
                         context["parallel_mode"] = True
                         output = input_data
@@ -707,6 +803,25 @@ async def test_workflow(request: WorkflowTestRequest):
                             return
                     
                     if next_nodes:
+                        async for event in execute_from_node(next_nodes[0]["target"], next_input):
+                            yield event
+                
+                # 处理分类器分支路由
+                elif node_type == "classifier":
+                    classifier_result = context.get("classifier_result")
+                    next_input = context.get("original_input", output)
+                    
+                    # 根据分类结果选择对应的下游分支
+                    matched = False
+                    for next_node in next_nodes:
+                        if next_node["handle"] == classifier_result:
+                            async for event in execute_from_node(next_node["target"], next_input):
+                                yield event
+                            matched = True
+                            break
+                    
+                    # 如果没有匹配到，执行第一个分支作为默认
+                    if not matched and next_nodes:
                         async for event in execute_from_node(next_nodes[0]["target"], next_input):
                             yield event
                 

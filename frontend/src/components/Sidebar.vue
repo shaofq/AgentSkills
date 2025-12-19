@@ -24,6 +24,7 @@ const nodeTypes = [
   {
     category: '流程控制',
     items: [
+      { type: 'classifier', label: '问题分类器', icon: '🏷️', color: 'bg-cyan-500' },
       { type: 'condition', label: '条件分支', icon: '🔀', color: 'bg-yellow-500' },
       { type: 'parallel', label: '并行执行', icon: '⚡', color: 'bg-purple-500' },
     ]

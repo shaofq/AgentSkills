@@ -10,6 +10,7 @@ import InputNode from './nodes/InputNode.vue'
 import OutputNode from './nodes/OutputNode.vue'
 import ConditionNode from './nodes/ConditionNode.vue'
 import ParallelNode from './nodes/ParallelNode.vue'
+import ClassifierNode from './nodes/ClassifierNode.vue'
 
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -29,6 +30,7 @@ const nodeTypes = {
   output: OutputNode,
   condition: ConditionNode,
   parallel: ParallelNode,
+  classifier: ClassifierNode,
 }
 
 // 使用时间戳生成唯一 ID，避免导入流程后 ID 冲突
@@ -57,16 +59,31 @@ function onDrop(event: DragEvent) {
     y: event.clientY - bounds.top - 25,
   }
   
+  const nodeData: Record<string, any> = {
+    label: item.label,
+    icon: item.icon,
+    color: item.color,
+  }
+  
+  // 根据节点类型初始化配置
+  if (item.type === 'agent' && item.agentConfig) {
+    nodeData.agentConfig = item.agentConfig
+  } else if (item.type === 'classifier') {
+    nodeData.classifierConfig = {
+      model: 'qwen3-max',
+      categories: [],
+    }
+  } else if (item.type === 'condition') {
+    nodeData.conditionConfig = {
+      expression: '',
+    }
+  }
+  
   const newNode = {
     id: getId(),
     type: item.type,
     position,
-    data: {
-      label: item.label,
-      icon: item.icon,
-      color: item.color,
-      agentConfig: item.agentConfig,
-    },
+    data: nodeData,
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   }

@@ -31,14 +31,26 @@ export interface ConditionConfig {
   expression: string
 }
 
+export interface ClassifierCategory {
+  id: string
+  name: string
+  description: string
+}
+
+export interface ClassifierConfig {
+  model: string
+  categories: ClassifierCategory[]
+}
+
 export interface WorkflowNode {
   id: string
-  type: 'agent' | 'input' | 'output' | 'condition' | 'parallel'
+  type: 'agent' | 'input' | 'output' | 'condition' | 'parallel' | 'classifier'
   position: { x: number; y: number }
   data: {
     label: string
     agentConfig?: AgentConfig
     conditionConfig?: ConditionConfig
+    classifierConfig?: ClassifierConfig
     [key: string]: any
   }
 }

@@ -23,6 +23,9 @@ const localConfig = ref({
   conditionExpression: '',
   // 并行节点配置
   parallelDescription: '',
+  // 分类器节点配置
+  classifierModel: 'qwen3-max',
+  classifierCategories: [] as { id: string; name: string; description: string }[],
 })
 
 const activeTab = ref<'basic' | 'advanced' | 'variables'>('basic')
@@ -45,6 +48,8 @@ watch(selectedNode, (node) => {
       inputVariables: config.inputVariables || [],
       conditionExpression: '',
       parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
     }
   } else if (node?.data?.conditionConfig) {
     // 条件节点配置
@@ -62,6 +67,27 @@ watch(selectedNode, (node) => {
       inputVariables: [],
       conditionExpression: config.expression || '',
       parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
+    }
+  } else if (node?.data?.classifierConfig) {
+    // 分类器节点配置
+    const config = node.data.classifierConfig
+    localConfig.value = {
+      name: node.data.label,
+      systemPrompt: '',
+      skills: [],
+      model: 'qwen3-max',
+      maxIters: 30,
+      temperature: 0.7,
+      enableThinking: false,
+      stream: true,
+      customParams: [],
+      inputVariables: [],
+      conditionExpression: '',
+      parallelDescription: '',
+      classifierModel: config.model || 'qwen3-max',
+      classifierCategories: config.categories || [],
     }
   } else if (node) {
     localConfig.value = {
@@ -77,6 +103,8 @@ watch(selectedNode, (node) => {
       inputVariables: [],
       conditionExpression: '',
       parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
     }
   }
   activeTab.value = 'basic'
@@ -118,6 +146,18 @@ function handleSave() {
           },
         },
       })
+    } else if (nodeType === 'classifier') {
+      // 分类器节点
+      store.updateNode(selectedNode.value.id, {
+        data: {
+          ...selectedNode.value.data,
+          label: localConfig.value.name,
+          classifierConfig: {
+            model: localConfig.value.classifierModel,
+            categories: localConfig.value.classifierCategories,
+          },
+        },
+      })
     } else {
       // 其他节点（input, output, parallel）
       store.updateNode(selectedNode.value.id, {
@@ -145,6 +185,15 @@ function addInputVariable() {
 
 function removeInputVariable(index: number) {
   localConfig.value.inputVariables.splice(index, 1)
+}
+
+function addClassifierCategory() {
+  const id = `cat_${Date.now()}`
+  localConfig.value.classifierCategories.push({ id, name: '', description: '' })
+}
+
+function removeClassifierCategory(index: number) {
+  localConfig.value.classifierCategories.splice(index, 1)
 }
 
 function handleDelete() {
@@ -258,6 +307,92 @@ const availableModels = [
                 <li>所有下游分支将同时并行执行</li>
                 <li>适用于需要同时处理多个任务的场景</li>
                 <li>执行结果会自动合并后输出</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 分类器节点配置 -->
+      <template v-if="selectedNode.type === 'classifier'">
+        <!-- 模型选择 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">分类模型</label>
+          <select 
+            v-model="localConfig.classifierModel"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+          >
+            <option v-for="model in availableModels" :key="model" :value="model">
+              {{ model }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 分类列表 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">分类 <span class="text-red-500">*</span></label>
+            <button 
+              @click="addClassifierCategory"
+              class="text-xs text-cyan-600 hover:text-cyan-700 font-medium"
+            >+ 添加分类</button>
+          </div>
+          
+          <div class="space-y-3">
+            <div 
+              v-for="(category, index) in localConfig.classifierCategories" 
+              :key="category.id"
+              class="p-3 bg-gray-50 rounded-lg border border-gray-200"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-medium text-gray-500">分类 {{ index + 1 }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400">{{ index + 1 }}</span>
+                  <button 
+                    @click="removeClassifierCategory(index)"
+                    class="p-1 text-red-500 hover:bg-red-100 rounded"
+                    title="删除分类"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <input 
+                v-model="category.name"
+                type="text"
+                placeholder="分类名称"
+                class="w-full px-3 py-2 mb-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+              />
+              <textarea 
+                v-model="category.description"
+                rows="2"
+                placeholder="分类描述（用于 LLM 判断分类条件）"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none resize-none"
+              ></textarea>
+            </div>
+            
+            <div v-if="localConfig.classifierCategories.length === 0" class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
+              <p>暂无分类</p>
+              <p class="text-xs mt-1">点击上方"添加分类"按钮创建</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-cyan-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-cyan-700">
+              <p class="font-medium mb-1">问题分类器：</p>
+              <ul class="space-y-1 list-disc list-inside">
+                <li>使用 LLM 智能分析用户输入并分类</li>
+                <li>每个分类对应一个输出连接点</li>
+                <li>根据分类结果路由到不同的下游节点</li>
+                <li>分类描述越详细，分类越准确</li>
               </ul>
             </div>
           </div>

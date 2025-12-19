@@ -1,7 +1,7 @@
 {
   "id": "workflow_1766038947662",
-  "name": "ocr文件识别工作流(pdf或者图片)",
-  "description": "",
+  "name": "ocr文件识别工作流",
+  "description": "实现通过本地ocr模型对pdf或者图片文件进行识别",
   "nodes": [
     {
       "id": "node_0",
