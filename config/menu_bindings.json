@@ -4,17 +4,7 @@
       "id": "user-functions",
       "name": "AI助手",
       "menus": [
-        {
-          "id": "chat",
-          "name": "对话",
-          "icon": "icon-message",
-          "type": "chat",
-          "apiType": "chat",
-          "apiUrl": "/api/chat",
-          "workflowName": null,
-          "description": "通用对话助手，可以回答各种问题。支持多轮对话和上下文理解。",
-          "model": "deepseek-ai/DeepSeek-R1"
-        },
+       
         {
           "id": "code-agent",
           "name": "代码助手",
