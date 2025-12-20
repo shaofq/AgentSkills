@@ -26,9 +26,22 @@ class ClassifierService:
         """获取或创建分类智能体"""
         from agents.base import BaseAgent
         
+        sys_prompt = """你是一个专业的意图分类助手。你的任务是准确理解用户的真实意图，并将其归类到最合适的类别。
+
+分类原则：
+1. 关注用户的核心需求，而非表面用词
+2. "咨询"、"查询"、"了解"、"问"等词通常表示信息获取类需求
+3. "生成"、"创建"、"开发"、"编写代码"、"做一个页面"等词通常表示技术开发类需求
+4. 如果用户询问某个制度、政策、规定的具体内容，属于信息咨询
+5. 如果用户要求制作工具、系统、页面、程序，属于技术开发
+
+输出要求：
+- 只输出分类名称，不要输出任何解释或其他内容
+- 分类名称必须与给定选项完全一致"""
+        
         return BaseAgent(
             name="Classifier",
-            sys_prompt="你是一个分类助手，根据用户输入选择最匹配的分类。只返回分类名称，不要返回其他内容。",
+            sys_prompt=sys_prompt,
             api_key=self.api_key,
             model_name=model or self.default_model,
             max_iters=1,
@@ -56,18 +69,24 @@ class ClassifierService:
         
         # 构建分类提示词
         category_list = "\n".join([
-            f"{i+1}. {cat['name']}: {cat.get('description', '')}" 
-            for i, cat in enumerate(categories)
+            f"- **{cat['name']}**: {cat.get('description', '')}" 
+            for cat in categories
         ])
         
-        classify_prompt = f"""请分析以下用户输入，并从给定的分类中选择最匹配的一个。
+        classify_prompt = f"""请分析用户输入的真实意图，并选择最匹配的分类。
 
-用户输入：{input_text}
+## 用户输入
+{input_text}
 
-可选分类：
+## 可选分类
 {category_list}
 
-请只返回最匹配的分类名称，不要返回其他内容。"""
+## 分类决策
+请根据用户的核心需求进行分类。注意区分：
+- 如果用户是在"询问/咨询/了解"某个信息或规定，选择信息咨询类
+- 如果用户是要"制作/开发/生成"某个功能或代码，选择技术开发类
+
+请直接输出分类名称："""
         
         # 调用 LLM 进行分类
         from agentscope.message import Msg

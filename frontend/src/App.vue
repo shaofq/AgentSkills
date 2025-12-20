@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { Button } from 'vue-devui/button'
 import 'vue-devui/button/style.css'
 import FlowCanvas from './components/FlowCanvas.vue'
@@ -138,6 +138,41 @@ interface Message {
 }
 
 const messages = ref<Message[]>([])
+const messagesContainer = ref<HTMLElement | null>(null)
+const thinkingCollapsed = ref<Record<number, boolean>>({})
+
+// 自动滚动到底部
+function scrollToBottom() {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
+
+// 监听消息变化，自动滚动
+watch(
+  () => messages.value.length,
+  () => {
+    scrollToBottom()
+  }
+)
+
+// 监听消息内容变化（流式更新时）
+watch(
+  () => {
+    const lastMsg = messages.value[messages.value.length - 1]
+    return lastMsg ? (lastMsg.content?.length || 0) + (lastMsg.thinkingSteps?.length || 0) : 0
+  },
+  () => {
+    scrollToBottom()
+  }
+)
+
+// 切换思考过程折叠状态
+function toggleThinking(msgIdx: number) {
+  thinkingCollapsed.value[msgIdx] = !thinkingCollapsed.value[msgIdx]
+}
 
 // 菜单选择处理
 function handleMenuSelect(menuId: string) {
@@ -471,7 +506,7 @@ async function onSubmit(evt: string) {
         </McLayoutContent>
 
         <!-- 对话内容 -->
-        <McLayoutContent class="content-container" v-else>
+        <McLayoutContent class="content-container" v-else ref="messagesContainer">
           <div class="messages-wrapper">
             <template v-for="(msg, idx) in messages" :key="idx">
               <McBubble
@@ -485,23 +520,51 @@ async function onSubmit(evt: string) {
                   <img src="https://matechat.gitcode.com/logo.svg" alt="AI" />
                 </div>
                 <div class="model-content">
-                  <!-- 思考步骤展示 -->
+                  <!-- 思考步骤展示（可折叠） -->
                   <div v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0" class="thinking-steps">
-                    <div 
-                      v-for="(step, stepIdx) in msg.thinkingSteps" 
-                      :key="stepIdx" 
-                      class="thinking-step"
-                      :class="{ 'step-done': step.status === 'done', 'step-running': step.status === 'running' }"
-                    >
-                      <div class="step-header">
-                        <span class="step-icon">
-                          <svg v-if="step.status === 'done'" class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 6L9 17l-5-5"/>
-                          </svg>
-                          <span v-else class="icon-loading"></span>
-                        </span>
-                        <span class="step-title">{{ step.message }}</span>
-                        <span class="step-time">{{ step.time }}</span>
+                    <!-- 折叠头部 -->
+                    <div class="thinking-header" @click="toggleThinking(idx)">
+                      <span class="thinking-toggle">
+                        <svg 
+                          class="toggle-icon" 
+                          :class="{ 'collapsed': thinkingCollapsed[idx] }"
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          stroke-width="2"
+                        >
+                          <path d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </span>
+                      <span class="thinking-label">
+                        <svg class="thinking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 6v6l4 2"/>
+                        </svg>
+                        思考过程
+                      </span>
+                      <span class="thinking-count">{{ msg.thinkingSteps.length }} 步</span>
+                      <span v-if="msg.loading" class="thinking-status running">进行中...</span>
+                      <span v-else class="thinking-status done">已完成</span>
+                    </div>
+                    <!-- 折叠内容 -->
+                    <div class="thinking-content" :class="{ 'collapsed': thinkingCollapsed[idx] }">
+                      <div 
+                        v-for="(step, stepIdx) in msg.thinkingSteps" 
+                        :key="stepIdx" 
+                        class="thinking-step"
+                        :class="{ 'step-done': step.status === 'done', 'step-running': step.status === 'running' }"
+                      >
+                        <div class="step-header">
+                          <span class="step-icon">
+                            <svg v-if="step.status === 'done'" class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                            <span v-else class="icon-loading"></span>
+                          </span>
+                          <span class="step-title">{{ step.message }}</span>
+                          <span class="step-time">{{ step.time }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -870,13 +933,109 @@ async function onSubmit(evt: string) {
   }
 }
 
-/* 思考步骤样式 - 参考 Manus 风格 */
+/* 思考步骤样式 - 可折叠 */
 .thinking-steps {
   margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 折叠头部 */
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.thinking-header:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.thinking-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-icon {
+  width: 16px;
+  height: 16px;
+  color: #64748b;
+  transition: transform 0.3s ease;
+}
+
+.toggle-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.thinking-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.thinking-icon {
+  width: 16px;
+  height: 16px;
+  color: #3b82f6;
+}
+
+.thinking-count {
+  font-size: 12px;
+  color: #94a3b8;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.thinking-status {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.thinking-status.running {
+  color: #3b82f6;
+  background: #dbeafe;
+}
+
+.thinking-status.done {
+  color: #22c55e;
+  background: #dcfce7;
+}
+
+/* 折叠内容 */
+.thinking-content {
+  max-height: 500px;
+  overflow-y: auto;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+  padding: 8px;
+  background: #fafafa;
+}
+
+.thinking-content.collapsed {
+  max-height: 0;
+  padding: 0 8px;
+  opacity: 0;
+  overflow: hidden;
 }
 
 .thinking-step {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.thinking-step:last-child {
+  margin-bottom: 0;
 }
 
 .step-header {
@@ -884,10 +1043,11 @@ async function onSubmit(evt: string) {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  font-size: 14px;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
   color: #333;
+  border: 1px solid #f0f0f0;
 }
 
 .step-icon {
