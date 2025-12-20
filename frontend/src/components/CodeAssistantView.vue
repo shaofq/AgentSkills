@@ -18,9 +18,9 @@ async function loadAmisSDK() {
   try {
     // 使用 amis 3.x 版本的 SDK（更稳定）
     const cssLinks = [
-      'https://unpkg.com/amis@3.6.4/lib/themes/cxd.css',
-      'https://unpkg.com/amis@3.6.4/lib/helper.css',
-      'https://unpkg.com/amis@3.6.4/sdk/iconfont.css'
+      'https://unpkg.com/amis@6.13.0/lib/themes/cxd.css',
+      'https://unpkg.com/amis@6.13.0/lib/helper.css',
+      'https://unpkg.com/amis@6.13.0/sdk/iconfont.css'
     ]
     
     for (const href of cssLinks) {
@@ -35,7 +35,7 @@ async function loadAmisSDK() {
     // 加载 amis JS SDK
     await new Promise<void>((resolve, reject) => {
       const script = document.createElement('script')
-      script.src = 'https://unpkg.com/amis@3.6.4/sdk/sdk.js'
+      script.src = 'https://unpkg.com/amis@6.13.0/sdk/sdk.js'
       script.onload = () => {
         // 等待 amis 初始化
         setTimeout(() => resolve(), 100)
