@@ -10,6 +10,7 @@ import LeftMenu from './components/LeftMenu.vue'
 import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
 import LoginDialog from './components/LoginDialog.vue'
+import CodeAssistantView from './components/CodeAssistantView.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -45,6 +46,7 @@ const menuConfigs = ref<MenuConfig[]>(defaultMenuConfigs)
 // 是否显示工作流模式
 const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
 const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
+const isCodeAssistantMode = computed(() => activeMenu.value === 'code-agent')
 
 // 菜单加载完成回调
 function handleMenuLoaded(menus: MenuConfig[]) {
@@ -320,6 +322,9 @@ async function onSubmit(evt: string) {
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- 流程查询模式 -->
       <WorkflowListDialog v-if="isWorkflowListMode" />
+      
+      <!-- 代码助手模式 -->
+      <CodeAssistantView v-else-if="isCodeAssistantMode" class="flex-1" />
       
       <!-- 对话模式 -->
       <template v-else-if="!isWorkflowMode">

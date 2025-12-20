@@ -895,6 +895,81 @@ async def test_workflow(request: WorkflowTestRequest):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+# ==================== 代码助手流式 API ====================
+
+class CodeAssistantRequest(BaseModel):
+    message: str
+    history: List[dict] = []
+
+
+@app.post("/api/code-assistant/stream")
+async def code_assistant_stream(request: CodeAssistantRequest):
+    """代码助手流式 API - 支持 amis 代码生成和实时预览"""
+    async def event_generator():
+        try:
+            user_input = request.message
+            
+            # 发送开始事件
+            yield f"data: {json.dumps({'type': 'start', 'message': '正在分析需求...'})}\n\n"
+            
+            # 创建代码生成智能体
+            code_agent = create_agent_by_skills(
+                name="CodeAssistant",
+                skill_names=["amis-generator"],
+                sys_prompt="""你是一个专业的 amis 低代码配置生成助手。
+你的任务是根据用户需求生成 amis JSON 配置。
+
+输出要求：
+1. 生成的 JSON 必须是有效的 amis 配置
+2. 使用 ```json 代码块包裹 JSON 配置
+3. 在 JSON 之前简要说明设计思路
+4. 确保生成的配置可以直接在 amis 中渲染
+
+常用组件：
+- form: 表单
+- table: 表格/CRUD
+- page: 页面容器
+- cards: 卡片列表
+- chart: 图表
+""",
+                api_key=API_KEY,
+                model_name="qwen3-max",
+                max_iters=30,
+            )
+            
+            yield f"data: {json.dumps({'type': 'thinking', 'message': '正在生成代码...'})}\n\n"
+            
+            # 调用智能体
+            response = await code_agent(Msg("user", user_input, "user"))
+            result = response.content if hasattr(response, "content") else str(response)
+            
+            # 处理返回值可能是列表的情况
+            if isinstance(result, list):
+                result = result[0].get("text", str(result[0])) if result else ""
+            
+            # 尝试提取 JSON 代码块
+            amis_json = None
+            import re
+            json_match = re.search(r'```json\s*([\s\S]*?)\s*```', str(result))
+            if json_match:
+                try:
+                    amis_json = json.loads(json_match.group(1))
+                    yield f"data: {json.dumps({'type': 'amis_code', 'code': amis_json})}\n\n"
+                except json.JSONDecodeError:
+                    pass
+            
+            # 发送完整响应
+            yield f"data: {json.dumps({'type': 'content', 'content': str(result)})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 # ==================== 制度问答智能体 API ====================
 
 class PolicyQARequest(BaseModel):
