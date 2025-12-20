@@ -635,6 +635,166 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/workflow/run/stream")
+async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
+    """执行预定义工作流（流式返回思考过程和结果）"""
+    async def event_generator():
+        try:
+            workflow_name = request.workflow_name
+            user_input = request.input
+            history = request.history or []
+            
+            if workflow_name not in predefined_workflows:
+                yield f"data: {json.dumps({'type': 'error', 'message': f'工作流 {workflow_name} 不存在'})}\n\n"
+                return
+            
+            workflow = predefined_workflows[workflow_name]
+            nodes = workflow.get("nodes", [])
+            edges = workflow.get("edges", [])
+            
+            yield f"data: {json.dumps({'type': 'thinking', 'message': '正在分析需求...'})}\n\n"
+            
+            # 构建上下文提示
+            context_prompt = ""
+            if history:
+                yield f"data: {json.dumps({'type': 'thinking', 'message': f'加载对话历史 ({len(history)} 条消息)...'})}\n\n"
+                context_prompt = "以下是之前的对话历史，请参考上下文理解用户需求：\n\n"
+                for msg in history[-10:]:
+                    role = "用户" if msg.get("role") == "user" else "助手"
+                    content = msg.get("content", "")[:500]
+                    context_prompt += f"{role}: {content}\n\n"
+                context_prompt += "---\n\n当前用户需求: "
+            
+            # 创建智能体
+            agent_nodes = [n for n in nodes if n["type"] == "agent"]
+            skill_agent_nodes = [n for n in nodes if n["type"] == "skill-agent"]
+            agents = {}
+            
+            for node in agent_nodes:
+                config = node["data"].get("agentConfig", {})
+                if config:
+                    agent_name = config.get("name", node["id"])
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化智能体: {agent_name}'})}\n\n"
+                    agent = create_agent_from_config(config, API_KEY)
+                    agents[node["id"]] = agent
+            
+            for node in skill_agent_nodes:
+                skill_config = node["data"].get("skillAgentConfig", {})
+                skills = skill_config.get("skills", [])
+                if skills:
+                    skill_names = ", ".join(skills)
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化技能智能体: {skill_names}'})}\n\n"
+                    model = skill_config.get("model", "qwen3-max")
+                    max_iters = skill_config.get("maxIters", 30)
+                    sys_prompt = skill_config.get("systemPrompt", "")
+                    agent = create_agent_by_skills(
+                        name=f"SkillAgent_{node['id']}",
+                        skill_names=skills,
+                        sys_prompt=sys_prompt,
+                        api_key=API_KEY,
+                        model_name=model,
+                        max_iters=max_iters,
+                    )
+                    agents[node["id"]] = agent
+            
+            execution_order = _get_execution_order(nodes, edges)
+            yield f"data: {json.dumps({'type': 'thinking', 'message': f'执行顺序: {len(execution_order)} 个节点'})}\n\n"
+            
+            current_input = context_prompt + user_input if context_prompt else user_input
+            final_output = ""
+            is_first_agent = True
+            
+            for node_id in execution_order:
+                node = next((n for n in nodes if n["id"] == node_id), None)
+                if not node:
+                    continue
+                
+                node_type = node.get("type")
+                node_label = node.get("data", {}).get("label", node_id)
+                
+                if node_type in ["agent", "skill-agent"] and node_id in agents:
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行: {node_label}'})}\n\n"
+                    
+                    agent = agents[node_id]
+                    agent_input = current_input
+                    
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
+                    
+                    response = await agent(Msg("user", agent_input, "user"))
+                    output = response.content if hasattr(response, "content") else str(response)
+                    
+                    # 处理返回值可能是列表的情况
+                    if isinstance(output, list):
+                        output = output[0].get("text", str(output[0])) if output else ""
+                    
+                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label} 执行完成'})}\n\n"
+                    
+                    current_input = str(output)
+                    final_output = str(output)
+                    is_first_agent = False
+                    
+                elif node_type == "classifier":
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在分类: {node_label}'})}\n\n"
+                    
+                    classifier_config = node["data"].get("classifierConfig", {})
+                    categories = classifier_config.get("categories", [])
+                    model = classifier_config.get("model", "qwen3-max")
+                    
+                    if categories:
+                        category_list = "\n".join([f"{i+1}. {cat['name']}: {cat['description']}" for i, cat in enumerate(categories)])
+                        classify_prompt = f"""请分析以下用户输入，并从给定的分类中选择最匹配的一个。
+
+用户输入：{current_input}
+
+可选分类：
+{category_list}
+
+请只返回最匹配的分类名称，不要返回其他内容。"""
+                        
+                        from agents.base import BaseAgent
+                        classifier_agent = BaseAgent(
+                            name="Classifier",
+                            sys_prompt="你是一个分类助手，根据用户输入选择最匹配的分类。只返回分类名称，不要返回其他内容。",
+                            api_key=API_KEY,
+                            model_name=model,
+                            max_iters=1,
+                        )
+                        
+                        yield f"data: {json.dumps({'type': 'thinking', 'message': '正在分析分类...'})}\n\n"
+                        
+                        response = await classifier_agent(Msg("user", classify_prompt, "user"))
+                        result = response.content if hasattr(response, "content") else str(response)
+                        result = str(result).strip()
+                        
+                        matched_category = None
+                        for cat in categories:
+                            if cat["name"] in result or result in cat["name"]:
+                                matched_category = cat
+                                break
+                        
+                        if not matched_category and categories:
+                            matched_category = categories[0]
+                        
+                        yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched_category['name'] if matched_category else 'None'})}\n\n"
+                
+                elif node_type == "input":
+                    current_input = context_prompt + user_input if context_prompt else user_input
+                    
+                elif node_type == "output":
+                    final_output = current_input
+            
+            # 发送最终结果
+            yield f"data: {json.dumps({'type': 'content', 'content': final_output})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 class WorkflowTestRequest(BaseModel):
     workflow: dict
     input: str

@@ -31,9 +31,10 @@
           "name": "制度问答",
           "icon": "icon-help",
           "type": "agent",
-          "apiType": "policy-qa",
-          "apiUrl": "http://localhost:8000/api/policy-qa/sync",
-          "workflowName": null,
+          "apiType": "workflow",
+        
+            "apiUrl": "http://localhost:8000/api/workflow/run",
+          "workflowName": "qa_classifier_example",
           "description": "公司制度问答助手。解答员工手册、财务制度、电脑补贴等问题。",
           "model": "qwen3-max"
         },

@@ -35,7 +35,7 @@ const defaultMenuConfigs: MenuConfig[] = [
   { id: 'code-agent', name: '代码助手', icon: 'icon-code', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'code_assistant', description: '专业的代码生成和调试助手。', model: 'qwen3-max' },
   { id: 'pptx-agent', name: 'PPT助手', icon: 'icon-file', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'pptx_assistant', description: '演示文稿制作助手。', model: 'qwen3-max' },
   { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'data_flow', description: '数据分析和可视化助手。', model: 'qwen3-max' },
-  { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent', apiType: 'policy-qa', apiUrl: 'http://localhost:8000/api/policy-qa/sync', workflowName: null, description: '公司制度问答助手。', model: 'qwen3-max' },
+  { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run/stream', workflowName: 'qa_classifier_example', description: '公司制度问答助手。', model: 'qwen3-max' },
   { id: 'ocr-agent', name: 'OCR识别', icon: 'icon-base-info', type: 'agent', apiType: 'ocr', apiUrl: 'http://localhost:8000/api/ocr/recognize', workflowName: null, description: 'OCR 文件识别助手。', model: 'qwen3-max' },
   { id: 'skill-creator', name: '技能创建', icon: 'icon-identity', type: 'agent', apiType: 'skill-creator', apiUrl: 'http://localhost:8000/api/skill-creator/chat', workflowName: null, description: '技能创建助手。', model: 'qwen3-max' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
@@ -118,7 +118,26 @@ onMounted(() => {
 // 对话相关状态
 const startPage = ref(true)
 const inputValue = ref('')
-const messages = ref<{ from: 'user' | 'model'; content: string; loading?: boolean }[]>([])
+// 思考步骤类型
+interface ThinkingStep {
+  type: 'thinking' | 'node' | 'classifier'
+  message: string
+  time: string
+  status: 'running' | 'done'
+  nodeId?: string
+  nodeLabel?: string
+  result?: string
+}
+
+// 消息类型
+interface Message {
+  from: 'user' | 'model'
+  content: string
+  loading?: boolean
+  thinkingSteps?: ThinkingStep[]
+}
+
+const messages = ref<Message[]>([])
 
 // 菜单选择处理
 function handleMenuSelect(menuId: string) {
@@ -202,19 +221,116 @@ async function onSubmit(evt: string) {
     let apiUrl = '/api/chat'
     let requestBody: Record<string, any> = { message: evt }
     
+    console.log('[Debug] menuConfig:', menuConfig)
+    console.log('[Debug] apiType:', menuConfig?.apiType, 'workflowName:', menuConfig?.workflowName)
+    
     if (menuConfig) {
       const apiType = menuConfig.apiType
       if (apiType === 'workflow' && menuConfig.workflowName) {
-        // 使用工作流 API，包含对话历史
-        apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/workflow/run'
-        // 构建对话历史
+        console.log('[Debug] 使用流式工作流 API')
+        // 使用流式工作流 API，展示思考过程
         const history = messages.value
           .filter(m => !m.loading)
           .map(m => ({
             role: m.from === 'user' ? 'user' : 'assistant',
             content: m.content
           }))
-        requestBody = { workflow_name: menuConfig.workflowName, input: evt, history }
+        
+        // 使用流式接口
+        const streamResponse = await fetch('http://localhost:8000/api/workflow/run/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workflow_name: menuConfig.workflowName, input: evt, history })
+        })
+        
+        if (streamResponse.ok) {
+          const reader = streamResponse.body?.getReader()
+          const decoder = new TextDecoder()
+          let finalContent = ''
+          
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              
+              const chunk = decoder.decode(value, { stream: true })
+              const lines = chunk.split('\n')
+              
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.slice(6))
+                    console.log('[Debug] SSE data:', data)
+                    
+                    const lastMsg = messages.value[messages.value.length - 1]
+                    if (!lastMsg || lastMsg.from !== 'model') continue
+                    
+                    // 初始化思考步骤数组
+                    if (!lastMsg.thinkingSteps) {
+                      lastMsg.thinkingSteps = []
+                    }
+                    
+                    if (data.type === 'thinking') {
+                      // 添加思考步骤
+                      lastMsg.thinkingSteps.push({
+                        type: 'thinking',
+                        message: data.message,
+                        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                        status: 'running'
+                      })
+                      lastMsg.loading = true
+                    } else if (data.type === 'node_start') {
+                      // 节点开始
+                      lastMsg.thinkingSteps.push({
+                        type: 'node',
+                        message: data.message,
+                        nodeId: data.nodeId,
+                        nodeLabel: data.nodeLabel,
+                        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                        status: 'running'
+                      })
+                      lastMsg.loading = true
+                    } else if (data.type === 'node_complete') {
+                      // 节点完成，更新状态
+                      const step = lastMsg.thinkingSteps.find((s: any) => s.nodeId === data.nodeId)
+                      if (step) {
+                        step.status = 'done'
+                        step.message = data.message
+                      }
+                    } else if (data.type === 'classifier_result') {
+                      lastMsg.thinkingSteps.push({
+                        type: 'classifier',
+                        message: `分类结果: ${data.result}`,
+                        result: data.result,
+                        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                        status: 'done'
+                      })
+                    } else if (data.type === 'content') {
+                      finalContent = data.content
+                    } else if (data.type === 'done') {
+                      // 标记所有步骤完成
+                      lastMsg.thinkingSteps.forEach((s: any) => s.status = 'done')
+                      lastMsg.content = finalContent
+                      lastMsg.loading = false
+                    } else if (data.type === 'error') {
+                      lastMsg.content = `❌ 错误: ${data.message}`
+                      lastMsg.loading = false
+                    }
+                  } catch (e) {
+                    // 忽略解析错误
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          const lastMsg = messages.value[messages.value.length - 1]
+          if (lastMsg && lastMsg.from === 'model') {
+            lastMsg.content = '请求失败，请重试'
+            lastMsg.loading = false
+          }
+        }
+        return
       } else if (apiType === 'policy-qa') {
         // 制度问答 API
         apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/policy-qa/sync'
@@ -369,8 +485,34 @@ async function onSubmit(evt: string) {
                   <img src="https://matechat.gitcode.com/logo.svg" alt="AI" />
                 </div>
                 <div class="model-content">
-                  <McMarkdownCard v-if="!msg.loading" :content="formatContent(msg.content)" />
-                  <div v-else class="loading-indicator">
+                  <!-- 思考步骤展示 -->
+                  <div v-if="msg.thinkingSteps && msg.thinkingSteps.length > 0" class="thinking-steps">
+                    <div 
+                      v-for="(step, stepIdx) in msg.thinkingSteps" 
+                      :key="stepIdx" 
+                      class="thinking-step"
+                      :class="{ 'step-done': step.status === 'done', 'step-running': step.status === 'running' }"
+                    >
+                      <div class="step-header">
+                        <span class="step-icon">
+                          <svg v-if="step.status === 'done'" class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                          </svg>
+                          <span v-else class="icon-loading"></span>
+                        </span>
+                        <span class="step-title">{{ step.message }}</span>
+                        <span class="step-time">{{ step.time }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 最终内容 -->
+                  <McMarkdownCard 
+                    v-if="msg.content" 
+                    :content="formatContent(msg.content)" 
+                    :enableThink="true"
+                  />
+                  <!-- 无内容且加载中时显示加载动画 -->
+                  <div v-if="msg.loading && !msg.content && (!msg.thinkingSteps || msg.thinkingSteps.length === 0)" class="loading-indicator">
                     <span class="dot"></span>
                     <span class="dot"></span>
                     <span class="dot"></span>
@@ -621,8 +763,10 @@ async function onSubmit(evt: string) {
 .model-content {
   flex: 1;
   max-width: calc(100% - 48px);
-  background: #f5f7fa;
+  /* background: #f5f7fa; */
+  background: white;
   border-radius: 12px;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI Variable Display,Segoe UI,Helvetica,Apple Color Emoji,Arial,sans-serif,Segoe UI Emoji,Segoe UI Symbol;
   padding: 16px;
   overflow: hidden;
 }
@@ -687,5 +831,111 @@ async function onSubmit(evt: string) {
   40% {
     transform: scale(1);
   }
+}
+
+/* 思考状态指示器 */
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #e8f4fd, #f0f7ff);
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.thinking-dot {
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: thinking-pulse 1.5s infinite ease-in-out;
+}
+
+.thinking-text {
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 思考步骤样式 - 参考 Manus 风格 */
+.thinking-steps {
+  margin-bottom: 16px;
+}
+
+.thinking-step {
+  margin-bottom: 8px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.icon-check {
+  width: 16px;
+  height: 16px;
+  color: #52c41a;
+}
+
+.icon-loading {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.step-title {
+  flex: 1;
+  color: #333;
+}
+
+.step-running .step-title {
+  color: #666;
+}
+
+.step-done .step-title {
+  color: #333;
+}
+
+.step-time {
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
 }
 </style>
