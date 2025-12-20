@@ -1,0 +1,443 @@
+# -*- coding: utf-8 -*-
+"""
+工作流执行路由
+"""
+import json
+from typing import Dict
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from agentscope.message import Msg
+
+from api.models.request import PredefinedWorkflowRequest, WorkflowTestRequest
+from api.services.context_builder import build_context_prompt
+from api.services.classifier import ClassifierService
+from api.services.agent_manager import AgentManager
+from api.utils.graph import get_execution_order
+from agents.base import create_agent_by_skills
+
+router = APIRouter(prefix="/api/workflow", tags=["工作流执行"])
+
+# 预定义工作流存储（由 config 模块加载）
+predefined_workflows: Dict[str, dict] = {}
+
+
+def set_predefined_workflows(workflows: Dict[str, dict]):
+    """设置预定义工作流"""
+    global predefined_workflows
+    predefined_workflows = workflows
+
+
+@router.post("/run")
+async def run_predefined_workflow(request: PredefinedWorkflowRequest):
+    """执行预定义工作流（同步返回最终结果）"""
+    workflow_name = request.workflow_name
+    user_input = request.input
+    history = request.history or []
+    
+    if workflow_name not in predefined_workflows:
+        raise HTTPException(status_code=404, detail=f"预定义工作流 '{workflow_name}' 不存在")
+    
+    workflow = predefined_workflows[workflow_name]
+    api_key = AgentManager.get_api_key()
+    
+    try:
+        nodes = workflow.get("nodes", [])
+        edges = workflow.get("edges", [])
+        
+        # 构建上下文提示
+        context_prompt = build_context_prompt(history)
+        
+        agent_nodes = [n for n in nodes if n["type"] == "agent"]
+        agents = {}
+        
+        for node in agent_nodes:
+            config = node["data"].get("agentConfig", {})
+            if config:
+                agent = AgentManager.create_from_config(config, api_key)
+                agents[node["id"]] = agent
+                print(f"[Workflow] 创建智能体: {node['id']} -> {agent.__class__.__name__}")
+        
+        execution_order = get_execution_order(nodes, edges)
+        
+        current_input = context_prompt + user_input if context_prompt else user_input
+        final_output = ""
+        is_first_agent = True
+        
+        for node_id in execution_order:
+            node = next((n for n in nodes if n["id"] == node_id), None)
+            if not node:
+                continue
+            
+            if node["type"] == "agent" and node_id in agents:
+                agent = agents[node_id]
+                print(f"[Workflow] 执行节点: {node_id}")
+                agent_input = current_input if is_first_agent else current_input
+                response = await agent(Msg("user", agent_input, "user"))
+                output = response.content if hasattr(response, "content") else str(response)
+                print(f"[Workflow] 节点 {node_id} 输出: {output[:100] if output else 'empty'}...")
+                current_input = output
+                final_output = output
+                is_first_agent = False
+            elif node["type"] == "classifier":
+                classifier_config = node["data"].get("classifierConfig", {})
+                categories = classifier_config.get("categories", [])
+                model = classifier_config.get("model", "qwen3-max")
+                
+                if categories:
+                    classifier = ClassifierService(api_key)
+                    matched = await classifier.classify(current_input, categories, model)
+                    print(f"[Workflow] 分类器结果: {matched['name'] if matched else 'None'}")
+            elif node["type"] == "input":
+                current_input = user_input
+            elif node["type"] == "output":
+                final_output = current_input
+        
+        return final_output
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/run/stream")
+async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
+    """执行预定义工作流（流式返回思考过程和结果）"""
+    async def event_generator():
+        try:
+            workflow_name = request.workflow_name
+            user_input = request.input
+            history = request.history or []
+            api_key = AgentManager.get_api_key()
+            
+            if workflow_name not in predefined_workflows:
+                yield f"data: {json.dumps({'type': 'error', 'message': f'工作流 {workflow_name} 不存在'})}\n\n"
+                return
+            
+            workflow = predefined_workflows[workflow_name]
+            nodes = workflow.get("nodes", [])
+            edges = workflow.get("edges", [])
+            
+            yield f"data: {json.dumps({'type': 'thinking', 'message': '正在分析需求...'})}\n\n"
+            
+            # 构建上下文提示
+            context_prompt = ""
+            if history:
+                yield f"data: {json.dumps({'type': 'thinking', 'message': f'加载对话历史 ({len(history)} 条消息)...'})}\n\n"
+                context_prompt = build_context_prompt(history)
+            
+            # 创建智能体
+            agent_nodes = [n for n in nodes if n["type"] == "agent"]
+            skill_agent_nodes = [n for n in nodes if n["type"] == "skill-agent"]
+            agents = {}
+            
+            for node in agent_nodes:
+                config = node["data"].get("agentConfig", {})
+                if config:
+                    agent_name = config.get("name", node["id"])
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化智能体: {agent_name}'})}\n\n"
+                    agent = AgentManager.create_from_config(config, api_key)
+                    agents[node["id"]] = agent
+            
+            for node in skill_agent_nodes:
+                skill_config = node["data"].get("skillAgentConfig", {})
+                skills = skill_config.get("skills", [])
+                if skills:
+                    skill_names = ", ".join(skills)
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化技能智能体: {skill_names}'})}\n\n"
+                    model = skill_config.get("model", "qwen3-max")
+                    max_iters = skill_config.get("maxIters", 30)
+                    sys_prompt = skill_config.get("systemPrompt", "")
+                    agent = create_agent_by_skills(
+                        name=f"SkillAgent_{node['id']}",
+                        skill_names=skills,
+                        sys_prompt=sys_prompt,
+                        api_key=api_key,
+                        model_name=model,
+                        max_iters=max_iters,
+                    )
+                    agents[node["id"]] = agent
+            
+            execution_order = get_execution_order(nodes, edges)
+            yield f"data: {json.dumps({'type': 'thinking', 'message': f'执行顺序: {len(execution_order)} 个节点'})}\n\n"
+            
+            current_input = context_prompt + user_input if context_prompt else user_input
+            final_output = ""
+            
+            for node_id in execution_order:
+                node = next((n for n in nodes if n["id"] == node_id), None)
+                if not node:
+                    continue
+                
+                node_type = node.get("type")
+                node_label = node.get("data", {}).get("label", node_id)
+                
+                if node_type in ["agent", "skill-agent"] and node_id in agents:
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行: {node_label}'})}\n\n"
+                    
+                    agent = agents[node_id]
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
+                    
+                    response = await agent(Msg("user", current_input, "user"))
+                    output = response.content if hasattr(response, "content") else str(response)
+                    
+                    if isinstance(output, list):
+                        output = output[0].get("text", str(output[0])) if output else ""
+                    
+                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label} 执行完成'})}\n\n"
+                    
+                    current_input = str(output)
+                    final_output = str(output)
+                    
+                elif node_type == "classifier":
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在分类: {node_label}'})}\n\n"
+                    
+                    classifier_config = node["data"].get("classifierConfig", {})
+                    categories = classifier_config.get("categories", [])
+                    model = classifier_config.get("model", "qwen3-max")
+                    
+                    if categories:
+                        yield f"data: {json.dumps({'type': 'thinking', 'message': '正在分析分类...'})}\n\n"
+                        
+                        classifier = ClassifierService(api_key)
+                        matched = await classifier.classify(current_input, categories, model)
+                        
+                        yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched['name'] if matched else 'None'})}\n\n"
+                
+                elif node_type == "input":
+                    current_input = context_prompt + user_input if context_prompt else user_input
+                    
+                elif node_type == "output":
+                    final_output = current_input
+            
+            yield f"data: {json.dumps({'type': 'content', 'content': final_output})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/test")
+async def test_workflow(request: WorkflowTestRequest):
+    """测试工作流（流式返回执行过程）"""
+    import asyncio
+    api_key = AgentManager.get_api_key()
+    
+    async def event_generator():
+        try:
+            workflow = request.workflow
+            user_input = request.input
+            nodes = workflow.get("nodes", [])
+            edges = workflow.get("edges", [])
+            
+            yield f"data: {json.dumps({'type': 'log', 'message': '开始执行工作流测试...'})}\n\n"
+            yield f"data: {json.dumps({'type': 'log', 'message': '输入内容: ' + user_input})}\n\n"
+            
+            # 创建智能体
+            agents = {}
+            agent_nodes = [n for n in nodes if n["type"] == "agent"]
+            
+            for node in agent_nodes:
+                config = node["data"].get("agentConfig", {})
+                if config:
+                    node_label = node["data"].get("label", node["id"])
+                    msg = f"初始化智能体: {config.get('name', node['id'])}"
+                    yield f"data: {json.dumps({'type': 'log', 'nodeId': node['id'], 'nodeLabel': node_label, 'message': msg})}\n\n"
+                    
+                    agent = AgentManager.create_from_config(config, api_key)
+                    agents[node["id"]] = agent
+            
+            # 构建邻接图
+            graph = {n["id"]: [] for n in nodes}
+            for edge in edges:
+                source = edge.get("source")
+                target = edge.get("target")
+                source_handle = edge.get("sourceHandle")
+                if source and target and source in graph:
+                    graph[source].append({
+                        "target": target,
+                        "handle": source_handle
+                    })
+            
+            # 找到起始节点
+            start_nodes = [n for n in nodes if n.get("type") == "input"]
+            if not start_nodes:
+                yield f"data: {json.dumps({'type': 'log', 'message': '错误: 未找到输入节点'})}\n\n"
+                return
+            
+            # 执行工作流
+            context = {"original_input": user_input}
+            node_outputs = {}
+            visited = set()
+            
+            async def execute_from_node(node_id: str, input_data: str):
+                if node_id in visited:
+                    return
+                
+                visited.add(node_id)
+                node = next((n for n in nodes if n["id"] == node_id), None)
+                if not node:
+                    return
+                
+                node_type = node.get("type")
+                node_label = node.get("data", {}).get("label", node_id)
+                
+                yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label})}\n\n"
+                
+                output = input_data
+                
+                try:
+                    if node_type == "input":
+                        output = input_data
+                        
+                    elif node_type == "output":
+                        output = input_data
+                        yield f"data: {json.dumps({'type': 'output', 'content': output})}\n\n"
+                        
+                    elif node_type == "agent" and node_id in agents:
+                        agent = agents[node_id]
+                        response = await agent(Msg("user", input_data, "user"))
+                        output = response.content if hasattr(response, "content") else str(response)
+                        
+                    elif node_type == "condition":
+                        condition_config = node.get("data", {}).get("conditionConfig", {})
+                        condition_expr = condition_config.get("expression", "")
+                        
+                        if condition_expr:
+                            input_str = str(input_data) if not isinstance(input_data, str) else input_data
+                            result = condition_expr.lower() in input_str.lower()
+                        else:
+                            result = True
+                        
+                        context["condition_result"] = result
+                        yield f"data: {json.dumps({'type': 'condition_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': result, 'expression': condition_expr})}\n\n"
+                        output = input_data
+                        
+                    elif node_type == "classifier":
+                        classifier_config = node.get("data", {}).get("classifierConfig", {})
+                        categories = classifier_config.get("categories", [])
+                        model = classifier_config.get("model", "qwen3-max")
+                        
+                        if categories:
+                            classifier = ClassifierService(api_key)
+                            matched_category = await classifier.classify(input_data, categories, model)
+                            
+                            context["classifier_result"] = matched_category["id"] if matched_category else None
+                            context["classifier_category_name"] = matched_category["name"] if matched_category else None
+                            
+                            yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched_category['name'] if matched_category else 'None', 'input': input_data[:100]})}\n\n"
+                        
+                        output = input_data
+                    
+                    elif node_type == "skill-agent":
+                        skill_config = node.get("data", {}).get("skillAgentConfig", {})
+                        skills = skill_config.get("skills", [])
+                        model = skill_config.get("model", "qwen3-max")
+                        max_iters = skill_config.get("maxIters", 30)
+                        sys_prompt = skill_config.get("systemPrompt", "")
+                        
+                        if skills:
+                            skill_agent = create_agent_by_skills(
+                                name=node_label,
+                                skill_names=skills,
+                                sys_prompt=sys_prompt if sys_prompt else None,
+                                api_key=api_key,
+                                model_name=model,
+                                max_iters=max_iters,
+                            )
+                            
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'使用技能: {chr(44).join(skills)}'})}\n\n"
+                            
+                            response = await skill_agent(Msg("user", input_data, "user"))
+                            result = response.content if hasattr(response, "content") else str(response)
+                            if isinstance(result, list):
+                                result = result[0].get("text", str(result[0])) if result else ""
+                            output = str(result)
+                        else:
+                            output = input_data
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': '警告: 未配置技能'})}\n\n"
+                    
+                    elif node_type == "parallel":
+                        context["parallel_mode"] = True
+                        output = input_data
+                    
+                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label})}\n\n"
+                    
+                except Exception as e:
+                    yield f"data: {json.dumps({'type': 'node_error', 'nodeId': node_id, 'nodeLabel': node_label, 'error': str(e)})}\n\n"
+                
+                node_outputs[node_id] = output
+                
+                next_nodes = graph.get(node_id, [])
+                
+                if not next_nodes:
+                    return
+                
+                if node_type == "condition":
+                    condition_result = context.get("condition_result", True)
+                    target_handle = "true" if condition_result else "false"
+                    next_input = context.get("original_input", output)
+                    
+                    for next_node in next_nodes:
+                        if next_node["handle"] == target_handle:
+                            async for event in execute_from_node(next_node["target"], next_input):
+                                yield event
+                            return
+                    
+                    if next_nodes:
+                        async for event in execute_from_node(next_nodes[0]["target"], next_input):
+                            yield event
+                
+                elif node_type == "classifier":
+                    classifier_result = context.get("classifier_result")
+                    next_input = context.get("original_input", output)
+                    
+                    matched = False
+                    for next_node in next_nodes:
+                        if next_node["handle"] == classifier_result:
+                            async for event in execute_from_node(next_node["target"], next_input):
+                                yield event
+                            matched = True
+                            break
+                    
+                    if not matched and next_nodes:
+                        async for event in execute_from_node(next_nodes[0]["target"], next_input):
+                            yield event
+                
+                elif node_type == "parallel" or context.get("parallel_mode"):
+                    yield f"data: {json.dumps({'type': 'parallel_start', 'nodeId': node_id, 'nodeLabel': node_label, 'branchCount': len(next_nodes)})}\n\n"
+                    
+                    tasks = []
+                    for next_node in next_nodes:
+                        async def execute_branch(target_id):
+                            results = []
+                            async for event in execute_from_node(target_id, output):
+                                results.append(event)
+                            return results
+                        tasks.append(execute_branch(next_node["target"]))
+                    
+                    all_results = await asyncio.gather(*tasks, return_exceptions=True)
+                    for results in all_results:
+                        if isinstance(results, list):
+                            for event in results:
+                                yield event
+                
+                else:
+                    for next_node in next_nodes:
+                        async for event in execute_from_node(next_node["target"], output):
+                            yield event
+            
+            for start_node in start_nodes:
+                async for event in execute_from_node(start_node["id"], user_input):
+                    yield event
+            
+            yield f"data: {json.dumps({'type': 'log', 'message': '工作流执行完成'})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'log', 'message': f'执行失败: {str(e)}'})}\n\n"
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
