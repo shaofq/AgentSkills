@@ -414,6 +414,7 @@ async def get_execution(execution_id: str):
 class PredefinedWorkflowRequest(BaseModel):
     workflow_name: str
     input: str
+    history: List[dict] = []  # 对话历史，用于上下文管理
 
 
 @app.get("/api/menu-bindings")
@@ -521,6 +522,7 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
     """执行预定义工作流（同步返回最终结果）"""
     workflow_name = request.workflow_name
     user_input = request.input
+    history = request.history or []
     
     if workflow_name not in predefined_workflows:
         raise HTTPException(status_code=404, detail=f"预定义工作流 '{workflow_name}' 不存在")
@@ -530,6 +532,16 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
     try:
         nodes = workflow.get("nodes", [])
         edges = workflow.get("edges", [])
+        
+        # 构建上下文提示
+        context_prompt = ""
+        if history:
+            context_prompt = "以下是之前的对话历史，请参考上下文理解用户需求：\n\n"
+            for msg in history[-10:]:  # 只保留最近10条消息
+                role = "用户" if msg.get("role") == "user" else "助手"
+                content = msg.get("content", "")[:500]  # 限制每条消息长度
+                context_prompt += f"{role}: {content}\n\n"
+            context_prompt += "---\n\n当前用户需求: "
         
         agent_nodes = [n for n in nodes if n["type"] == "agent"]
         agents = {}
@@ -544,8 +556,10 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
         
         execution_order = _get_execution_order(nodes, edges)
         
-        current_input = user_input
+        # 第一个节点使用带上下文的输入
+        current_input = context_prompt + user_input if context_prompt else user_input
         final_output = ""
+        is_first_agent = True
         
         for node_id in execution_order:
             node = next((n for n in nodes if n["id"] == node_id), None)
@@ -555,11 +569,14 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
             if node["type"] == "agent" and node_id in agents:
                 agent = agents[node_id]
                 print(f"[Workflow] 执行节点: {node_id}")
-                response = await agent(Msg("user", current_input, "user"))
+                # 只有第一个智能体节点使用带上下文的输入
+                agent_input = current_input if is_first_agent else current_input
+                response = await agent(Msg("user", agent_input, "user"))
                 output = response.content if hasattr(response, "content") else str(response)
                 print(f"[Workflow] 节点 {node_id} 输出: {output[:100] if output else 'empty'}...")
                 current_input = output
                 final_output = output
+                is_first_agent = False
             elif node["type"] == "classifier":
                 # 分类器节点：使用 LLM 分析输入并选择分类
                 classifier_config = node["data"].get("classifierConfig", {})
@@ -908,9 +925,20 @@ async def code_assistant_stream(request: CodeAssistantRequest):
     async def event_generator():
         try:
             user_input = request.message
+            history = request.history or []
             
             # 发送开始事件
             yield f"data: {json.dumps({'type': 'start', 'message': '正在分析需求...'})}\n\n"
+            
+            # 构建包含历史上下文的提示
+            context_prompt = ""
+            if history:
+                context_prompt = "以下是之前的对话历史，请参考上下文理解用户需求：\n\n"
+                for msg in history[-10:]:  # 只保留最近10条消息
+                    role = "用户" if msg.get("role") == "user" else "助手"
+                    content = msg.get("content", "")[:500]  # 限制每条消息长度
+                    context_prompt += f"{role}: {content}\n\n"
+                context_prompt += "---\n\n"
             
             # 创建代码生成智能体
             code_agent = create_agent_by_skills(
@@ -924,6 +952,7 @@ async def code_assistant_stream(request: CodeAssistantRequest):
 2. 使用 ```json 代码块包裹 JSON 配置
 3. 在 JSON 之前简要说明设计思路
 4. 确保生成的配置可以直接在 amis 中渲染
+5. 如果用户要求修改之前的配置，请基于上下文进行修改
 
 常用组件：
 - form: 表单
@@ -939,8 +968,11 @@ async def code_assistant_stream(request: CodeAssistantRequest):
             
             yield f"data: {json.dumps({'type': 'thinking', 'message': '正在生成代码...'})}\n\n"
             
+            # 构建完整的用户输入（包含上下文）
+            full_input = context_prompt + "当前用户需求: " + user_input if context_prompt else user_input
+            
             # 调用智能体
-            response = await code_agent(Msg("user", user_input, "user"))
+            response = await code_agent(Msg("user", full_input, "user"))
             result = response.content if hasattr(response, "content") else str(response)
             
             # 处理返回值可能是列表的情况

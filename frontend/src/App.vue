@@ -205,9 +205,16 @@ async function onSubmit(evt: string) {
     if (menuConfig) {
       const apiType = menuConfig.apiType
       if (apiType === 'workflow' && menuConfig.workflowName) {
-        // 使用工作流 API
+        // 使用工作流 API，包含对话历史
         apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/workflow/run'
-        requestBody = { workflow_name: menuConfig.workflowName, input: evt }
+        // 构建对话历史
+        const history = messages.value
+          .filter(m => !m.loading)
+          .map(m => ({
+            role: m.from === 'user' ? 'user' : 'assistant',
+            content: m.content
+          }))
+        requestBody = { workflow_name: menuConfig.workflowName, input: evt, history }
       } else if (apiType === 'policy-qa') {
         // 制度问答 API
         apiUrl = menuConfig.apiUrl || 'http://localhost:8000/api/policy-qa/sync'

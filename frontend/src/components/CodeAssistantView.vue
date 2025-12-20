@@ -1,113 +1,54 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 
-// amis 渲染器引用
-const amisPreviewRef = ref<HTMLElement | null>(null)
-let amisInstance: any = null
+// 使用 iframe 隔离 amis 样式，避免影响主页面
+const amisIframeRef = ref<HTMLIFrameElement | null>(null)
 
-// 动态加载 amis SDK
-const amisLoaded = ref(false)
-const amisLoadError = ref('')
-
-async function loadAmisSDK() {
-  if ((window as any).amisRequire || (window as any).amis) {
-    amisLoaded.value = true
-    return
-  }
-  
-  try {
-    // 使用 amis 3.x 版本的 SDK（更稳定）
-    const cssLinks = [
-      'https://unpkg.com/amis@6.13.0/lib/themes/cxd.css',
-      'https://unpkg.com/amis@6.13.0/lib/helper.css',
-      'https://unpkg.com/amis@6.13.0/sdk/iconfont.css'
-    ]
-    
-    for (const href of cssLinks) {
-      if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement('link')
-        link.rel = 'stylesheet'
-        link.href = href
-        document.head.appendChild(link)
-      }
-    }
-    
-    // 加载 amis JS SDK
-    await new Promise<void>((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = 'https://unpkg.com/amis@6.13.0/sdk/sdk.js'
-      script.onload = () => {
-        // 等待 amis 初始化
-        setTimeout(() => resolve(), 100)
-      }
-      script.onerror = () => reject(new Error('加载 amis SDK 失败'))
-      document.head.appendChild(script)
-    })
-    
-    amisLoaded.value = true
-  } catch (e: any) {
-    amisLoadError.value = e.message
-  }
-}
-
-// 渲染 amis 配置
+// 使用 iframe 渲染 amis 配置（样式隔离）
 function renderAmis(schema: any) {
-  if (!amisLoaded.value || !amisPreviewRef.value) return
+  if (!amisIframeRef.value) return
   
-  const amisLib = (window as any).amisRequire ? (window as any).amisRequire('amis/embed') : (window as any).amis
-  if (!amisLib) {
-    console.error('amis SDK 未正确加载')
-    return
-  }
+  const iframe = amisIframeRef.value
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+  if (!iframeDoc) return
   
-  // 清除之前的内容
-  if (amisPreviewRef.value) {
-    amisPreviewRef.value.innerHTML = ''
-  }
+  // 构建 iframe 内容（注意：script 标签需要拆分避免 Vue 解析错误）
+  const scriptEnd = '</' + 'script>'
+  const schemaJson = JSON.stringify(schema)
   
-  // 清除之前的实例
-  if (amisInstance && amisInstance.unmount) {
-    try {
-      amisInstance.unmount()
-    } catch (e) {
-      // 忽略卸载错误
-    }
-    amisInstance = null
-  }
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/amis@6.3.0/lib/themes/cxd.css">
+  <link rel="stylesheet" href="https://unpkg.com/amis@6.3.0/lib/helper.css">
+  <link rel="stylesheet" href="https://unpkg.com/amis@6.3.0/sdk/iconfont.css">
+  <style>
+    body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    #root { min-height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/amis@6.3.0/sdk/sdk.js">${scriptEnd}
+  <script>
+    (function() {
+      var schema = ${schemaJson};
+      var amis = window.amisRequire ? amisRequire('amis/embed') : window.amis;
+      if (amis && amis.embed) {
+        amis.embed('#root', schema, {}, { theme: 'cxd' });
+      } else if (typeof amis === 'function') {
+        amis('#root', schema, {}, { theme: 'cxd' });
+      }
+    })();
+  ${scriptEnd}
+</body>
+</html>`
   
-  // 渲染新的配置
-  try {
-    // 尝试不同的 API
-    if (typeof amisLib.embed === 'function') {
-      amisInstance = amisLib.embed(
-        amisPreviewRef.value,
-        schema,
-        {},
-        { theme: 'cxd' }
-      )
-    } else if (typeof amisLib === 'function') {
-      amisInstance = amisLib(
-        amisPreviewRef.value,
-        schema,
-        {},
-        { theme: 'cxd' }
-      )
-    } else {
-      // 如果都不行，显示 JSON
-      amisPreviewRef.value.innerHTML = `<pre style="padding: 16px; background: #f5f5f5; border-radius: 8px; overflow: auto;">${JSON.stringify(schema, null, 2)}</pre>`
-    }
-  } catch (e) {
-    console.error('amis 渲染失败:', e)
-    // 降级显示 JSON
-    if (amisPreviewRef.value) {
-      amisPreviewRef.value.innerHTML = `
-        <div style="padding: 16px;">
-          <div style="color: #f59e0b; margin-bottom: 8px;">⚠️ amis 渲染失败，显示原始配置：</div>
-          <pre style="padding: 16px; background: #1f2937; color: #f3f4f6; border-radius: 8px; overflow: auto; font-size: 12px;">${JSON.stringify(schema, null, 2)}</pre>
-        </div>
-      `
-    }
-  }
+  iframeDoc.open()
+  iframeDoc.write(htmlContent)
+  iframeDoc.close()
 }
 
 // 消息类型
@@ -141,15 +82,7 @@ watch(() => activeTab.value, (tab) => {
   }
 })
 
-onMounted(() => {
-  loadAmisSDK()
-})
-
-onUnmounted(() => {
-  if (amisInstance) {
-    amisInstance.unmount()
-  }
-})
+// iframe 方式不需要 onMounted 和 onUnmounted 处理
 
 // 滚动到底部
 function scrollToBottom() {
@@ -187,11 +120,19 @@ async function sendMessage() {
   isLoading.value = true
   
   try {
+    // 构建对话历史（不包含当前正在加载的消息）
+    const history = messages.value
+      .filter(m => m.id !== assistantMsgId && !m.loading)
+      .map(m => ({
+        role: m.from === 'user' ? 'user' : 'assistant',
+        content: m.content
+      }))
+    
     // 使用 SSE 流式请求
     const response = await fetch('http://localhost:8000/api/code-assistant/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage })
+      body: JSON.stringify({ message: userMessage, history })
     })
     
     if (!response.ok) {
@@ -477,37 +418,13 @@ function copyCode() {
           </div>
         </div>
         
-        <!-- 预览模式 -->
-        <div v-else-if="activeTab === 'preview'" class="p-4 h-full">
-          <div class="border border-gray-200 rounded-lg bg-white min-h-[400px] h-full overflow-auto">
-            <!-- amis 加载状态 -->
-            <div v-if="!amisLoaded && !amisLoadError" class="flex items-center justify-center h-64">
-              <div class="text-center text-gray-500">
-                <div class="flex gap-1 justify-center mb-2">
-                  <span class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                  <span class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                  <span class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
-                </div>
-                <p class="text-sm">正在加载 amis SDK...</p>
-              </div>
-            </div>
-            
-            <!-- amis 加载失败 -->
-            <div v-else-if="amisLoadError" class="flex items-center justify-center h-64">
-              <div class="text-center text-red-500">
-                <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <p class="text-sm">{{ amisLoadError }}</p>
-                <button @click="loadAmisSDK" class="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
-                  重试
-                </button>
-              </div>
-            </div>
-            
-            <!-- amis 渲染容器 -->
-            <div v-else ref="amisPreviewRef" class="amis-preview-container p-4"></div>
-          </div>
+        <!-- 预览模式 - 使用 iframe 隔离样式 -->
+        <div v-else-if="activeTab === 'preview'" class="h-full">
+          <iframe 
+            ref="amisIframeRef" 
+            class="w-full h-full border-0 rounded-lg bg-white"
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
         </div>
         
         <!-- 代码模式 -->
