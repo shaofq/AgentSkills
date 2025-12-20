@@ -48,6 +48,17 @@
           "workflowName": "ocr_workflow",
           "description": "OCR 文件识别助手。识别 PDF 和图片中的文字内容。",
           "model": "qwen3-max"
+        },
+        {
+          "id": "ppt-agent",
+          "name": "PPT生成",
+          "icon": "icon-beginner-guidance",
+          "type": "agent",
+          "apiType": "workflow",
+          "apiUrl": "http://localhost:8000/api/workflow/run",
+          "workflowName": "ppt_workflow",
+          "description": "PPT生成助手,生成PPT文件。",
+          "model": "qwen3-max"
         }
       ]
     },

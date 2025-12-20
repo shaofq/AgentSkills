@@ -1,0 +1,423 @@
+{
+  "id": "workflow_1766223157895",
+  "name": "ppt生成流程",
+  "description": "",
+  "nodes": [
+    {
+      "id": "node_1766223026821_yohl3up3r",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 17.999999999999986,
+        "y": 107.49999999999997,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766223026821_yohl3up3r",
+            "position": "right",
+            "x": 134.00001525878906,
+            "y": 27.49998728434245,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 17.999999999999986,
+        "y": 107.49999999999997
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766223028054_rl3fitsoi",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 282.83333333333337,
+        "y": 267.83333333333337,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766223028054_rl3fitsoi",
+            "position": "right",
+            "x": 153.99993896484375,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766223028054_rl3fitsoi",
+            "position": "left",
+            "x": -6.000010172526042,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 282.83333333333337,
+        "y": 267.83333333333337
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "pptx"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": "请将生成的文件生成到目录中"
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766223032896_jz17s2aw0",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 473.1094423087235,
+        "y": 202.0207081731542,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766223032896_jz17s2aw0",
+            "position": "left",
+            "x": -6.00006103515625,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 473.1094423087235,
+        "y": 202.0207081731542
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766223026821_yohl3up3r_node_1766223028054_rl3fitsoi",
+      "type": "default",
+      "source": "node_1766223026821_yohl3up3r",
+      "target": "node_1766223028054_rl3fitsoi",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766223026821_yohl3up3r",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 17.999999999999986,
+          "y": 107.49999999999997,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766223026821_yohl3up3r",
+              "position": "right",
+              "x": 134.00001525878906,
+              "y": 27.49998728434245,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 17.999999999999986,
+          "y": 107.49999999999997
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766223028054_rl3fitsoi",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 222.75345542125308,
+          "y": 232.00000000000009,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766223028054_rl3fitsoi",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766223028054_rl3fitsoi",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 222.75345542125308,
+          "y": 232.00000000000009
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "pptx"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": "请将生成的文件生成到目录中"
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 164.00001525878906,
+      "sourceY": 140.9999872843424,
+      "targetX": 216.75344524872705,
+      "targetY": 288.24998982747405
+    },
+    {
+      "id": "edge_node_1766223028054_rl3fitsoi_node_1766223032896_jz17s2aw0",
+      "type": "default",
+      "source": "node_1766223028054_rl3fitsoi",
+      "target": "node_1766223032896_jz17s2aw0",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766223028054_rl3fitsoi",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 222.75345542125308,
+          "y": 232.00000000000009,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766223028054_rl3fitsoi",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766223028054_rl3fitsoi",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 222.75345542125308,
+          "y": 232.00000000000009
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "pptx"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": "请将生成的文件生成到目录中"
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766223032896_jz17s2aw0",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 473.1094423087235,
+          "y": 202.0207081731542,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766223032896_jz17s2aw0",
+              "position": "left",
+              "x": -6.00006103515625,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 473.1094423087235,
+          "y": 202.0207081731542
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 388.7534452487271,
+      "sourceY": 288.24998982747405,
+      "targetX": 467.10938127356724,
+      "targetY": 235.5207081731542
+    }
+  ],
+  "createdAt": "2025-12-20T09:32:37.895Z",
+  "updatedAt": "2025-12-20T09:32:37.895Z"
+}

@@ -85,7 +85,7 @@ export DASHSCOPE_API_KEY="your-api-key"
 ### 4. Start Backend Service
 
 ```bash
-python api_server.py
+python api.main
 # Service runs at http://localhost:8000
 ```
 
