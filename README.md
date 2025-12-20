@@ -30,7 +30,8 @@ LowCode AI is a **visual agent orchestration platform** that enables users to bu
 - 💾 **Workflow Import/Export** - JSON format storage for easy sharing and reuse
 
 <p align="center">
-  <img src="./visualflow.png" alt="Visual Flow Editor" width="800" />
+  <img src="./docs/visualflow.png" alt="Visual Flow Editor" width="800" />
+  <img src="./docs/flowtest.png" alt="Visual Flow Test" width="800" />
 </p>
 
 ---
