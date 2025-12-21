@@ -42,5 +42,27 @@
     "total_tokens": 949,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T14:49:09.215806",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 29,
+    "completion_tokens": 143,
+    "total_tokens": 172,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T14:59:18.068011",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 31,
+    "completion_tokens": 98,
+    "total_tokens": 129,
+    "user_id": null,
+    "session_id": null
   }
 ]

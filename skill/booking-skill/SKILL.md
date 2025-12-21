@@ -1,7 +1,6 @@
 ---
 name: booking-skill
-description: |
-  订舱管理技能，提供以下功能：
+description: 订舱管理技能，提供以下功能：
   1. 收集客户订舱数据并验证后提交
   2. 根据提单号查询订舱状态
   
