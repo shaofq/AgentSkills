@@ -1,0 +1,46 @@
+[
+  {
+    "timestamp": "2025-12-21T13:35:17.046320",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 116,
+    "total_tokens": 154,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T13:35:47.595212",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 159,
+    "completion_tokens": 180,
+    "total_tokens": 339,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T13:36:27.423369",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 726,
+    "completion_tokens": 361,
+    "total_tokens": 1087,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T13:37:13.992032",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 744,
+    "completion_tokens": 205,
+    "total_tokens": 949,
+    "user_id": null,
+    "session_id": null
+  }
+]

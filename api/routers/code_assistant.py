@@ -12,6 +12,7 @@ from api.models.request import CodeAssistantRequest
 from api.services.context_builder import build_context_prompt
 from agents.base import create_agent_by_skills
 from api.services.agent_manager import AgentManager
+from api.services.token_logger import log_agent_call
 
 router = APIRouter(prefix="/api/code-assistant", tags=["代码助手"])
 
@@ -64,6 +65,15 @@ async def code_assistant_stream(request: CodeAssistantRequest):
             
             if isinstance(result, list):
                 result = result[0].get("text", str(result[0])) if result else ""
+            
+            # 记录 Token 消耗
+            log_agent_call(
+                agent_id="code-agent",
+                agent_name="代码助手",
+                model="qwen3-max",
+                input_text=full_input,
+                output_text=str(result) if result else "",
+            )
             
             # 尝试提取 JSON 代码块
             json_match = re.search(r'```json\s*([\s\S]*?)\s*```', str(result))

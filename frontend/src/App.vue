@@ -12,6 +12,7 @@ import WorkflowListDialog from './components/WorkflowListDialog.vue'
 import LoginDialog from './components/LoginDialog.vue'
 import CodeAssistantView from './components/CodeAssistantView.vue'
 import AIExpertHome from './components/AIExpertHome.vue'
+import TokenStatsDialog from './components/TokenStatsDialog.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -30,6 +31,7 @@ interface MenuConfig {
 const activeMenu = ref('chat')
 const showConfigPanel = ref(false)
 const showPolicyQA = ref(false)
+const showTokenStats = ref(false)
 // 默认菜单配置（当后端未返回时使用）
 const defaultMenuConfigs: MenuConfig[] = [
   { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat', apiType: 'chat', apiUrl: '/api/chat', workflowName: null, description: '通用对话助手，可以回答各种问题。', model: 'deepseek-ai/DeepSeek-R1' },
@@ -528,7 +530,7 @@ async function onSubmit(evt: string) {
   
   <div v-else class="h-screen w-screen flex">
     <!-- 左侧菜单 -->
-    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" @logout="handleLogout" />
+    <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" @logout="handleLogout" @openSettings="showTokenStats = true" />
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -802,6 +804,9 @@ async function onSubmit(evt: string) {
 
     <!-- 制度问答对话框 -->
     <PolicyQADialog :visible="showPolicyQA" @close="showPolicyQA = false" />
+    
+    <!-- Token 统计对话框 -->
+    <TokenStatsDialog :visible="showTokenStats" @close="showTokenStats = false" />
   </div>
 </template>
 

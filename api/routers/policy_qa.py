@@ -9,6 +9,7 @@ from agentscope.message import Msg
 
 from api.models.request import PolicyQARequest
 from api.services.agent_manager import AgentManager
+from api.services.token_logger import log_agent_call
 
 router = APIRouter(prefix="/api/policy-qa", tags=["制度问答"])
 
@@ -23,6 +24,15 @@ async def policy_qa(request: PolicyQARequest):
             agent = AgentManager.get("policy_qa")
             response = await agent(Msg("user", request.question, "user"))
             answer = response.content if hasattr(response, "content") else str(response)
+            
+            # 记录 Token 消耗
+            log_agent_call(
+                agent_id="policy-qa",
+                agent_name="制度问答",
+                model="qwen3-max",
+                input_text=request.question,
+                output_text=answer if isinstance(answer, str) else str(answer),
+            )
             
             yield f"data: {json.dumps({'type': 'answer', 'content': answer})}\n\n"
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
@@ -72,6 +82,15 @@ async def policy_qa_sync(request: PolicyQARequest):
             answer = answer.replace('\\n', '\n').strip()
         
         print(f"[PolicyQA] 处理后答案: {answer[:100] if answer else 'empty'}...")
+        
+        # 记录 Token 消耗
+        log_agent_call(
+            agent_id="policy-qa",
+            agent_name="制度问答",
+            model="qwen3-max",
+            input_text=request.question,
+            output_text=answer if isinstance(answer, str) else str(answer),
+        )
         
         return {"success": True, "answer": answer}
     except Exception as e:

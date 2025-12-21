@@ -7,6 +7,7 @@ from agentscope.message import Msg
 
 from api.models.request import PolicyQARequest
 from api.services.agent_manager import AgentManager
+from api.services.token_logger import log_agent_call
 
 router = APIRouter(prefix="/api/skill-creator", tags=["技能创建"])
 
@@ -21,6 +22,16 @@ async def skill_creator_chat(request: PolicyQARequest):
         answer = response.content if hasattr(response, "content") else str(response)
         
         print(f"[SkillCreator] 响应: {answer[:100] if answer else 'empty'}...")
+        
+        # 记录 Token 消耗
+        log_agent_call(
+            agent_id="skill-creator",
+            agent_name="技能创建",
+            model="qwen3-max",
+            input_text=request.question,
+            output_text=answer if isinstance(answer, str) else str(answer),
+        )
+        
         return answer
         
     except Exception as e:

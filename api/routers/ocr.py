@@ -7,6 +7,7 @@ from agentscope.message import Msg
 
 from api.models.request import OCRRequest, PolicyQARequest
 from api.services.agent_manager import AgentManager
+from api.services.token_logger import log_agent_call
 
 router = APIRouter(prefix="/api/ocr", tags=["OCR识别"])
 
@@ -25,6 +26,16 @@ async def ocr_recognize(request: OCRRequest):
         )
         
         print(f"[OCR] 识别完成: {len(result) if result else 0} 字符")
+        
+        # 记录 Token 消耗
+        log_agent_call(
+            agent_id="ocr-agent",
+            agent_name="OCR识别",
+            model="qwen3-max",
+            input_text=request.file_path,
+            output_text=result if result else "",
+        )
+        
         return {"success": True, "text": result}
         
     except Exception as e:
@@ -43,6 +54,16 @@ async def ocr_chat(request: PolicyQARequest):
         answer = response.content if hasattr(response, "content") else str(response)
         
         print(f"[OCR] 响应: {answer[:100] if answer else 'empty'}...")
+        
+        # 记录 Token 消耗
+        log_agent_call(
+            agent_id="ocr-agent",
+            agent_name="OCR识别",
+            model="qwen3-max",
+            input_text=request.question,
+            output_text=answer if isinstance(answer, str) else str(answer),
+        )
+        
         return {"success": True, "answer": answer}
         
     except Exception as e:

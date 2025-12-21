@@ -12,6 +12,7 @@ from api.models.request import PredefinedWorkflowRequest, WorkflowTestRequest
 from api.services.context_builder import build_context_prompt
 from api.services.classifier import ClassifierService
 from api.services.agent_manager import AgentManager
+from api.services.token_logger import log_agent_call
 from api.utils.graph import get_execution_order
 from agents.base import create_agent_by_skills
 
@@ -75,6 +76,19 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
                 response = await agent(Msg("user", agent_input, "user"))
                 output = response.content if hasattr(response, "content") else str(response)
                 print(f"[Workflow] 节点 {node_id} 输出: {output[:100] if output else 'empty'}...")
+                
+                # 记录 Token 消耗
+                agent_config = node["data"].get("agentConfig", {})
+                agent_name = agent_config.get("name", node_id)
+                model_name = agent_config.get("model", "qwen3-max")
+                log_agent_call(
+                    agent_id=node_id,
+                    agent_name=agent_name,
+                    model=model_name,
+                    input_text=agent_input,
+                    output_text=output if output else "",
+                )
+                
                 current_input = output
                 final_output = output
                 is_first_agent = False
@@ -178,11 +192,30 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                     agent = agents[node_id]
                     yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
                     
-                    response = await agent(Msg("user", current_input, "user"))
+                    agent_input = current_input
+                    response = await agent(Msg("user", agent_input, "user"))
                     output = response.content if hasattr(response, "content") else str(response)
                     
                     if isinstance(output, list):
                         output = output[0].get("text", str(output[0])) if output else ""
+                    
+                    # 记录 Token 消耗
+                    if node_type == "agent":
+                        agent_config = node["data"].get("agentConfig", {})
+                        agent_name = agent_config.get("name", node_label)
+                        model_name = agent_config.get("model", "qwen3-max")
+                    else:
+                        skill_config = node["data"].get("skillAgentConfig", {})
+                        agent_name = node_label
+                        model_name = skill_config.get("model", "qwen3-max")
+                    
+                    log_agent_call(
+                        agent_id=node_id,
+                        agent_name=agent_name,
+                        model=model_name,
+                        input_text=agent_input,
+                        output_text=str(output) if output else "",
+                    )
                     
                     yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label} 执行完成'})}\n\n"
                     

@@ -50,7 +50,7 @@ app.add_middleware(
 
 
 # 注册路由
-from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking
+from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking, token_stats
 
 app.include_router(agents.router)
 app.include_router(workflows.router)
@@ -61,6 +61,7 @@ app.include_router(ocr.router)
 app.include_router(skill_creator.router)
 app.include_router(code_assistant.router)
 app.include_router(booking.router)
+app.include_router(token_stats.router)
 
 
 # 健康检查

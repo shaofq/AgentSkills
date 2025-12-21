@@ -5,6 +5,7 @@ const emit = defineEmits<{
   (e: 'select', menu: string): void
   (e: 'menuLoaded', menus: MenuItem[]): void
   (e: 'logout'): void
+  (e: 'openSettings'): void
 }>()
 
 function handleLogout() {
@@ -130,6 +131,10 @@ function handleMouseLeave() {
 function selectMenu(item: MenuItem) {
   emit('select', item.id)
 }
+
+function handleOpenSettings() {
+  emit('openSettings')
+}
 </script>
 
 <template>
@@ -190,7 +195,7 @@ function selectMenu(item: MenuItem) {
       <!-- 底部图标 -->
       <div class="flex items-center justify-around mt-3 pt-3 border-t border-gray-700">
         <i class="icon-language text-gray-400 hover:text-white cursor-pointer text-lg" title="语言"></i>
-        <i class="icon-setting text-gray-400 hover:text-white cursor-pointer text-lg" title="设置"></i>
+        <i class="icon-setting text-gray-400 hover:text-white cursor-pointer text-lg" title="设置" @click="handleOpenSettings"></i>
         <svg 
           class="w-5 h-5 text-gray-400 hover:text-red-400 cursor-pointer transition-colors" 
           title="退出登录"
