@@ -1,0 +1,423 @@
+{
+  "id": "workflow_1766281741809",
+  "name": "订舱工作流",
+  "description": "订舱业务工作流程",
+  "nodes": [
+    {
+      "id": "node_1766281721053_xlk9z43jn",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 58,
+        "y": 155,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766281721053_xlk9z43jn",
+            "position": "right",
+            "x": 134.00001525878906,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 58,
+        "y": 155
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766281723247_gqon1c0gb",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 326.1666666666667,
+        "y": 140.99999999999997,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766281723247_gqon1c0gb",
+            "position": "right",
+            "x": 153.99998982747397,
+            "y": 44.750010172526046,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766281723247_gqon1c0gb",
+            "position": "left",
+            "x": -6.000010172526042,
+            "y": 44.750010172526046,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 326.1666666666667,
+        "y": 140.99999999999997
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "booking-skill"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766281736319_dg6c36xye",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 591,
+        "y": 223,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766281736319_dg6c36xye",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 591,
+        "y": 223
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766281721053_xlk9z43jn_node_1766281723247_gqon1c0gb",
+      "type": "default",
+      "source": "node_1766281721053_xlk9z43jn",
+      "target": "node_1766281723247_gqon1c0gb",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766281721053_xlk9z43jn",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 58,
+          "y": 155,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766281721053_xlk9z43jn",
+              "position": "right",
+              "x": 134.00001525878906,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 58,
+          "y": 155
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766281723247_gqon1c0gb",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 326.1666666666667,
+          "y": 140.99999999999997,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766281723247_gqon1c0gb",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 44.750010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766281723247_gqon1c0gb",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 44.750010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 326.1666666666667,
+          "y": 140.99999999999997
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 204.00001525878906,
+      "sourceY": 188.5,
+      "targetX": 320.1666564941406,
+      "targetY": 191.750010172526
+    },
+    {
+      "id": "edge_node_1766281723247_gqon1c0gb_node_1766281736319_dg6c36xye",
+      "type": "default",
+      "source": "node_1766281723247_gqon1c0gb",
+      "target": "node_1766281736319_dg6c36xye",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766281723247_gqon1c0gb",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 326.1666666666667,
+          "y": 140.99999999999997,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766281723247_gqon1c0gb",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 44.750010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766281723247_gqon1c0gb",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 44.750010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 326.1666666666667,
+          "y": 140.99999999999997
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766281736319_dg6c36xye",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 591,
+          "y": 223,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766281736319_dg6c36xye",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 591,
+          "y": 223
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 492.1666564941406,
+      "sourceY": 191.750010172526,
+      "targetX": 585.0000406901041,
+      "targetY": 256.5
+    }
+  ],
+  "createdAt": "2025-12-21T01:49:01.809Z",
+  "updatedAt": "2025-12-21T01:49:01.809Z"
+}
