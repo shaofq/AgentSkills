@@ -138,14 +138,22 @@ interface Message {
 }
 
 const messages = ref<Message[]>([])
-const messagesContainer = ref<HTMLElement | null>(null)
 const thinkingCollapsed = ref<Record<number, boolean>>({})
 
 // 自动滚动到底部
 function scrollToBottom() {
   nextTick(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    // 查找所有可能的滚动容器并滚动到底部
+    const selectors = ['.content-container', '.messages-wrapper']
+    for (const selector of selectors) {
+      const el = document.querySelector(selector)
+      if (el) {
+        // 如果是 messages-wrapper，滚动其父元素
+        const scrollEl = selector === '.messages-wrapper' ? el.parentElement : el
+        if (scrollEl && scrollEl.scrollHeight > scrollEl.clientHeight) {
+          scrollEl.scrollTop = scrollEl.scrollHeight
+        }
+      }
     }
   })
 }
@@ -158,15 +166,13 @@ watch(
   }
 )
 
-// 监听消息内容变化（流式更新时）
+// 监听消息内容变化（流式更新时）- 深度监听
 watch(
-  () => {
-    const lastMsg = messages.value[messages.value.length - 1]
-    return lastMsg ? (lastMsg.content?.length || 0) + (lastMsg.thinkingSteps?.length || 0) : 0
-  },
+  messages,
   () => {
     scrollToBottom()
-  }
+  },
+  { deep: true }
 )
 
 // 切换思考过程折叠状态
@@ -506,7 +512,7 @@ async function onSubmit(evt: string) {
         </McLayoutContent>
 
         <!-- 对话内容 -->
-        <McLayoutContent class="content-container" v-else ref="messagesContainer">
+        <McLayoutContent class="content-container" v-else>
           <div class="messages-wrapper">
             <template v-for="(msg, idx) in messages" :key="idx">
               <McBubble

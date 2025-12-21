@@ -1,0 +1,423 @@
+{
+  "id": "workflow_1766278260464",
+  "name": "制度问答工作流",
+  "description": "回答员工手册、财务制度、电脑补贴等问题",
+  "nodes": [
+    {
+      "id": "node_1766278243231_hmtpwlwm9",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 85,
+        "y": 135,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766278243231_hmtpwlwm9",
+            "position": "right",
+            "x": 134.00004069010419,
+            "y": 27.500012715657554,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 85,
+        "y": 135
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766278244405_lpei71e9f",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 336.5,
+        "y": 157.83333333333334,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766278244405_lpei71e9f",
+            "position": "right",
+            "x": 153.99998982747397,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766278244405_lpei71e9f",
+            "position": "left",
+            "x": -6.00006103515625,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 336.5,
+        "y": 157.83333333333334
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "company-policy-qa"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766278254946_bqiec53gy",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 574.3333333333334,
+        "y": 149.33333333333334,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766278254946_bqiec53gy",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 574.3333333333334,
+        "y": 149.33333333333334
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766278243231_hmtpwlwm9_node_1766278244405_lpei71e9f",
+      "type": "default",
+      "source": "node_1766278243231_hmtpwlwm9",
+      "target": "node_1766278244405_lpei71e9f",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766278243231_hmtpwlwm9",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 85,
+          "y": 135,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766278243231_hmtpwlwm9",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 27.500012715657554,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 85,
+          "y": 135
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766278244405_lpei71e9f",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 336.5,
+          "y": 157.83333333333334,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766278244405_lpei71e9f",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766278244405_lpei71e9f",
+              "position": "left",
+              "x": -6.00006103515625,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 336.5,
+          "y": 157.83333333333334
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "company-policy-qa"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 231.00004069010419,
+      "sourceY": 168.50001271565756,
+      "targetX": 330.49993896484375,
+      "targetY": 208.58331807454428
+    },
+    {
+      "id": "edge_node_1766278244405_lpei71e9f_node_1766278254946_bqiec53gy",
+      "type": "default",
+      "source": "node_1766278244405_lpei71e9f",
+      "target": "node_1766278254946_bqiec53gy",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766278244405_lpei71e9f",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 336.5,
+          "y": 157.83333333333334,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766278244405_lpei71e9f",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766278244405_lpei71e9f",
+              "position": "left",
+              "x": -6.00006103515625,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 336.5,
+          "y": 157.83333333333334
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "company-policy-qa"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766278254946_bqiec53gy",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 574.3333333333334,
+          "y": 149.33333333333334,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766278254946_bqiec53gy",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 574.3333333333334,
+          "y": 149.33333333333334
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 502.499989827474,
+      "sourceY": 208.58331807454428,
+      "targetX": 568.3333740234375,
+      "targetY": 182.83333333333334
+    }
+  ],
+  "createdAt": "2025-12-21T00:51:00.464Z",
+  "updatedAt": "2025-12-21T00:51:00.464Z"
+}

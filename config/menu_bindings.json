@@ -24,7 +24,7 @@
           "apiType": "workflow",
         
             "apiUrl": "http://localhost:8000/api/workflow/run",
-          "workflowName": "qa_classifier_example",
+          "workflowName": "company_qa",
           "description": "公司制度问答助手。解答员工手册、财务制度、电脑补贴等问题。",
           "model": "qwen3-max"
         },
