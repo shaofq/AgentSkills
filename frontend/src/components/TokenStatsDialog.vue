@@ -358,7 +358,7 @@ function handleClose() {
 }
 
 .dialog-container {
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 16px;
   width: 90%;
   max-width: 700px;
@@ -366,7 +366,7 @@ function handleClose() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 60px var(--shadow-color);
 }
 
 .dialog-header {
@@ -374,7 +374,7 @@ function handleClose() {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dialog-title {
@@ -383,7 +383,7 @@ function handleClose() {
   gap: 10px;
   font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -397,7 +397,7 @@ function handleClose() {
   width: 32px;
   height: 32px;
   border: none;
-  background: #f1f5f9;
+  background: var(--bg-tertiary);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -407,13 +407,13 @@ function handleClose() {
 }
 
 .close-btn:hover {
-  background: #e2e8f0;
+  background: var(--bg-hover);
 }
 
 .close-btn svg {
   width: 18px;
   height: 18px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .time-filter {
@@ -421,13 +421,13 @@ function handleClose() {
   align-items: center;
   gap: 12px;
   padding: 16px 24px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .filter-label {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .filter-options {
@@ -437,11 +437,11 @@ function handleClose() {
 
 .filter-btn {
   padding: 6px 14px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
   border-radius: 6px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -464,7 +464,7 @@ function handleClose() {
   justify-content: center;
   padding: 60px 24px;
   gap: 16px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .loading-spinner {
@@ -500,7 +500,7 @@ function handleClose() {
 }
 
 .stat-card {
-  background: #f8fafc;
+  background: var(--bg-tertiary);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -551,19 +551,19 @@ function handleClose() {
 .stat-value {
   font-size: 18px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 12px;
 }
 
@@ -573,14 +573,14 @@ function handleClose() {
   background: transparent;
   border-radius: 6px;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .tab-btn.active {
@@ -599,7 +599,7 @@ function handleClose() {
 }
 
 .list-item {
-  background: #f8fafc;
+  background: var(--bg-tertiary);
   border-radius: 10px;
   padding: 14px 16px;
 }
@@ -614,12 +614,12 @@ function handleClose() {
 .item-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .item-count {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .item-stats {
@@ -634,7 +634,7 @@ function handleClose() {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .stat-dot {
@@ -657,7 +657,7 @@ function handleClose() {
 
 .item-bar {
   height: 6px;
-  background: #e2e8f0;
+  background: var(--border-color);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -684,13 +684,13 @@ function handleClose() {
   justify-content: center;
   padding: 60px 24px;
   gap: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
 .empty-icon {
   width: 48px;
   height: 48px;
-  color: #cbd5e1;
+  color: var(--text-muted);
 }
 </style>

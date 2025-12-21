@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useTheme } from '../composables/useTheme'
+
+const { currentTheme, toggleTheme } = useTheme()
 
 const emit = defineEmits<{
   (e: 'select', menu: string): void
@@ -145,10 +148,10 @@ function handleOpenSettings() {
     @mouseleave="handleMouseLeave"
   >
     <!-- Logo 区域 -->
-    <div class="menu-header p-3 flex items-center justify-center border-b border-gray-700">
+    <div class="menu-header p-3 flex items-center justify-center">
       <div class="flex items-center gap-2">
         <img src="https://matechat.gitcode.com/logo.svg" alt="logo" class="w-8 h-8" />
-        <span v-if="!collapsed || isHovering" class="text-white font-semibold text-lg">智能体编排</span>
+        <span v-if="!collapsed || isHovering" class="menu-title font-semibold text-lg">智能体编排</span>
       </div>
     </div>
 
@@ -158,11 +161,11 @@ function handleOpenSettings() {
         <!-- 分组标题 -->
         <div 
           v-if="group.name && (!collapsed || isHovering)" 
-          class="group-title mx-3 mt-3 mb-2 text-xs text-gray-500 font-medium uppercase tracking-wider"
+          class="group-title mx-3 mt-3 mb-2 text-xs font-medium uppercase tracking-wider"
         >
           {{ group.name }}
         </div>
-        <div v-else-if="group.name" class="group-divider mx-3 my-2 border-t border-gray-700"></div>
+        <div v-else-if="group.name" class="group-divider mx-3 my-2"></div>
         
         <!-- 分组菜单项 -->
         <div
@@ -172,8 +175,8 @@ function handleOpenSettings() {
           class="menu-item mx-2 mb-1 px-3 py-3 rounded-lg cursor-pointer transition-all flex items-center gap-3"
           :class="[
             activeMenu === item.id 
-              ? 'bg-blue-600 text-white' 
-              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              ? 'active' 
+              : 'inactive'
           ]"
         >
           <i :class="item.icon" class="text-lg"></i>
@@ -183,21 +186,49 @@ function handleOpenSettings() {
     </div>
 
     <!-- 底部操作区 -->
-    <div class="menu-footer p-3 border-t border-gray-700">
+    <div class="menu-footer p-3">
       <div 
         @click="toggleCollapse"
-        class="flex items-center justify-center p-2 rounded-lg cursor-pointer text-gray-400 hover:bg-gray-700 hover:text-white transition-all"
+        class="collapse-btn flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all"
       >
         <i :class="collapsed ? 'icon-chevron-right' : 'icon-chevron-left'" class="text-lg"></i>
         <span v-if="!collapsed || isHovering" class="ml-2 text-sm">收起菜单</span>
       </div>
       
       <!-- 底部图标 -->
-      <div class="flex items-center justify-around mt-3 pt-3 border-t border-gray-700">
-        <i class="icon-language text-gray-400 hover:text-white cursor-pointer text-lg" title="语言"></i>
-        <i class="icon-setting text-gray-400 hover:text-white cursor-pointer text-lg" title="设置" @click="handleOpenSettings"></i>
+      <div class="bottom-icons flex items-center justify-around mt-3 pt-3">
+        <!-- 主题切换按钮 -->
         <svg 
-          class="w-5 h-5 text-gray-400 hover:text-red-400 cursor-pointer transition-colors" 
+          class="w-5 h-5 icon-btn cursor-pointer transition-colors"
+          :title="currentTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'"
+          @click="toggleTheme"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <!-- 太阳图标（深色主题时显示） -->
+          <template v-if="currentTheme === 'dark'">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </template>
+          <!-- 月亮图标（浅色主题时显示） -->
+          <template v-else>
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </template>
+        </svg>
+        <i class="icon-setting icon-btn cursor-pointer text-lg" title="设置" @click="handleOpenSettings"></i>
+        <svg 
+          class="w-5 h-5 icon-btn logout-btn cursor-pointer transition-colors" 
           title="退出登录"
           @click="handleLogout"
           viewBox="0 0 24 24" 
@@ -218,12 +249,22 @@ function handleOpenSettings() {
 
 <style scoped>
 .left-menu {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: var(--menu-bg);
+  transition: background 0.3s ease;
+  border-right: 1px solid var(--menu-border);
+}
+
+.menu-header {
+  border-bottom: 1px solid var(--menu-border);
+}
+
+.menu-title {
+  color: var(--menu-text);
 }
 
 .menu-list {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 transparent;
+  scrollbar-color: var(--menu-text-muted) transparent;
   min-height: 0;
 }
 
@@ -236,12 +277,26 @@ function handleOpenSettings() {
 }
 
 .menu-list::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: var(--menu-text-muted);
   border-radius: 2px;
 }
 
 .menu-item {
   min-height: 44px;
+  color: var(--menu-text);
+}
+
+.menu-item.active {
+  background: var(--menu-item-active);
+  color: #ffffff;
+}
+
+.menu-item.inactive {
+  color: var(--menu-text);
+}
+
+.menu-item.inactive:hover {
+  background: var(--menu-item-hover);
 }
 
 .menu-header img {
@@ -249,6 +304,39 @@ function handleOpenSettings() {
 }
 
 .group-title {
-  color: #9ca3af;
+  color: var(--menu-text-muted);
+}
+
+.group-divider {
+  border-top: 1px solid var(--menu-border);
+}
+
+.menu-footer {
+  border-top: 1px solid var(--menu-border);
+}
+
+.collapse-btn {
+  color: var(--menu-text-muted);
+}
+
+.collapse-btn:hover {
+  background: var(--menu-item-hover);
+  color: var(--menu-text);
+}
+
+.bottom-icons {
+  border-top: 1px solid var(--menu-border);
+}
+
+.icon-btn {
+  color: var(--menu-text-muted);
+}
+
+.icon-btn:hover {
+  color: var(--menu-text);
+}
+
+.logout-btn:hover {
+  color: #ef4444;
 }
 </style>

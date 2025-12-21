@@ -533,7 +533,7 @@ async function onSubmit(evt: string) {
     <LeftMenu :activeMenu="activeMenu" @select="handleMenuSelect" @menuLoaded="handleMenuLoaded" @logout="handleLogout" @openSettings="showTokenStats = true" />
     
     <!-- 右侧主内容区 -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden main-content">
       <!-- 流程查询模式 -->
       <WorkflowListDialog v-if="isWorkflowListMode" />
       
@@ -694,11 +694,13 @@ async function onSubmit(evt: string) {
                     </div>
                   </div>
                   <!-- 最终内容 -->
-                  <McMarkdownCard 
-                    v-if="msg.content" 
-                    :content="formatContent(msg.content)" 
-                    :enableThink="true"
-                  />
+                  <div class="markdown-wrapper">
+                    <McMarkdownCard 
+                      v-if="msg.content" 
+                      :content="formatContent(msg.content)" 
+                      :enableThink="true"
+                    />
+                  </div>
                   <!-- 无内容且加载中时显示加载动画 -->
                   <div v-if="msg.loading && !msg.content && (!msg.thinkingSteps || msg.thinkingSteps.length === 0)" class="loading-indicator">
                     <span class="dot"></span>
@@ -714,13 +716,13 @@ async function onSubmit(evt: string) {
         <!-- 快捷操作 -->
         <div class="shortcut-container">
           <div class="shortcut-wrapper">
-            <McPrompt
+            <!-- <McPrompt
               v-if="!startPage"
               :list="simplePrompt"
               direction="horizontal"
               style="flex: 1"
               @itemClick="onSubmit($event.label)"
-            />
+            /> -->
             <Button
               icon="add"
               shape="circle"
@@ -811,12 +813,20 @@ async function onSubmit(evt: string) {
 </template>
 
 <style>
+/* 主内容区主题样式 */
+.main-content {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 .content-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow: auto;
   padding: 16px 0;
+  background-color: var(--bg-primary);
 }
 
 .messages-wrapper {
@@ -905,9 +915,9 @@ async function onSubmit(evt: string) {
   width: 72px;
   height: 72px;
   padding: 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-card);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px var(--shadow-color);
 }
 
 .welcome-icon svg {
@@ -918,10 +928,7 @@ async function onSubmit(evt: string) {
 .welcome-title {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin: 0 0 12px 0;
   position: relative;
   z-index: 1;
@@ -929,7 +936,7 @@ async function onSubmit(evt: string) {
 
 .welcome-desc {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-tertiary);
   margin: 0 0 28px 0;
   max-width: 450px;
   line-height: 1.6;
@@ -952,11 +959,11 @@ async function onSubmit(evt: string) {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-tertiary);
   transition: all 0.3s ease;
 }
 
@@ -981,7 +988,7 @@ async function onSubmit(evt: string) {
 
 .prompts-title {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0 0 16px 0;
 }
 
@@ -996,11 +1003,11 @@ async function onSubmit(evt: string) {
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   font-size: 14px;
-  color: #475569;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: left;
@@ -1055,12 +1062,23 @@ async function onSubmit(evt: string) {
 
 .sender-container {
   padding: 16px 0;
+  background-color: var(--bg-primary);
 }
 
 .sender-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+.sender-wrapper :deep(.devui-input) {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+.sender-wrapper :deep(.devui-input::placeholder) {
+  color: var(--text-muted) !important;
 }
 
 .input-foot-wrapper {
@@ -1081,18 +1099,18 @@ async function onSubmit(evt: string) {
 .input-foot-left span {
   font-size: 14px;
   line-height: 18px;
-  color: #252b3a;
+  color: var(--text-secondary);
 }
 
 .input-foot-dividing-line {
   width: 1px;
   height: 14px;
-  background-color: #d7d8da;
+  background-color: var(--border-color);
 }
 
 .input-foot-maxlength {
   font-size: 14px;
-  color: #71757f;
+  color: var(--text-muted);
 }
 
 .input-foot-right {
@@ -1149,17 +1167,57 @@ async function onSubmit(evt: string) {
 .model-content {
   flex: 1;
   max-width: calc(100% - 48px);
-  /* background: #f5f7fa; */
-  background: white;
+  background: transparent;
+  border: none;
   border-radius: 12px;
-  font-family: -apple-system,BlinkMacSystemFont,Segoe UI Variable Display,Segoe UI,Helvetica,Apple Color Emoji,Arial,sans-serif,Segoe UI Emoji,Segoe UI Symbol;
-  padding: 16px;
+  /* font-family: -apple-system,BlinkMacSystemFont,Segoe UI Variable Display,Segoe UI,Helvetica,Apple Color Emoji,Arial,sans-serif,Segoe UI Emoji,Segoe UI Symbol; */
+  padding: 16px 0;
   overflow: hidden;
+  color: var(--text-primary);
+}
+
+.model-content :deep(*) {
+  color: var(--text-primary) !important;
+}
+
+.model-content :deep(a) {
+  color: #3b82f6 !important;
 }
 
 .model-content :deep(.mc-markdown-card) {
   background: transparent !important;
   padding: 0 !important;
+  color: var(--text-primary) !important;
+}
+
+.model-content :deep(.mc-markdown-card *) {
+  color: var(--text-primary) !important;
+}
+
+.model-content :deep(p),
+.model-content :deep(li),
+.model-content :deep(span),
+.model-content :deep(div) {
+  color: var(--text-primary) !important;
+}
+
+/* Markdown 内容包装器 */
+.markdown-wrapper {
+  color: var(--text-primary) !important;
+}
+
+.markdown-wrapper :deep(*) {
+  color: inherit !important;
+}
+
+.markdown-wrapper :deep(a) {
+  color: #3b82f6 !important;
+}
+
+.markdown-wrapper :deep(pre),
+.markdown-wrapper :deep(pre *),
+.markdown-wrapper :deep(code) {
+  color: #e5e7eb !important;
 }
 
 .model-content :deep(pre) {
@@ -1167,6 +1225,11 @@ async function onSubmit(evt: string) {
   border-radius: 8px;
   padding: 16px;
   overflow-x: auto;
+}
+
+.model-content :deep(pre code),
+.model-content :deep(pre *) {
+  color: #e5e7eb !important;
 }
 
 .model-content :deep(code) {
@@ -1259,9 +1322,10 @@ async function onSubmit(evt: string) {
 /* 思考步骤样式 - 可折叠 */
 .thinking-steps {
   margin-bottom: 16px;
-  border: 1px solid #e5e7eb;
+  /* border: 1px solid var(--border-color); */
   border-radius: 8px;
   overflow: hidden;
+  background: var(--bg-card);
 }
 
 /* 折叠头部 */
@@ -1270,14 +1334,14 @@ async function onSubmit(evt: string) {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  /* background: var(--bg-tertiary); */
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
 }
 
 .thinking-header:hover {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: var(--bg-hover);
 }
 
 .thinking-toggle {
@@ -1289,7 +1353,7 @@ async function onSubmit(evt: string) {
 .toggle-icon {
   width: 16px;
   height: 16px;
-  color: #64748b;
+  color: var(--text-tertiary);
   transition: transform 0.3s ease;
 }
 
@@ -1303,7 +1367,7 @@ async function onSubmit(evt: string) {
   gap: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .thinking-icon {
@@ -1314,8 +1378,8 @@ async function onSubmit(evt: string) {
 
 .thinking-count {
   font-size: 12px;
-  color: #94a3b8;
-  background: #e2e8f0;
+  color: var(--text-muted);
+  background: var(--bg-hover);
   padding: 2px 8px;
   border-radius: 10px;
 }
@@ -1343,7 +1407,7 @@ async function onSubmit(evt: string) {
   overflow-y: auto;
   transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
   padding: 8px;
-  background: #fafafa;
+  background: var(--bg-secondary);
 }
 
 .thinking-content.collapsed {
@@ -1366,11 +1430,11 @@ async function onSubmit(evt: string) {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 6px;
   font-size: 13px;
-  color: #333;
-  border: 1px solid #f0f0f0;
+  color: var(--text-primary);
+  /* border: 1px solid var(--border-color); */
 }
 
 .step-icon {

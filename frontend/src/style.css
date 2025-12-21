@@ -4,11 +4,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 深色主题（默认） */
+:root,
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-hover: #374151;
+  
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --border-color: #374151;
+  --border-light: #4b5563;
+  
+  --menu-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  --menu-item-active: #2563eb;
+  --menu-item-hover: #374151;
+  --menu-text: #e2e8f0;
+  --menu-text-muted: #94a3b8;
+  --menu-border: #374151;
+  
+  --input-bg: #1e293b;
+  --input-border: #374151;
+  
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 浅色主题 */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-hover: #e5e7eb;
+  
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --text-muted: #9ca3af;
+  
+  --border-color: #d1d5db;
+  --border-light: #e5e7eb;
+  
+  --menu-bg: #f3f4f6;
+  --menu-item-active: #2563eb;
+  --menu-item-hover: #f3f4f6;
+  --menu-text: #374151;
+  --menu-text-muted: #6b7280;
+  --menu-border: #e5e7eb;
+  
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
 }
 
 html,
@@ -17,7 +75,9 @@ body,
   width: 100%;
   height: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Vue Flow 自定义样式 */
@@ -53,4 +113,78 @@ body,
   width: 10px;
   height: 10px;
   border-radius: 50%;
+}
+
+/* 输入框主题样式 */
+.mc-input-wrapper,
+.mc-layout-sender,
+.sender-container .mc-input,
+[class*="mc-input"],
+[class*="mc-layout-sender"] {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+}
+
+.mc-input-wrapper textarea,
+.mc-input-wrapper input,
+[class*="mc-input"] textarea,
+[class*="mc-input"] input {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.mc-input-wrapper textarea::placeholder,
+.mc-input-wrapper input::placeholder,
+[class*="mc-input"] textarea::placeholder,
+[class*="mc-input"] input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* 输入框容器背景 */
+.sender-container,
+.mc-layout-sender {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Markdown 内容主题样式 - 深色主题 */
+[data-theme="dark"] .mc-markdown-card,
+[data-theme="dark"] .mc-markdown-card *,
+[data-theme="dark"] [class*="mc-markdown"] *,
+[data-theme="dark"] [class*="markdown"] *,
+[data-theme="dark"] .model-content,
+[data-theme="dark"] .model-content *,
+[data-theme="dark"] .markdown-wrapper,
+[data-theme="dark"] .markdown-wrapper * {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .mc-markdown-card a,
+[data-theme="dark"] [class*="mc-markdown"] a,
+[data-theme="dark"] [class*="markdown"] a,
+[data-theme="dark"] .model-content a,
+[data-theme="dark"] .markdown-wrapper a {
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] .mc-markdown-card pre,
+[data-theme="dark"] .mc-markdown-card pre *,
+[data-theme="dark"] [class*="mc-markdown"] pre *,
+[data-theme="dark"] [class*="markdown"] pre *,
+[data-theme="dark"] .model-content pre *,
+[data-theme="dark"] .markdown-wrapper pre * {
+  color: #e5e7eb !important;
+}
+
+/* 用户消息气泡 - 深色主题 */
+[data-theme="dark"] .mc-bubble,
+[data-theme="dark"] [class*="mc-bubble"],
+[data-theme="dark"] [class*="bubble"] {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .mc-bubble *,
+[data-theme="dark"] [class*="mc-bubble"] *,
+[data-theme="dark"] [class*="bubble"] * {
+  color: #ffffff !important;
 }

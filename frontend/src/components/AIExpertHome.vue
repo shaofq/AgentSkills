@@ -149,7 +149,8 @@ function formatUsageCount(count: number): string {
   height: 100%;
   overflow-y: auto;
   padding: 48px 24px;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  background: var(--bg-primary);
+  transition: background 0.3s ease;
 }
 
 /* 头部区域 */
@@ -187,14 +188,14 @@ function formatUsageCount(count: number): string {
 
 .main-subtitle {
   font-size: 20px;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-bottom: 12px;
   font-weight: 500;
 }
 
 .sub-description {
   font-size: 15px;
-  color: #64748b;
+  color: var(--text-tertiary);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -216,13 +217,13 @@ function formatUsageCount(count: number): string {
 
 /* 卡片样式 */
 .agent-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .agent-card:hover {
@@ -261,13 +262,13 @@ function formatUsageCount(count: number): string {
 .card-title {
   font-size: 17px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-description {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-tertiary);
   line-height: 1.6;
   margin: 0 0 16px 0;
   display: -webkit-box;
@@ -289,7 +290,7 @@ function formatUsageCount(count: number): string {
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .stat-icon {

@@ -25,7 +25,7 @@ function renderAmis(schema: any) {
   <link rel="stylesheet" href="https://unpkg.com/amis@6.3.0/lib/helper.css">
   <link rel="stylesheet" href="https://unpkg.com/amis@6.3.0/sdk/iconfont.css">
   <style>
-    body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { margin: 0; padding: 16px; font-family: 'Inter',-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     #root { min-height: 100%; }
   </style>
 </head>
