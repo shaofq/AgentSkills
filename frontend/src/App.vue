@@ -11,6 +11,7 @@ import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
 import LoginDialog from './components/LoginDialog.vue'
 import CodeAssistantView from './components/CodeAssistantView.vue'
+import AIExpertHome from './components/AIExpertHome.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -140,6 +141,53 @@ interface Message {
 const messages = ref<Message[]>([])
 const thinkingCollapsed = ref<Record<number, boolean>>({})
 
+// AI 专家卡片数据
+interface AgentCard {
+  id: string
+  name: string
+  description: string
+  icon: string
+  iconBg: string
+  usageCount: number
+  avgTime: string
+}
+
+// 从菜单配置生成 AI 专家卡片
+const agentCards = computed<AgentCard[]>(() => {
+  const iconMap: Record<string, { icon: string; bg: string }> = {
+    'chat': { icon: '💬', bg: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)' },
+    'code-agent': { icon: '💻', bg: 'linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%)' },
+    'pptx-agent': { icon: '📊', bg: 'linear-gradient(135deg, #fde68a 0%, #fcd34d 100%)' },
+    'data-agent': { icon: '📈', bg: 'linear-gradient(135deg, #fca5a5 0%, #f87171 100%)' },
+    'policy-qa': { icon: '💬', bg: 'linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)' },
+    'ocr-agent': { icon: '📄', bg: 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)' },
+    'skill-creator': { icon: '🎯', bg: 'linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)' },
+    'booking-agent': { icon: '🚢', bg: 'linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)' },
+  }
+  
+  // 过滤出 agent 类型的菜单项
+  return menuConfigs.value
+    .filter(m => m.type === 'agent' || m.type === 'chat')
+    .map(m => {
+      const iconInfo = iconMap[m.id] || { icon: '🤖', bg: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)' }
+      return {
+        id: m.id,
+        name: m.name,
+        description: m.description || '智能助手',
+        icon: iconInfo.icon,
+        iconBg: iconInfo.bg,
+        usageCount: Math.floor(Math.random() * 200000) + 5000,
+        avgTime: Math.floor(Math.random() * 25 + 2) + ' 分钟'
+      }
+    })
+})
+
+// 处理 AI 专家卡片点击
+function handleAgentCardSelect(agentId: string) {
+  activeMenu.value = agentId
+  startPage.value = false
+}
+
 // 自动滚动到底部
 function scrollToBottom() {
   nextTick(() => {
@@ -184,8 +232,8 @@ function toggleThinking(msgIdx: number) {
 function handleMenuSelect(menuId: string) {
   activeMenu.value = menuId
   // 切换菜单时重置对话状态
-  if (menuId !== 'workflow') {
-    startPage.value = true
+  if (menuId !== 'workflow' && menuId !== 'workflow-list') {
+    startPage.value = false
     messages.value = []
   }
 }
@@ -492,28 +540,97 @@ async function onSubmit(evt: string) {
       
       <!-- 对话模式 -->
       <template v-else-if="!isWorkflowMode">
-        <!-- 开始页面 -->
-        <McLayoutContent 
+        <!-- AI 专家首页 -->
+        <AIExpertHome 
           v-if="startPage" 
-          style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px"
-        >
-          <McIntroduction
-            logoImg="https://matechat.gitcode.com/logo2x.svg"
-            :title="currentAgent.name"
-            :subTitle="'Hi，欢迎使用' + currentAgent.name"
-            :description="currentAgent.description"
-          />
-          <McPrompt
-            :list="introPrompt.list"
-            :direction="introPrompt.direction"
-            class="intro-prompt"
-            @itemClick="onSubmit($event.label)"
-          />
-        </McLayoutContent>
+          :agents="agentCards"
+          @select="handleAgentCardSelect"
+        />
 
         <!-- 对话内容 -->
         <McLayoutContent class="content-container" v-else>
           <div class="messages-wrapper">
+            <!-- 欢迎提示（无消息时显示） -->
+            <div v-if="messages.length === 0" class="welcome-section">
+              <!-- 装饰背景 -->
+              <!-- <div class="welcome-bg-decoration">
+                <div class="decoration-circle circle-1"></div>
+                <div class="decoration-circle circle-2"></div>
+                <div class="decoration-circle circle-3"></div>
+              </div> -->
+              
+              <!-- 图标容器 -->
+              <div class="welcome-icon-wrapper">
+                <div class="welcome-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#wg1)"/>
+                    <path d="M2 17L12 22L22 17" stroke="url(#wg2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="url(#wg3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                      <linearGradient id="wg1" x1="2" y1="7" x2="22" y2="7" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+                      </linearGradient>
+                      <linearGradient id="wg2" x1="2" y1="19.5" x2="22" y2="19.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#06b6d4"/><stop offset="1" stop-color="#3b82f6"/>
+                      </linearGradient>
+                      <linearGradient id="wg3" x1="2" y1="14.5" x2="22" y2="14.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              
+              <!-- 标题和描述 -->
+              <h2 class="welcome-title">{{ currentAgent.name }}</h2>
+              <p class="welcome-desc">{{ currentAgent.description[0] }}</p>
+              
+              <!-- 功能标签 -->
+              <div class="welcome-tags">
+                <span class="welcome-tag">
+                  <svg class="tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22,4 12,14.01 9,11.01"/>
+                  </svg>
+                  智能对话
+                </span>
+                <span class="welcome-tag">
+                  <svg class="tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  实时响应
+                </span>
+                <span class="welcome-tag">
+                  <svg class="tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  安全可靠
+                </span>
+              </div>
+              
+              <!-- 快捷提示 -->
+              <div class="welcome-prompts">
+                <p class="prompts-title">试试这样问我：</p>
+                <div class="prompt-items">
+                  <button class="prompt-item" @click="onSubmit('你好，请介绍一下你的功能')">
+                    <svg class="prompt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    介绍一下你的功能
+                  </button>
+                  <button class="prompt-item" @click="onSubmit('帮我完成一个任务')">
+                    <svg class="prompt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    帮我完成一个任务
+                  </button>
+                </div>
+              </div>
+            </div>
             <template v-for="(msg, idx) in messages" :key="idx">
               <McBubble
                 v-if="msg.from === 'user'"
@@ -612,8 +729,8 @@ async function onSubmit(evt: string) {
           </div>
         </div>
 
-        <!-- 输入区域 -->
-        <McLayoutSender class="sender-container">
+        <!-- 输入区域（首页不显示） -->
+        <McLayoutSender v-if="!startPage" class="sender-container">
           <div class="sender-wrapper">
             <McInput
               :value="inputValue"
@@ -706,6 +823,201 @@ async function onSubmit(evt: string) {
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
+  flex: 1;
+}
+
+/* 欢迎区域样式 */
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  text-align: center;
+  padding: 48px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 装饰背景 */
+.welcome-bg-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.circle-1 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  top: -100px;
+  right: -50px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.circle-2 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  bottom: -50px;
+  left: -30px;
+  animation: float 6s ease-in-out infinite reverse;
+}
+
+.circle-3 {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  top: 50%;
+  left: 10%;
+  animation: float 10s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+/* 图标容器 */
+.welcome-icon-wrapper {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 24px;
+}
+
+.welcome-icon {
+  width: 72px;
+  height: 72px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+}
+
+.welcome-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.welcome-title {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 12px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-desc {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0 0 28px 0;
+  max-width: 450px;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+/* 功能标签 */
+.welcome-tags {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+.welcome-tag:hover {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: #c7d2fe;
+  color: #6366f1;
+}
+
+.tag-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* 快捷提示 */
+.welcome-prompts {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+}
+
+.prompts-title {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 16px 0;
+}
+
+.prompt-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prompt-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.prompt-item:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  border-color: #c7d2fe;
+  color: #6366f1;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.prompt-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.prompt-item:hover .prompt-icon {
+  color: #6366f1;
 }
 
 /* 用户消息靠右对齐 */

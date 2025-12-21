@@ -12,7 +12,7 @@
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
           "workflowName": "code_assistant",
-          "description": "专业的代码生成和调试助手。支持 amis、React、Vue 等多种框架。",
+          "description": "专业的代码生成和调试助手,支持 amis、React、Vue 等多种框架。",
           "model": "qwen3-max"
         },
         {
@@ -34,7 +34,7 @@
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
           "workflowName": "ocr_workflow",
-          "description": "OCR 文件识别助手。识别 PDF 和图片中的文字内容。",
+          "description": "OCR 文件识别助手,识别 PDF 和图片中的文字内容。",
           "model": "qwen3-max"
         },
         {
@@ -45,7 +45,7 @@
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
           "workflowName": "ppt_workflow",
-          "description": "PPT生成助手,生成PPT文件。",
+          "description": "PPT生成助手,帮助用户根据文本内容生成PPT文件。",
           "model": "qwen3-max"
         }
         ,
@@ -57,7 +57,7 @@
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
           "workflowName": "booking_workflow",
-          "description": "订舱智能体。",
+          "description": "订舱功能，支持创建新的订舱申请，查询订舱状态。",
           "model": "qwen3-max"
         }
       ]
@@ -74,7 +74,7 @@
           "apiType": "skill-creator",
           "apiUrl": "http://localhost:8000/api/skill-creator/chat",
           "workflowName": null,
-          "description": "技能创建助手。帮助创建新的 Skill 技能包，设计技能结构和编写 SKILL.md 文档。",
+          "description": "技能创建助手,帮助创建新的 Skill 技能包，设计技能结构和编写 SKILL.md 文档。",
           "model": "qwen3-max"
         },
         {
