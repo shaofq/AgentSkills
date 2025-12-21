@@ -71,9 +71,9 @@
           "name": "技能创建",
           "icon": "icon-identity",
           "type": "agent",
-          "apiType": "skill-creator",
-          "apiUrl": "http://localhost:8000/api/skill-creator/chat",
-          "workflowName": null,
+          "apiType": "workflow",
+            "apiUrl": "http://localhost:8000/api/workflow/run",
+           "workflowName": "skill_create_flow",
           "description": "技能创建助手,帮助创建新的 Skill 技能包，设计技能结构和编写 SKILL.md 文档。",
           "model": "qwen3-max"
         },

@@ -339,5 +339,104 @@
     "total_tokens": 143,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T20:36:56.967457",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 29,
+    "completion_tokens": 117,
+    "total_tokens": 146,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T20:37:59.534697",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 534,
+    "completion_tokens": 344,
+    "total_tokens": 878,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T21:22:17.699477",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 146,
+    "total_tokens": 184,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T21:23:44.661792",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 116,
+    "total_tokens": 154,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T21:24:19.206660",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 140,
+    "total_tokens": 178,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T21:25:57.420508",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 131,
+    "total_tokens": 169,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T22:55:00.973810",
+    "agent_id": "skill-creator",
+    "agent_name": "技能创建",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 312,
+    "total_tokens": 319,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T23:22:18.742531",
+    "agent_id": "skill-creator",
+    "agent_name": "技能创建",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 292,
+    "total_tokens": 299,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-21T23:23:02.369961",
+    "agent_id": "node_1766330243657_4xry65gct",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 38,
+    "completion_tokens": 288,
+    "total_tokens": 326,
+    "user_id": null,
+    "session_id": null
   }
 ]

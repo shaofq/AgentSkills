@@ -638,7 +638,7 @@ async function onSubmit(evt: string) {
                 v-if="msg.from === 'user'"
                 :content="msg.content"
                 align="right"
-                :avatarConfig="{ imgSrc: 'https://matechat.gitcode.com/png/demo/userAvatar.svg' }"
+                
               />
               <div v-else class="model-message">
                 <div class="model-avatar">
