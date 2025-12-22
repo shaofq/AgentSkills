@@ -59,6 +59,17 @@
           "workflowName": "booking_workflow",
           "description": "订舱功能，支持创建新的订舱申请，查询订舱状态。",
           "model": "qwen3-max"
+        } ,
+        {
+          "id": "web-auto-agent",
+          "name": "Web自动化智能体",
+          "icon": "icon-management-new",
+          "type": "agent",
+          "apiType": "workflow",
+          "apiUrl": "http://localhost:8000/api/workflow/run",
+          "workflowName": "webauto_workflow",
+          "description": "Web自动化智能体，支持自动化Web页面操作。",
+          "model": "qwen3-max"
         }
       ]
     },

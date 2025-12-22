@@ -1,0 +1,423 @@
+{
+  "id": "workflow_1766366029516",
+  "name": "web自动化工作流",
+  "description": "实现通过用户命令，自动化执行web页面操作",
+  "nodes": [
+    {
+      "id": "node_1766366009078_ytrvmpiyo",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 99,
+        "y": 154,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766366009078_ytrvmpiyo",
+            "position": "right",
+            "x": 133.99998982747397,
+            "y": 27.49998728434245,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 99,
+        "y": 154
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766366011362_qch1w9oe5",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 329.5,
+        "y": 153,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766366011362_qch1w9oe5",
+            "position": "right",
+            "x": 153.99998982747397,
+            "y": 44.750010172526046,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766366011362_qch1w9oe5",
+            "position": "left",
+            "x": -6.000010172526042,
+            "y": 44.750010172526046,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 329.5,
+        "y": 153
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "playwright-skill"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766366015327_v22xfzan7",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 606.8333333333334,
+        "y": 178,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766366015327_v22xfzan7",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 606.8333333333334,
+        "y": 178
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766366009078_ytrvmpiyo_node_1766366011362_qch1w9oe5",
+      "type": "default",
+      "source": "node_1766366009078_ytrvmpiyo",
+      "target": "node_1766366011362_qch1w9oe5",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766366009078_ytrvmpiyo",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 99,
+          "y": 154,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766366009078_ytrvmpiyo",
+              "position": "right",
+              "x": 133.99998982747397,
+              "y": 27.49998728434245,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 99,
+          "y": 154
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766366011362_qch1w9oe5",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 329.5,
+          "y": 153,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766366011362_qch1w9oe5",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 50.25001525878906,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766366011362_qch1w9oe5",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 50.25001525878906,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 329.5,
+          "y": 153
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "playwright-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 244.99998982747397,
+      "sourceY": 187.49998728434244,
+      "targetX": 323.49998982747394,
+      "targetY": 209.25001525878906
+    },
+    {
+      "id": "edge_node_1766366011362_qch1w9oe5_node_1766366015327_v22xfzan7",
+      "type": "default",
+      "source": "node_1766366011362_qch1w9oe5",
+      "target": "node_1766366015327_v22xfzan7",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766366011362_qch1w9oe5",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 329.5,
+          "y": 153,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766366011362_qch1w9oe5",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 50.25001525878906,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766366011362_qch1w9oe5",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 50.25001525878906,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 329.5,
+          "y": 153
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "playwright-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766366015327_v22xfzan7",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 606.8333333333334,
+          "y": 178,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766366015327_v22xfzan7",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 606.8333333333334,
+          "y": 178
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 495.499989827474,
+      "sourceY": 209.25001525878906,
+      "targetX": 600.8333740234375,
+      "targetY": 211.5
+    }
+  ],
+  "createdAt": "2025-12-22T01:13:49.516Z",
+  "updatedAt": "2025-12-22T01:13:49.517Z"
+}
