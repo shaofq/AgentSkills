@@ -636,5 +636,159 @@
     "total_tokens": 453,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:48:51.954980",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 256,
+    "total_tokens": 265,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:50:20.437570",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 380,
+    "total_tokens": 389,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:50:47.525780",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 104,
+    "total_tokens": 111,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:53:03.170457",
+    "agent_id": "code-agent",
+    "agent_name": "代码助手",
+    "model": "qwen3-max",
+    "prompt_tokens": 56,
+    "completion_tokens": 947,
+    "total_tokens": 1003,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:53:16.988316",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 135,
+    "total_tokens": 142,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:58:19.072210",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 90,
+    "total_tokens": 97,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T13:59:20.796560",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 263,
+    "total_tokens": 272,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:01:36.847571",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 166,
+    "total_tokens": 173,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:07:45.744321",
+    "agent_id": "node_1766366011362_qch1w9oe5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 245,
+    "total_tokens": 252,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:11:29.390891",
+    "agent_id": "node_1766366011362_qch1w9oe5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 297,
+    "total_tokens": 304,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:12:03.366881",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 180,
+    "total_tokens": 187,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:14:53.232846",
+    "agent_id": "node_1766366011362_qch1w9oe5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 348,
+    "total_tokens": 355,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:16:40.869746",
+    "agent_id": "node_1",
+    "agent_name": "OCRReader",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 97,
+    "total_tokens": 104,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T14:23:03.916573",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 123,
+    "total_tokens": 130,
+    "user_id": null,
+    "session_id": null
   }
 ]

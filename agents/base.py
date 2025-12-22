@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Base agent class for all specialized agents."""
 import os
-from typing import List, Optional, Dict, Any
+import sys
+import io
+import asyncio
+from typing import List, Optional, Dict, Any, Callable
 from agentscope.agent import ReActAgent
 from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
@@ -11,6 +14,33 @@ from agentscope.tool import Toolkit, execute_shell_command, execute_python_code,
 
 # 技能目录的基础路径
 SKILL_BASE_PATH = "./skill"
+
+# 全局日志回调（用于捕获 agent 执行过程中的日志）
+_log_callback: Optional[Callable[[str, str, str], None]] = None
+
+
+def set_log_callback(callback: Optional[Callable[[str, str, str], None]]):
+    """设置全局日志回调函数
+    
+    Args:
+        callback: 回调函数，接收 (source, log_type, message) 参数
+    """
+    global _log_callback
+    _log_callback = callback
+
+
+def get_log_callback() -> Optional[Callable[[str, str, str], None]]:
+    """获取全局日志回调函数"""
+    return _log_callback
+
+
+def emit_log(source: str, log_type: str, message: str):
+    """发送日志到回调函数"""
+    if _log_callback:
+        try:
+            _log_callback(source, log_type, message)
+        except Exception:
+            pass
 
 
 class BaseAgent:
@@ -68,8 +98,46 @@ class BaseAgent:
         )
     
     async def __call__(self, msg):
-        """Process a message."""
-        return await self.agent(msg)
+        """Process a message with logging support."""
+        # 发送开始日志
+        emit_log(self.name, "info", f"开始处理请求...")
+        
+        # 捕获 stdout 输出
+        original_stdout = sys.stdout
+        captured_output = io.StringIO()
+        
+        class TeeOutput:
+            """同时输出到原始 stdout 和捕获器，并发送日志"""
+            def __init__(self, original, capture, agent_name):
+                self.original = original
+                self.capture = capture
+                self.agent_name = agent_name
+                self.buffer = ""
+            
+            def write(self, text):
+                self.original.write(text)
+                self.capture.write(text)
+                # 按行发送日志
+                self.buffer += text
+                while "\n" in self.buffer:
+                    line, self.buffer = self.buffer.split("\n", 1)
+                    if line.strip():
+                        emit_log(self.agent_name, "info", line.strip())
+            
+            def flush(self):
+                self.original.flush()
+                self.capture.flush()
+        
+        try:
+            sys.stdout = TeeOutput(original_stdout, captured_output, self.name)
+            result = await self.agent(msg)
+            emit_log(self.name, "success", "处理完成")
+            return result
+        except Exception as e:
+            emit_log(self.name, "error", f"执行错误: {str(e)}")
+            raise
+        finally:
+            sys.stdout = original_stdout
     
     @property
     def sys_prompt(self):

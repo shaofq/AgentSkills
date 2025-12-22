@@ -13,8 +13,9 @@ from api.services.context_builder import build_context_prompt
 from api.services.classifier import ClassifierService
 from api.services.agent_manager import AgentManager
 from api.services.token_logger import log_agent_call
+from api.services.console_logger import capture_console_for_session, log_to_session
 from api.utils.graph import get_execution_order
-from agents.base import create_agent_by_skills
+from agents.base import create_agent_by_skills, set_log_callback
 
 router = APIRouter(prefix="/api/workflow", tags=["工作流执行"])
 
@@ -117,12 +118,39 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
 @router.post("/run/stream")
 async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
     """执行预定义工作流（流式返回思考过程和结果）"""
+    import asyncio
+    from collections import deque
+    import threading
+    
+    # 日志队列（线程安全）
+    log_queue: deque = deque(maxlen=1000)
+    log_lock = threading.Lock()
+    
+    def log_callback(source: str, log_type: str, message: str):
+        """日志回调函数，将日志添加到队列"""
+        with log_lock:
+            log_queue.append({
+                'source': source,
+                'log_type': log_type,
+                'message': message
+            })
+    
+    def get_pending_logs():
+        """获取并清空待发送的日志"""
+        with log_lock:
+            logs = list(log_queue)
+            log_queue.clear()
+            return logs
+    
     async def event_generator():
         try:
             workflow_name = request.workflow_name
             user_input = request.input
             history = request.history or []
             api_key = AgentManager.get_api_key()
+            
+            # 设置日志回调
+            set_log_callback(log_callback)
             
             if workflow_name not in predefined_workflows:
                 yield f"data: {json.dumps({'type': 'error', 'message': f'工作流 {workflow_name} 不存在'})}\n\n"
@@ -133,6 +161,7 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
             edges = workflow.get("edges", [])
             
             yield f"data: {json.dumps({'type': 'thinking', 'message': '正在分析需求...'})}\n\n"
+            yield f"data: {json.dumps({'type': 'console_log', 'source': 'system', 'log_type': 'info', 'message': f'开始执行工作流: {workflow_name}'})}\n\n"
             
             # 构建上下文提示
             context_prompt = ""
@@ -150,6 +179,7 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                 if config:
                     agent_name = config.get("name", node["id"])
                     yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化智能体: {agent_name}'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'agent', 'log_type': 'info', 'message': f'[Agent] 创建智能体: {agent_name}'})}\n\n"
                     agent = AgentManager.create_from_config(config, api_key)
                     agents[node["id"]] = agent
             
@@ -188,13 +218,24 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                 
                 if node_type in ["agent", "skill-agent"] and node_id in agents:
                     yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行: {node_label}'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'workflow', 'log_type': 'info', 'message': f'[Workflow] 执行节点: {node_label}'})}\n\n"
                     
                     agent = agents[node_id]
                     yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'agent', 'log_type': 'info', 'message': f'[Agent] {node_label} 正在处理输入...'})}\n\n"
                     
                     agent_input = current_input
                     response = await agent(Msg("user", agent_input, "user"))
                     output = response.content if hasattr(response, "content") else str(response)
+                    
+                    # 推送 agent 执行过程中收集的日志
+                    pending_logs = get_pending_logs()
+                    for log in pending_logs:
+                        yield f"data: {json.dumps({'type': 'console_log', 'source': log['source'], 'log_type': log['log_type'], 'message': log['message']})}\n\n"
+                    
+                    # 推送输出日志
+                    output_preview = str(output)[:100] + '...' if len(str(output)) > 100 else str(output)
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'agent', 'log_type': 'success', 'message': f'[Agent] {node_label} 输出: {output_preview}'})}\n\n"
                     
                     if isinstance(output, list):
                         output = output[0].get("text", str(output[0])) if output else ""
@@ -238,11 +279,11 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                         yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched['name'] if matched else 'None'})}\n\n"
                 
                 elif node_type == "input":
-                    current_input = context_prompt + user_input if context_prompt else user_input
-                    
+                    current_input = user_input
                 elif node_type == "output":
                     final_output = current_input
             
+            yield f"data: {json.dumps({'type': 'console_log', 'source': 'system', 'log_type': 'success', 'message': '工作流执行完成'})}\n\n"
             yield f"data: {json.dumps({'type': 'content', 'content': final_output})}\n\n"
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
             
@@ -250,6 +291,9 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
             import traceback
             traceback.print_exc()
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        finally:
+            # 清理日志回调
+            set_log_callback(None)
     
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

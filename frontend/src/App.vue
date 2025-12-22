@@ -13,6 +13,7 @@ import LoginDialog from './components/LoginDialog.vue'
 import CodeAssistantView from './components/CodeAssistantView.vue'
 import AIExpertHome from './components/AIExpertHome.vue'
 import TokenStatsDialog from './components/TokenStatsDialog.vue'
+import ConsolePanel from './components/ConsolePanel.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -32,6 +33,15 @@ const activeMenu = ref('chat')
 const showConfigPanel = ref(false)
 const showPolicyQA = ref(false)
 const showTokenStats = ref(false)
+
+// 控制台日志
+interface ConsoleLog {
+  timestamp: string
+  type: string
+  source?: string
+  message: string
+}
+const consoleLogs = ref<ConsoleLog[]>([])
 // 默认菜单配置（当后端未返回时使用）
 const defaultMenuConfigs: MenuConfig[] = [
   { id: 'chat', name: '对话', icon: 'icon-message', type: 'chat', apiType: 'chat', apiUrl: '/api/chat', workflowName: null, description: '通用对话助手，可以回答各种问题。', model: 'deepseek-ai/DeepSeek-R1' },
@@ -406,6 +416,14 @@ async function onSubmit(evt: string) {
                     } else if (data.type === 'error') {
                       lastMsg.content = `❌ 错误: ${data.message}`
                       lastMsg.loading = false
+                    } else if (data.type === 'console_log') {
+                      // 添加控制台日志
+                      consoleLogs.value.push({
+                        timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                        type: data.log_type || 'info',
+                        source: data.source || 'system',
+                        message: data.message
+                      })
                     }
                   } catch (e) {
                     // 忽略解析错误
@@ -729,6 +747,13 @@ async function onSubmit(evt: string) {
               title="新建对话"
               size="md"
               @click="newConversation"
+            />
+            <!-- 控制台日志面板 - 放在加号按钮旁边 -->
+            <ConsolePanel 
+              v-if="!isWorkflowMode && !isWorkflowListMode && !startPage"
+              :logs="consoleLogs" 
+              @clear="consoleLogs = []" 
+              class="inline-console"
             />
           </div>
         </div>
