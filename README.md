@@ -31,7 +31,6 @@ LowCode AI is a **visual agent orchestration platform** that enables users to bu
 
 <p align="center">
   <img src="./docs/visualflow.png" alt="Visual Flow Editor" width="800" />
-  <img src="./docs/flowtest.png" alt="Visual Flow Test" width="800" />
 </p>
 
 ---
