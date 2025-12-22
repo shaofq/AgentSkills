@@ -245,13 +245,24 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                 node_type = node.get("type")
                 node_label = node.get("data", {}).get("label", node_id)
                 
-                if node_type in ["agent", "skill-agent"] and node_id in agents:
-                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行: {node_label}'})}\n\n"
-                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'workflow', 'log_type': 'info', 'message': f'[Workflow] 执行节点: {node_label}'})}\n\n"
+                if node_type in ["agent", "skill-agent", "simple-agent"] and node_id in agents:
+                    # 获取技能信息用于显示
+                    skill_info = ""
+                    if node_type == "skill-agent":
+                        skill_config = node["data"].get("skillAgentConfig", {})
+                        skills = skill_config.get("skills", [])
+                        if skills:
+                            skill_info = f" (技能: {', '.join(skills)})"
+                    elif node_type == "simple-agent":
+                        skill_info = " (对话模式)"
+                    
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行: {node_label}{skill_info}'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'workflow', 'log_type': 'info', 'message': f'[Workflow] 执行节点: {node_label}{skill_info}'})}\n\n"
                     
                     agent = agents[node_id]
-                    yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
-                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'agent', 'log_type': 'info', 'message': f'[Agent] {node_label} 正在处理输入...'})}\n\n"
+                    thinking_msg = f'{node_label} 正在思考...' if not skill_info else f'{node_label}{skill_info} 正在执行...'
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': thinking_msg})}\n\n"
+                    yield f"data: {json.dumps({'type': 'console_log', 'source': 'agent', 'log_type': 'info', 'message': f'[Agent] {node_label}{skill_info} 正在处理输入...'})}\n\n"
                     
                     agent_input = current_input
                     response = await agent(Msg("user", agent_input, "user"))
@@ -274,6 +285,10 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                         agent_config = node["data"].get("agentConfig", {})
                         agent_name = agent_config.get("name", node_label)
                         model_name = agent_config.get("model", "qwen3-max")
+                    elif node_type == "simple-agent":
+                        simple_config = node["data"].get("simpleAgentConfig", {})
+                        agent_name = simple_config.get("name", node_label)
+                        model_name = simple_config.get("model", "qwen3-max")
                     else:
                         skill_config = node["data"].get("skillAgentConfig", {})
                         agent_name = node_label
@@ -287,7 +302,7 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                         output_text=str(output) if output else "",
                     )
                     
-                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label} 执行完成'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label}{skill_info} 执行完成'})}\n\n"
                     
                     current_input = str(output)
                     final_output = str(output)
@@ -331,8 +346,21 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                                     target_node = next((n for n in nodes if n["id"] == target_node_id), None)
                                     if target_node and target_node_id in agents:
                                         target_label = target_node.get("data", {}).get("label", target_node_id)
-                                        yield f"data: {json.dumps({'type': 'node_start', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'正在执行: {target_label}'})}\n\n"
-                                        yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
+                                        target_type = target_node.get("type")
+                                        
+                                        # 获取技能信息用于显示
+                                        branch_skill_info = ""
+                                        if target_type == "skill-agent":
+                                            branch_skill_config = target_node["data"].get("skillAgentConfig", {})
+                                            branch_skills = branch_skill_config.get("skills", [])
+                                            if branch_skills:
+                                                branch_skill_info = f" (技能: {', '.join(branch_skills)})"
+                                        elif target_type == "simple-agent":
+                                            branch_skill_info = " (对话模式)"
+                                        
+                                        yield f"data: {json.dumps({'type': 'node_start', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'正在执行: {target_label}{branch_skill_info}'})}\n\n"
+                                        thinking_msg = f'{target_label}{branch_skill_info} 正在执行...' if branch_skill_info else f'{target_label} 正在思考...'
+                                        yield f"data: {json.dumps({'type': 'thinking', 'message': thinking_msg})}\n\n"
                                         
                                         agent = agents[target_node_id]
                                         # 使用完整输入（包含对话历史），而不是current_input
@@ -359,7 +387,7 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                                             output_text=str(output) if output else "",
                                         )
                                         
-                                        yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'{target_label} 执行完成'})}\n\n"
+                                        yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'{target_label}{branch_skill_info} 执行完成'})}\n\n"
                                         
                                         current_input = str(output)
                                         final_output = str(output)

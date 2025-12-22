@@ -1505,5 +1505,115 @@
     "total_tokens": 272,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:01:17.001693",
+    "agent_id": "node_1766391030358_5xj8r9ye5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 36,
+    "completion_tokens": 225,
+    "total_tokens": 261,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:01:32.723555",
+    "agent_id": "node_1766396153845_rt674xgj4",
+    "agent_name": "对话智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 266,
+    "completion_tokens": 29,
+    "total_tokens": 295,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:05:43.634164",
+    "agent_id": "node_1766391030358_5xj8r9ye5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 35,
+    "completion_tokens": 233,
+    "total_tokens": 268,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:08:45.009145",
+    "agent_id": "node_1766391030358_5xj8r9ye5",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 35,
+    "completion_tokens": 236,
+    "total_tokens": 271,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:09:14.939731",
+    "agent_id": "node_1766396153845_rt674xgj4",
+    "agent_name": "对话智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 275,
+    "completion_tokens": 29,
+    "total_tokens": 304,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:10:30.529860",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 228,
+    "total_tokens": 237,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:11:18.984373",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 273,
+    "completion_tokens": 213,
+    "total_tokens": 486,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:11:37.397615",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 2,
+    "completion_tokens": 112,
+    "total_tokens": 114,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:12:39.410435",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 333,
+    "completion_tokens": 330,
+    "total_tokens": 663,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-22T18:13:22.401945",
+    "agent_id": "node_1766281723247_gqon1c0gb",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 680,
+    "completion_tokens": 219,
+    "total_tokens": 899,
+    "user_id": null,
+    "session_id": null
   }
 ]
