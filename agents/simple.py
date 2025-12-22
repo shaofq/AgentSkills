@@ -5,10 +5,14 @@ from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
 from agentscope.model import DashScopeChatModel
 from agentscope.tool import Toolkit
+from agentscope.message import Msg
 
 
 class SimpleAgent:
-    """Simple agent without tools, only for analysis and conversation."""
+    """Simple agent without tools, only for analysis and conversation.
+    
+    Uses ReActAgent with empty toolkit and max_iters=1 to get direct response.
+    """
     
     def __init__(
         self,
@@ -27,11 +31,9 @@ class SimpleAgent:
             model_name: Model name to use
         """
         self.name = name
+        self._sys_prompt = sys_prompt
         
-        # Create empty toolkit (no tools registered)
-        self.toolkit = Toolkit()
-        
-        # Create the agent with empty toolkit
+        # 使用 ReActAgent，但不注册任何工具，max_iters=1 直接返回
         self.agent = ReActAgent(
             name=name,
             sys_prompt=sys_prompt,
@@ -42,16 +44,18 @@ class SimpleAgent:
                 stream=True,
             ),
             formatter=DashScopeChatFormatter(),
-            toolkit=self.toolkit,
+            toolkit=Toolkit(),  # 空工具箱
             memory=InMemoryMemory(),
-            max_iters=1,  # 只执行一次，不需要工具循环
+            max_iters=1,  # 只执行一次，直接返回结果
         )
     
     async def __call__(self, msg):
         """Process a message."""
-        return await self.agent(msg)
+        result = await self.agent(msg)
+        print(f"{self.name}: {result.content if hasattr(result, 'content') else result}")
+        return result
     
     @property
     def sys_prompt(self):
         """Get the agent's system prompt."""
-        return self.agent.sys_prompt
+        return self._sys_prompt

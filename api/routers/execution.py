@@ -165,13 +165,18 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
             
             # 构建上下文提示
             context_prompt = ""
+            print(f"[Debug] 收到历史消息数量: {len(history)}")
+            for i, msg in enumerate(history):
+                print(f"[Debug] history[{i}]: role={msg.get('role')}, content长度={len(msg.get('content', ''))}")
             if history:
                 yield f"data: {json.dumps({'type': 'thinking', 'message': f'加载对话历史 ({len(history)} 条消息)...'})}\n\n"
                 context_prompt = build_context_prompt(history)
+                print(f"[Debug] context_prompt 长度: {len(context_prompt)}")
             
             # 创建智能体
             agent_nodes = [n for n in nodes if n["type"] == "agent"]
             skill_agent_nodes = [n for n in nodes if n["type"] == "skill-agent"]
+            simple_agent_nodes = [n for n in nodes if n["type"] == "simple-agent"]
             agents = {}
             
             for node in agent_nodes:
@@ -183,6 +188,20 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                     agent = AgentManager.create_from_config(config, api_key)
                     agents[node["id"]] = agent
             
+            # 创建对话智能体（SimpleAgent）
+            for node in simple_agent_nodes:
+                config = node["data"].get("simpleAgentConfig", {})
+                agent_name = config.get("name", "SimpleAgent")
+                yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化对话智能体: {agent_name}'})}\n\n"
+                from agents.simple import SimpleAgent
+                agent = SimpleAgent(
+                    name=agent_name,
+                    sys_prompt=config.get("systemPrompt", ""),
+                    api_key=api_key,
+                    model_name=config.get("model", "qwen3-max"),
+                )
+                agents[node["id"]] = agent
+            
             for node in skill_agent_nodes:
                 skill_config = node["data"].get("skillAgentConfig", {})
                 skills = skill_config.get("skills", [])
@@ -191,7 +210,7 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                     yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化技能智能体: {skill_names}'})}\n\n"
                     model = skill_config.get("model", "qwen3-max")
                     max_iters = skill_config.get("maxIters", 30)
-                    sys_prompt = skill_config.get("systemPrompt", "")
+                    sys_prompt = skill_config.get("systemPrompt") or None
                     agent = create_agent_by_skills(
                         name=f"SkillAgent_{node['id']}",
                         skill_names=skills,
@@ -205,10 +224,20 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
             execution_order = get_execution_order(nodes, edges)
             yield f"data: {json.dumps({'type': 'thinking', 'message': f'执行顺序: {len(execution_order)} 个节点'})}\n\n"
             
-            current_input = context_prompt + user_input if context_prompt else user_input
+            # 保存包含对话历史的完整输入
+            full_input_with_history = context_prompt + user_input if context_prompt else user_input
+            current_input = full_input_with_history
+            print(f"[Debug] 发送给Agent的完整输入:\n{current_input}\n{'='*50}")
             final_output = ""
             
+            # 记录分类器已执行的分支节点，避免重复执行
+            executed_branch_nodes = set()
+            
             for node_id in execution_order:
+                # 如果该节点已经被分类器分支执行过，跳过
+                if node_id in executed_branch_nodes:
+                    continue
+                    
                 node = next((n for n in nodes if n["id"] == node_id), None)
                 if not node:
                     continue
@@ -276,10 +305,69 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                         classifier = ClassifierService(api_key)
                         matched = await classifier.classify(current_input, categories, model)
                         
+                        print(f"Classifier: {matched['name'] if matched else 'None'}")
                         yield f"data: {json.dumps({'type': 'classifier_result', 'nodeId': node_id, 'nodeLabel': node_label, 'result': matched['name'] if matched else 'None'})}\n\n"
+                        
+                        # 根据分类结果选择下一个节点
+                        if matched:
+                            matched_category_id = matched.get("id")
+                            
+                            # 收集所有从分类器出发的分支节点，标记为需要跳过
+                            for edge in edges:
+                                if edge.get("source") == node_id and edge.get("sourceHandle"):
+                                    branch_target = edge.get("target")
+                                    # 如果不是匹配的分支，添加到跳过集合
+                                    if edge.get("sourceHandle") != matched_category_id:
+                                        executed_branch_nodes.add(branch_target)
+                            
+                            # 找到匹配的分支并执行
+                            for edge in edges:
+                                if edge.get("source") == node_id and edge.get("sourceHandle") == matched_category_id:
+                                    target_node_id = edge.get("target")
+                                    # 标记为已执行
+                                    executed_branch_nodes.add(target_node_id)
+                                    
+                                    # 执行匹配的分支节点
+                                    target_node = next((n for n in nodes if n["id"] == target_node_id), None)
+                                    if target_node and target_node_id in agents:
+                                        target_label = target_node.get("data", {}).get("label", target_node_id)
+                                        yield f"data: {json.dumps({'type': 'node_start', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'正在执行: {target_label}'})}\n\n"
+                                        yield f"data: {json.dumps({'type': 'thinking', 'message': '智能体正在思考...'})}\n\n"
+                                        
+                                        agent = agents[target_node_id]
+                                        # 使用完整输入（包含对话历史），而不是current_input
+                                        branch_input = full_input_with_history
+                                        print(f"[Debug] 分类器分支执行，输入长度: {len(branch_input)}")
+                                        print(f"[Debug] 分类器分支输入内容:\n{branch_input[:500]}...")
+                                        response = await agent(Msg("user", branch_input, "user"))
+                                        output = response.content if hasattr(response, "content") else str(response)
+                                        
+                                        # 处理列表格式的响应，提取text字段
+                                        if isinstance(output, list):
+                                            output = output[0].get("text", str(output[0])) if output else ""
+                                        
+                                        pending_logs = get_pending_logs()
+                                        for log in pending_logs:
+                                            yield f"data: {json.dumps({'type': 'console_log', 'source': log['source'], 'log_type': log['log_type'], 'message': log['message']})}\n\n"
+                                        
+                                        skill_config = target_node["data"].get("skillAgentConfig", {})
+                                        log_agent_call(
+                                            agent_id=target_node_id,
+                                            agent_name=target_label,
+                                            model=skill_config.get("model", "qwen3-max"),
+                                            input_text=current_input,
+                                            output_text=str(output) if output else "",
+                                        )
+                                        
+                                        yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': target_node_id, 'nodeLabel': target_label, 'message': f'{target_label} 执行完成'})}\n\n"
+                                        
+                                        current_input = str(output)
+                                        final_output = str(output)
+                                    break
                 
                 elif node_type == "input":
-                    current_input = user_input
+                    # 保持完整输入（包含对话历史），不要重置为只有user_input
+                    current_input = full_input_with_history
                 elif node_type == "output":
                     final_output = current_input
             
@@ -473,15 +561,21 @@ async def test_workflow(request: WorkflowTestRequest):
                     classifier_result = context.get("classifier_result")
                     next_input = context.get("original_input", output)
                     
+                    print(f"[Debug] 分类器结果: {classifier_result}")
+                    print(f"[Debug] 下一节点列表: {next_nodes}")
+                    
                     matched = False
                     for next_node in next_nodes:
+                        print(f"[Debug] 检查边: handle={next_node['handle']}, target={next_node['target']}")
                         if next_node["handle"] == classifier_result:
+                            print(f"[Debug] 匹配成功，执行节点: {next_node['target']}")
                             async for event in execute_from_node(next_node["target"], next_input):
                                 yield event
                             matched = True
                             break
                     
                     if not matched and next_nodes:
+                        print(f"[Debug] 未匹配，执行默认节点: {next_nodes[0]['target']}")
                         async for event in execute_from_node(next_nodes[0]["target"], next_input):
                             yield event
                 

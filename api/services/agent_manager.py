@@ -139,6 +139,14 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
             )
+        elif agent_type == "analyzer":
+            # 分析型 Agent，使用 SimpleAgent（纯对话模型，不带工具）
+            return SimpleAgent(
+                name=config.get("name", "Analyzer"),
+                sys_prompt=config.get("systemPrompt", "你是一个内容分析助手。"),
+                api_key=api_key,
+                model_name=model,
+            )
         else:
             # 自定义 Agent，使用 BaseAgent
             skill_paths = [f"./skill/{s}" for s in config.get("skills", [])]

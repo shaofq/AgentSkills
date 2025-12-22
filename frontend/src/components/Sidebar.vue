@@ -16,6 +16,8 @@ const nodeTypes = [
     items: [
       // 通用技能智能体
       { type: 'skill-agent', label: '技能智能体', icon: '🎯', color: 'bg-emerald-500' },
+      // 对话智能体（无工具）
+      { type: 'simple-agent', label: '对话智能体', icon: '💬', color: 'bg-purple-500' },
       // 预定义智能体
       ...store.predefinedAgents.map(agent => ({
         type: 'agent',

@@ -17,7 +17,7 @@
         },
         {
           "id": "policy-qa",
-          "name": "制度问答",
+          "name": "公司制度问答",
           "icon": "icon-help",
           "type": "agent",
           "apiType": "workflow",
@@ -33,7 +33,7 @@
           "type": "agent",
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
-          "workflowName": "ocr_workflow",
+          "workflowName": "com_ocr_workflow",
           "description": "OCR 文件识别助手,识别 PDF 和图片中的文字内容。",
           "model": "qwen3-max"
         },
@@ -51,7 +51,7 @@
         ,
         {
           "id": "booking-agent",
-          "name": "订舱智能体",
+          "name": "海运订舱智能体",
           "icon": "icon-add-child-node-o",
           "type": "agent",
           "apiType": "workflow",

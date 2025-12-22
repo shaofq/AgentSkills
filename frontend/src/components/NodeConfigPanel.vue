@@ -31,6 +31,10 @@ const localConfig = ref({
   skillAgentModel: 'qwen3-max',
   skillAgentMaxIters: 30,
   skillAgentSystemPrompt: '',
+  // 对话智能体配置
+  simpleAgentName: 'SimpleAgent',
+  simpleAgentSystemPrompt: '',
+  simpleAgentModel: 'qwen3-max',
 })
 
 // 可用技能列表（从后端加载）
@@ -81,6 +85,9 @@ watch(selectedNode, (node) => {
       skillAgentModel: 'qwen3-max',
       skillAgentMaxIters: 30,
       skillAgentSystemPrompt: '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
     }
   } else if (node?.data?.skillAgentConfig) {
     // 技能智能体配置
@@ -104,6 +111,35 @@ watch(selectedNode, (node) => {
       skillAgentModel: config.model || 'qwen3-max',
       skillAgentMaxIters: config.maxIters || 30,
       skillAgentSystemPrompt: config.systemPrompt || '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
+    }
+  } else if (node?.data?.simpleAgentConfig) {
+    // 对话智能体配置
+    const config = node.data.simpleAgentConfig
+    localConfig.value = {
+      name: node.data.label,
+      systemPrompt: '',
+      skills: [],
+      model: 'qwen3-max',
+      maxIters: 30,
+      temperature: 0.7,
+      enableThinking: false,
+      stream: true,
+      customParams: [],
+      inputVariables: [],
+      conditionExpression: '',
+      parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
+      simpleAgentName: config.name || 'SimpleAgent',
+      simpleAgentSystemPrompt: config.systemPrompt || '',
+      simpleAgentModel: config.model || 'qwen3-max',
     }
   } else if (node?.data?.conditionConfig) {
     // 条件节点配置
@@ -127,6 +163,9 @@ watch(selectedNode, (node) => {
       skillAgentModel: 'qwen3-max',
       skillAgentMaxIters: 30,
       skillAgentSystemPrompt: '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
     }
   } else if (node?.data?.classifierConfig) {
     // 分类器节点配置
@@ -150,6 +189,9 @@ watch(selectedNode, (node) => {
       skillAgentModel: 'qwen3-max',
       skillAgentMaxIters: 30,
       skillAgentSystemPrompt: '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
     }
   } else if (node) {
     localConfig.value = {
@@ -171,6 +213,9 @@ watch(selectedNode, (node) => {
       skillAgentModel: 'qwen3-max',
       skillAgentMaxIters: 30,
       skillAgentSystemPrompt: '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
     }
   }
   activeTab.value = 'basic'
@@ -235,6 +280,19 @@ function handleSave() {
             model: localConfig.value.skillAgentModel,
             maxIters: localConfig.value.skillAgentMaxIters,
             systemPrompt: localConfig.value.skillAgentSystemPrompt,
+          },
+        },
+      })
+    } else if (nodeType === 'simple-agent') {
+      // 对话智能体节点
+      store.updateNode(selectedNode.value.id, {
+        data: {
+          ...selectedNode.value.data,
+          label: localConfig.value.name,
+          simpleAgentConfig: {
+            name: localConfig.value.simpleAgentName,
+            systemPrompt: localConfig.value.simpleAgentSystemPrompt,
+            model: localConfig.value.simpleAgentModel,
           },
         },
       })
@@ -573,6 +631,53 @@ const availableModels = [
                 <li>技能会自动加载到智能体的工具集中</li>
                 <li>执行时会根据技能动态创建智能体</li>
                 <li>可自定义系统提示词或使用自动生成</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 对话智能体配置 -->
+      <template v-if="selectedNode.type === 'simple-agent'">
+        <!-- 模型选择 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">模型</label>
+          <select 
+            v-model="localConfig.simpleAgentModel"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+          >
+            <option v-for="model in availableModels" :key="model" :value="model">
+              {{ model }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 系统提示词 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            系统提示词 <span class="text-red-500">*</span>
+          </label>
+          <textarea 
+            v-model="localConfig.simpleAgentSystemPrompt"
+            rows="6"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all resize-none"
+            placeholder="定义智能体的行为和能力，例如：你是一个内容分析助手，直接从输入中提取用户需要的信息..."
+          ></textarea>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-purple-700">
+              <p class="font-medium mb-1">对话智能体：</p>
+              <ul class="space-y-1 list-disc list-inside">
+                <li>纯对话模型，不调用任何工具</li>
+                <li>适合内容分析、总结、问答等场景</li>
+                <li>直接根据系统提示词和输入生成回复</li>
+                <li>执行速度快，适合简单任务</li>
               </ul>
             </div>
           </div>

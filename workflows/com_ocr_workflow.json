@@ -1,0 +1,1035 @@
+{
+  "id": "workflow_176603894766211",
+  "name": "ocr文件识别工作流",
+  "description": "实现通过本地ocr模型对pdf或者图片文件进行识别",
+  "nodes": [
+    {
+      "id": "node_1766391028518_7vbta545r",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": -502.9375,
+        "y": 153.33333333333334,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766391028518_7vbta545r",
+            "position": "right",
+            "x": 134.00001525878906,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": -502.9375,
+        "y": 153.33333333333334
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766391030358_5xj8r9ye5",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 113
+      },
+      "computedPosition": {
+        "x": 111.15501493888948,
+        "y": 64.83333333333331,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766391030358_5xj8r9ye5",
+            "position": "right",
+            "x": 154.00001525878906,
+            "y": 50.250002543131515,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766391030358_5xj8r9ye5",
+            "position": "left",
+            "x": -5.9999847412109375,
+            "y": 50.250002543131515,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 111.15501493888948,
+        "y": 64.83333333333331
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "ocr-file-reader"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766391049273_f5o4ihvup",
+      "type": "classifier",
+      "dimensions": {
+        "width": 160,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": -121.33333333333331,
+        "y": 123.33333333333336,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "cat_1766391055449",
+            "type": "source",
+            "nodeId": "node_1766391049273_f5o4ihvup",
+            "position": "right",
+            "x": 154.00001525878906,
+            "y": 48.00001780192058,
+            "width": 12,
+            "height": 12
+          },
+          {
+            "id": "cat_1766391117433",
+            "type": "source",
+            "nodeId": "node_1766391049273_f5o4ihvup",
+            "position": "right",
+            "x": 154.00001525878906,
+            "y": 68.00001780192058,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766391049273_f5o4ihvup",
+            "position": "left",
+            "x": -5.99999745686849,
+            "y": 37.00000762939453,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": -121.33333333333331,
+        "y": 123.33333333333336
+      },
+      "data": {
+        "label": "问题分类器",
+        "icon": "🏷️",
+        "color": "bg-cyan-500",
+        "classifierConfig": {
+          "model": "qwen3-max",
+          "categories": [
+            {
+              "id": "cat_1766391055449",
+              "name": "ocr解析",
+              "description": "如果用户输入内容包含具体附件地址"
+            },
+            {
+              "id": "cat_1766391117433",
+              "name": "普通总结",
+              "description": "如果用户输入内容不包含具体附件地址，只是对消息内容的解析总结"
+            }
+          ]
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766391218902_njnfe56zj",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 378.70085681611675,
+        "y": 134.2873275449817,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766391218902_njnfe56zj",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 378.70085681611675,
+        "y": 134.2873275449817
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766396153845_rt674xgj4",
+      "type": "simple-agent",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 140.16666666666669,
+        "y": 225.5,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766396153845_rt674xgj4",
+            "position": "right",
+            "x": 133.99998982747397,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766396153845_rt674xgj4",
+            "position": "left",
+            "x": -6.000010172526042,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 140.16666666666669,
+        "y": 225.5
+      },
+      "data": {
+        "label": "对话智能体",
+        "icon": "💬",
+        "color": "bg-purple-500",
+        "simpleAgentConfig": {
+          "name": "SimpleAgent",
+          "systemPrompt": "你是一个内容分析助手。\n\n## 重要规则\n1. 你的输入中已经包含了完整的对话历史，其中有之前识别的文件内容（如发票信息）\n2. 直接从输入的对话历史中提取用户需要的信息\n3. 绝对禁止要求用户提供文件或文本\n4. 如果用户问\"发票号是多少\"，直接从对话历史中找到发票号并回答\n\n## 输入格式\n你收到的输入包含：\n- 对话历史（包含之前识别的文件内容）\n- 当前用户需求\n\n请仔细阅读对话历史，从中提取用户需要的信息。",
+          "model": "qwen3-max"
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766391028518_7vbta545r_node_1766391049273_f5o4ihvup",
+      "type": "default",
+      "source": "node_1766391028518_7vbta545r",
+      "target": "node_1766391049273_f5o4ihvup",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766391028518_7vbta545r",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": -502.9375,
+          "y": 153.33333333333334,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766391028518_7vbta545r",
+              "position": "right",
+              "x": 134.00001525878906,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": -502.9375,
+          "y": 153.33333333333334
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766391049273_f5o4ihvup",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766391055449",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 48.00001780192058,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766391117433",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 68.00001780192058,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766391055449",
+                "name": "ocr解析",
+                "description": "如果用户输入内容包含具体附件地址"
+              },
+              {
+                "id": "cat_1766391117433",
+                "name": "普通总结",
+                "description": "如果用户输入内容不包含具体附件地址，只是对消息内容的解析总结"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": -356.93748474121094,
+      "sourceY": 186.83333333333334,
+      "targetX": -127.3333307902018,
+      "targetY": 166.3333409627279
+    },
+    {
+      "id": "edge_node_1766391049273_f5o4ihvup_node_1766391030358_5xj8r9ye5",
+      "type": "default",
+      "source": "node_1766391049273_f5o4ihvup",
+      "target": "node_1766391030358_5xj8r9ye5",
+      "sourceHandle": "cat_1766391055449",
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766391049273_f5o4ihvup",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766391055449",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 48.00001780192058,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766391117433",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 68.00001780192058,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766391055449",
+                "name": "ocr解析",
+                "description": "如果用户输入内容包含具体附件地址"
+              },
+              {
+                "id": "cat_1766391117433",
+                "name": "普通总结",
+                "description": "如果用户输入内容不包含具体附件地址，只是对消息内容的解析总结"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766391030358_5xj8r9ye5",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 111.15501493888948,
+          "y": 64.83333333333331,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766391030358_5xj8r9ye5",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 50.250002543131515,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391030358_5xj8r9ye5",
+              "position": "left",
+              "x": -5.9999847412109375,
+              "y": 50.250002543131515,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 111.15501493888948,
+          "y": 64.83333333333331
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "ocr-file-reader"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 44.66668192545575,
+      "sourceY": 177.33335113525393,
+      "targetX": 105.15503019767854,
+      "targetY": 121.08333587646483
+    },
+    {
+      "id": "edge_node_1766391030358_5xj8r9ye5_node_1766391218902_njnfe56zj",
+      "type": "default",
+      "source": "node_1766391030358_5xj8r9ye5",
+      "target": "node_1766391218902_njnfe56zj",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766391030358_5xj8r9ye5",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 111.15501493888948,
+          "y": 64.83333333333331,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766391030358_5xj8r9ye5",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 50.250002543131515,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391030358_5xj8r9ye5",
+              "position": "left",
+              "x": -5.9999847412109375,
+              "y": 50.250002543131515,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 111.15501493888948,
+          "y": 64.83333333333331
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "ocr-file-reader"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766391218902_njnfe56zj",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 378.70085681611675,
+          "y": 134.2873275449817,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391218902_njnfe56zj",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 378.70085681611675,
+          "y": 134.2873275449817
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 277.15503019767857,
+      "sourceY": 121.08333587646483,
+      "targetX": 372.70089750622094,
+      "targetY": 167.7873275449817
+    },
+    {
+      "id": "edge_node_1766391049273_f5o4ihvup_node_1766396153845_rt674xgj4",
+      "type": "default",
+      "source": "node_1766391049273_f5o4ihvup",
+      "target": "node_1766396153845_rt674xgj4",
+      "sourceHandle": "cat_1766391117433",
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766391049273_f5o4ihvup",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766391055449",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 48.00001780192058,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766391117433",
+              "type": "source",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "right",
+              "x": 154.00001525878906,
+              "y": 68.00001780192058,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391049273_f5o4ihvup",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": -121.33333333333331,
+          "y": 123.33333333333336
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766391055449",
+                "name": "ocr解析",
+                "description": "如果用户输入内容包含具体附件地址"
+              },
+              {
+                "id": "cat_1766391117433",
+                "name": "普通总结",
+                "description": "如果用户输入内容不包含具体附件地址，只是对消息内容的解析总结"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766396153845_rt674xgj4",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 140.16666666666669,
+          "y": 225.5,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766396153845_rt674xgj4",
+              "position": "right",
+              "x": 133.99998982747397,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766396153845_rt674xgj4",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 140.16666666666669,
+          "y": 225.5
+        },
+        "data": {
+          "label": "对话智能体",
+          "icon": "💬",
+          "color": "bg-purple-500",
+          "simpleAgentConfig": {
+            "name": "SimpleAgent",
+            "systemPrompt": "你是一个内容分析助手。\n\n## 重要规则\n1. 你的输入中已经包含了完整的对话历史，其中有之前识别的文件内容（如发票信息）\n2. 直接从输入的对话历史中提取用户需要的信息\n3. 绝对禁止要求用户提供文件或文本\n4. 如果用户问\"发票号是多少\"，直接从对话历史中找到发票号并回答\n\n## 输入格式\n你收到的输入包含：\n- 对话历史（包含之前识别的文件内容）\n- 当前用户需求\n\n请仔细阅读对话历史，从中提取用户需要的信息。",
+            "model": "qwen3-max"
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 44.66668192545575,
+      "sourceY": 197.33335113525393,
+      "targetX": 134.16665649414065,
+      "targetY": 268.499994913737
+    },
+    {
+      "id": "edge_node_1766396153845_rt674xgj4_node_1766391218902_njnfe56zj",
+      "type": "default",
+      "source": "node_1766396153845_rt674xgj4",
+      "target": "node_1766391218902_njnfe56zj",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766396153845_rt674xgj4",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 140.16666666666669,
+          "y": 225.5,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766396153845_rt674xgj4",
+              "position": "right",
+              "x": 133.99998982747397,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766396153845_rt674xgj4",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 140.16666666666669,
+          "y": 225.5
+        },
+        "data": {
+          "label": "对话智能体",
+          "icon": "💬",
+          "color": "bg-purple-500",
+          "simpleAgentConfig": {
+            "name": "SimpleAgent",
+            "systemPrompt": "你是一个内容分析助手。\n\n## 重要规则\n1. 你的输入中已经包含了完整的对话历史，其中有之前识别的文件内容（如发票信息）\n2. 直接从输入的对话历史中提取用户需要的信息\n3. 绝对禁止要求用户提供文件或文本\n4. 如果用户问\"发票号是多少\"，直接从对话历史中找到发票号并回答\n\n## 输入格式\n你收到的输入包含：\n- 对话历史（包含之前识别的文件内容）\n- 当前用户需求\n\n请仔细阅读对话历史，从中提取用户需要的信息。",
+            "model": "qwen3-max"
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766391218902_njnfe56zj",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 378.70085681611675,
+          "y": 134.2873275449817,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766391218902_njnfe56zj",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 378.70085681611675,
+          "y": 134.2873275449817
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 286.1666564941406,
+      "sourceY": 268.499994913737,
+      "targetX": 372.70089750622094,
+      "targetY": 167.7873275449817
+    }
+  ],
+  "createdAt": "2025-12-18T06:22:27.662Z",
+  "updatedAt": "2025-12-22T09:36:05.300Z"
+}

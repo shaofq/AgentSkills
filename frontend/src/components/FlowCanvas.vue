@@ -12,6 +12,7 @@ import ConditionNode from './nodes/ConditionNode.vue'
 import ParallelNode from './nodes/ParallelNode.vue'
 import ClassifierNode from './nodes/ClassifierNode.vue'
 import SkillAgentNode from './nodes/SkillAgentNode.vue'
+import SimpleAgentNode from './nodes/SimpleAgentNode.vue'
 
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
@@ -33,6 +34,7 @@ const nodeTypes = {
   parallel: ParallelNode,
   classifier: ClassifierNode,
   'skill-agent': SkillAgentNode,
+  'simple-agent': SimpleAgentNode,
 }
 
 // 使用时间戳生成唯一 ID，避免导入流程后 ID 冲突
@@ -85,6 +87,12 @@ function onDrop(event: DragEvent) {
       model: 'qwen3-max',
       maxIters: 30,
       systemPrompt: '',
+    }
+  } else if (item.type === 'simple-agent') {
+    nodeData.simpleAgentConfig = {
+      name: 'SimpleAgent',
+      systemPrompt: '',
+      model: 'qwen3-max',
     }
   }
   

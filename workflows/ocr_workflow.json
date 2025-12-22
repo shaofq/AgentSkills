@@ -11,8 +11,8 @@
         "height": 67
       },
       "computedPosition": {
-        "x": 102,
-        "y": 147,
+        "x": 47.83333333333333,
+        "y": 78.66666666666666,
         "z": 0
       },
       "handleBounds": {
@@ -36,8 +36,8 @@
       "initialized": false,
       "isParent": false,
       "position": {
-        "x": 102,
-        "y": 147
+        "x": 47.83333333333333,
+        "y": 78.66666666666666
       },
       "data": {
         "label": "用户输入",
@@ -56,8 +56,8 @@
         "height": 86
       },
       "computedPosition": {
-        "x": 422,
-        "y": 215,
+        "x": 287.83333333333337,
+        "y": 76.66666666666664,
         "z": 1000
       },
       "handleBounds": {
@@ -92,8 +92,8 @@
       "initialized": false,
       "isParent": false,
       "position": {
-        "x": 422,
-        "y": 215
+        "x": 287.83333333333337,
+        "y": 76.66666666666664
       },
       "data": {
         "label": "OCRReader",
@@ -104,9 +104,10 @@
           "name": "OCRReader",
           "type": "ocr",
           "description": "OCR文件识别智能体 - 识别PDF和图片中的文字",
-          "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。",
+          "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。如果没有附件文件，则直接对历史消息进行分析",
           "skills": [
-            "ocr-file-reader"
+            "ocr-file-reader",
+            "content-analyzer"
           ],
           "model": "qwen3-max",
           "maxIters": 10,
@@ -129,8 +130,8 @@
         "height": 67
       },
       "computedPosition": {
-        "x": 679,
-        "y": 240.66666666666669,
+        "x": 496.5,
+        "y": 252.33333333333337,
         "z": 0
       },
       "handleBounds": {
@@ -142,7 +143,7 @@
             "nodeId": "node_2",
             "position": "left",
             "x": -5.999959309895834,
-            "y": 27.5,
+            "y": 27.500025431315105,
             "width": 12,
             "height": 12
           }
@@ -154,8 +155,8 @@
       "initialized": false,
       "isParent": false,
       "position": {
-        "x": 679,
-        "y": 240.66666666666669
+        "x": 496.5,
+        "y": 252.33333333333337
       },
       "data": {
         "label": "输出结果",
@@ -191,8 +192,8 @@
           "height": 67
         },
         "computedPosition": {
-          "x": 102,
-          "y": 147,
+          "x": 47.83333333333333,
+          "y": 78.66666666666666,
           "z": 0
         },
         "handleBounds": {
@@ -216,8 +217,8 @@
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 102,
-          "y": 147
+          "x": 47.83333333333333,
+          "y": 78.66666666666666
         },
         "data": {
           "label": "用户输入",
@@ -236,9 +237,9 @@
           "height": 86
         },
         "computedPosition": {
-          "x": 422,
-          "y": 215,
-          "z": 0
+          "x": 287.83333333333337,
+          "y": 76.66666666666664,
+          "z": 1000
         },
         "handleBounds": {
           "source": [
@@ -266,14 +267,14 @@
             }
           ]
         },
-        "selected": false,
+        "selected": true,
         "dragging": false,
         "resizing": false,
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 422,
-          "y": 215
+          "x": 287.83333333333337,
+          "y": 76.66666666666664
         },
         "data": {
           "label": "OCRReader",
@@ -284,22 +285,28 @@
             "name": "OCRReader",
             "type": "ocr",
             "description": "OCR文件识别智能体 - 识别PDF和图片中的文字",
-            "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。",
+            "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。如果没有附件文件，则直接对历史消息进行分析",
             "skills": [
-              "ocr-file-reader"
+              "ocr-file-reader",
+              "content-analyzer"
             ],
             "model": "qwen3-max",
-            "maxIters": 10
+            "maxIters": 10,
+            "temperature": 0.7,
+            "enableThinking": false,
+            "stream": true,
+            "customParams": [],
+            "inputVariables": []
           }
         },
         "events": {},
         "sourcePosition": "right",
         "targetPosition": "left"
       },
-      "sourceX": 248.00001525878906,
-      "sourceY": 180.50001271565756,
-      "targetX": 415.99998982747394,
-      "targetY": 258.0000203450521
+      "sourceX": 193.83334859212238,
+      "sourceY": 112.16667938232422,
+      "targetX": 281.8333231608073,
+      "targetY": 119.66668701171872
     },
     {
       "id": "edge_node_1_node_2",
@@ -324,9 +331,9 @@
           "height": 86
         },
         "computedPosition": {
-          "x": 422,
-          "y": 215,
-          "z": 0
+          "x": 287.83333333333337,
+          "y": 76.66666666666664,
+          "z": 1000
         },
         "handleBounds": {
           "source": [
@@ -354,14 +361,14 @@
             }
           ]
         },
-        "selected": false,
+        "selected": true,
         "dragging": false,
         "resizing": false,
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 422,
-          "y": 215
+          "x": 287.83333333333337,
+          "y": 76.66666666666664
         },
         "data": {
           "label": "OCRReader",
@@ -372,12 +379,18 @@
             "name": "OCRReader",
             "type": "ocr",
             "description": "OCR文件识别智能体 - 识别PDF和图片中的文字",
-            "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。",
+            "systemPrompt": "你是一个专业的OCR文件识别助手OCRReader。你的专长是识别PDF文件和图片中的文字内容。如果没有附件文件，则直接对历史消息进行分析",
             "skills": [
-              "ocr-file-reader"
+              "ocr-file-reader",
+              "content-analyzer"
             ],
             "model": "qwen3-max",
-            "maxIters": 10
+            "maxIters": 10,
+            "temperature": 0.7,
+            "enableThinking": false,
+            "stream": true,
+            "customParams": [],
+            "inputVariables": []
           }
         },
         "events": {},
@@ -392,8 +405,8 @@
           "height": 67
         },
         "computedPosition": {
-          "x": 679,
-          "y": 240.66666666666669,
+          "x": 496.5,
+          "y": 252.33333333333337,
           "z": 0
         },
         "handleBounds": {
@@ -405,7 +418,7 @@
               "nodeId": "node_2",
               "position": "left",
               "x": -5.999959309895834,
-              "y": 27.5,
+              "y": 27.500025431315105,
               "width": 12,
               "height": 12
             }
@@ -417,8 +430,8 @@
         "initialized": false,
         "isParent": false,
         "position": {
-          "x": 679,
-          "y": 240.66666666666669
+          "x": 496.5,
+          "y": 252.33333333333337
         },
         "data": {
           "label": "输出结果",
@@ -429,12 +442,12 @@
         "sourcePosition": "right",
         "targetPosition": "left"
       },
-      "sourceX": 567.999989827474,
-      "sourceY": 258.0000203450521,
-      "targetX": 673.0000406901041,
-      "targetY": 274.1666666666667
+      "sourceX": 433.83332316080737,
+      "sourceY": 119.66668701171872,
+      "targetX": 490.5000406901042,
+      "targetY": 285.8333587646485
     }
   ],
   "createdAt": "2025-12-18T06:22:27.662Z",
-  "updatedAt": "2025-12-18T06:22:27.662Z"
+  "updatedAt": "2025-12-22T07:13:20.474Z"
 }

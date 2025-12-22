@@ -10,7 +10,7 @@ from typing import List, Optional
 def build_context_prompt(
     history: List[dict],
     max_messages: int = 10,
-    max_length: int = 500,
+    max_length: int = 4000,
     prefix: str = "以下是之前的对话历史，请参考上下文理解用户需求：\n\n",
     suffix: str = "---\n\n当前用户需求: "
 ) -> str:

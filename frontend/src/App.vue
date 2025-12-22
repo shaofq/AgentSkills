@@ -60,6 +60,65 @@ const menuConfigs = ref<MenuConfig[]>(defaultMenuConfigs)
 const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
 const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 const isCodeAssistantMode = computed(() => activeMenu.value === 'code-agent')
+const isOCRMode = computed(() => activeMenu.value === 'ocr-agent')
+
+// 文件上传相关
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const pendingFile = ref<File | null>(null)  // 待上传的文件（选择后暂存）
+const isUploading = ref(false)
+
+// 触发文件选择
+function triggerFileUpload() {
+  fileInputRef.value?.click()
+}
+
+// 处理文件选择（只暂存，不上传）
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  // 暂存文件，等待发送时上传
+  pendingFile.value = file
+  // 清空 input 以便重复选择同一文件
+  target.value = ''
+}
+
+// 移除待上传的文件
+function removePendingFile() {
+  pendingFile.value = null
+}
+
+// 上传文件并返回路径
+async function uploadFile(file: File): Promise<string | null> {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await fetch('http://localhost:8000/api/upload/file', {
+      method: 'POST',
+      body: formData
+    })
+    
+    if (response.ok) {
+      const result = await response.json()
+      return result.file_path
+    } else {
+      console.error('上传失败')
+      return null
+    }
+  } catch (error) {
+    console.error('上传错误:', error)
+    return null
+  }
+}
+
+// 格式化文件大小
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
 
 // 菜单加载完成回调
 function handleMenuLoaded(menus: MenuConfig[]) {
@@ -299,19 +358,46 @@ function newConversation() {
 
 // 提交消息
 async function onSubmit(evt: string) {
-  if (!evt || !evt.trim()) return
+  // OCR 模式下，如果有待上传文件但没有输入消息，使用默认消息
+  let userMessage = evt?.trim() || ''
+  if (!userMessage && !pendingFile.value) return
+  
+  // 如果有待上传文件，先上传
+  let filePath: string | null = null
+  if (pendingFile.value && isOCRMode.value) {
+    isUploading.value = true
+    filePath = await uploadFile(pendingFile.value)
+    isUploading.value = false
+    
+    if (!filePath) {
+      alert('文件上传失败，请重试')
+      return
+    }
+    
+    // 构建带文件路径的消息
+    if (!userMessage) {
+      userMessage = `请识别这个文件的内容`
+    }
+    userMessage = `[附件: ${pendingFile.value.name}]\n文件路径: ${filePath}\n\n${userMessage}`
+    
+    // 清除待上传文件
+    pendingFile.value = null
+  }
+  
+  if (!userMessage) return
   
   inputValue.value = ''
   startPage.value = false
   
   // 处理特殊命令
-  if (evt === '创建一个工作流' || evt === '创建工作流') {
+  if (userMessage === '创建一个工作流' || userMessage === '创建工作流') {
     activeMenu.value = 'workflow'
     return
   }
   
-  // 用户发送消息
-  messages.value.push({ from: 'user', content: evt })
+  // 用户发送消息（显示给用户的消息，不包含文件路径）
+  const displayMessage = filePath ? `[附件: ${evt || '请识别文件'}]` : userMessage
+  messages.value.push({ from: 'user', content: displayMessage })
   
   // 添加加载状态的模型消息
   messages.value.push({ from: 'model', content: '', loading: true })
@@ -320,7 +406,7 @@ async function onSubmit(evt: string) {
     // 根据当前菜单配置选择 API
     const menuConfig = currentMenuConfig.value
     let apiUrl = '/api/chat'
-    let requestBody: Record<string, any> = { message: evt }
+    let requestBody: Record<string, any> = { message: userMessage }
     
     console.log('[Debug] menuConfig:', menuConfig)
     console.log('[Debug] apiType:', menuConfig?.apiType, 'workflowName:', menuConfig?.workflowName)
@@ -330,18 +416,21 @@ async function onSubmit(evt: string) {
       if (apiType === 'workflow' && menuConfig.workflowName) {
         console.log('[Debug] 使用流式工作流 API')
         // 使用流式工作流 API，展示思考过程
-        const history = messages.value
+        // 排除最后两条消息（当前用户消息和loading状态的模型消息）
+        const historyMessages = messages.value.slice(0, -2)
+        const history = historyMessages
           .filter(m => !m.loading)
           .map(m => ({
             role: m.from === 'user' ? 'user' : 'assistant',
             content: m.content
           }))
+        console.log('[Debug] 发送历史消息数量:', history.length, history)
         
         // 使用流式接口
         const streamResponse = await fetch('http://localhost:8000/api/workflow/run/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ workflow_name: menuConfig.workflowName, input: evt, history })
+          body: JSON.stringify({ workflow_name: menuConfig.workflowName, input: userMessage, history })
         })
         
         if (streamResponse.ok) {
@@ -761,6 +850,27 @@ async function onSubmit(evt: string) {
         <!-- 输入区域（首页不显示） -->
         <McLayoutSender v-if="!startPage" class="sender-container">
           <div class="sender-wrapper">
+            <!-- 隐藏的文件输入 -->
+            <input 
+              ref="fileInputRef"
+              type="file" 
+              accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tiff"
+              style="display: none"
+              @change="handleFileSelect"
+            />
+            
+            <!-- 待上传文件预览 -->
+            <div v-if="pendingFile && isOCRMode" class="pending-file-preview">
+              <div class="file-info">
+                <i class="icon-file-text" style="margin-right: 6px; color: #667eea;"></i>
+                <span class="file-name">{{ pendingFile.name }}</span>
+                <span class="file-size">({{ formatFileSize(pendingFile.size) }})</span>
+              </div>
+              <button class="remove-file-btn" @click="removePendingFile" title="移除文件">
+                <i class="icon-close"></i>
+              </button>
+            </div>
+            
             <McInput
               :value="inputValue"
               :maxLength="2000"
@@ -770,6 +880,16 @@ async function onSubmit(evt: string) {
             <template #extra>
               <div class="input-foot-wrapper">
                 <div class="input-foot-left">
+                  <!-- OCR 模式下显示上传按钮 -->
+                  <span 
+                    v-if="isOCRMode" 
+                    class="cursor-pointer hover:text-blue-500 upload-btn"
+                    :class="{ 'has-file': pendingFile }"
+                    @click="triggerFileUpload"
+                  >
+                    <i class="icon-upload" style="margin-right: 4px;"></i>
+                    {{ pendingFile ? '更换文件' : '选择文件' }}
+                  </span>
                   <span v-for="(item, index) in inputFootIcons" :key="index" class="cursor-pointer hover:text-blue-500">
                     <i :class="item.icon"></i>
                     {{ item.text }}
@@ -778,7 +898,7 @@ async function onSubmit(evt: string) {
                   <span class="input-foot-maxlength">{{ inputValue.length }}/2000</span>
                 </div>
                 <div class="input-foot-right">
-                  <Button icon="op-clearup" shape="round" :disabled="!inputValue" @click="inputValue = ''">
+                  <Button icon="op-clearup" shape="round" :disabled="!inputValue && !pendingFile" @click="inputValue = ''; removePendingFile()">
                     <span class="demo-button-content">清空</span>
                   </Button>
                 </div>
@@ -1509,5 +1629,102 @@ async function onSubmit(evt: string) {
   font-size: 12px;
   color: #999;
   flex-shrink: 0;
+}
+
+/* 上传按钮样式 */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-right: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.upload-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.upload-btn i {
+  font-size: 14px;
+}
+
+.upload-btn.has-file {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+}
+
+/* 待上传文件预览样式 */
+.pending-file-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 100%);
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1890ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.remove-file-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 50%;
+  cursor: pointer;
+  color: #8c8c8c;
+  transition: all 0.2s;
+  margin-left: 8px;
+}
+
+.remove-file-btn:hover {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff4d4f;
 }
 </style>
