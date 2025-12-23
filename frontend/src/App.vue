@@ -14,6 +14,7 @@ import CodeAssistantView from './components/CodeAssistantView.vue'
 import AIExpertHome from './components/AIExpertHome.vue'
 import TokenStatsDialog from './components/TokenStatsDialog.vue'
 import ConsolePanel from './components/ConsolePanel.vue'
+import EmailTriggerConfig from './components/EmailTriggerConfig.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -61,6 +62,7 @@ const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
 const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 const isCodeAssistantMode = computed(() => activeMenu.value === 'code-agent')
 const isOCRMode = computed(() => activeMenu.value === 'ocr-agent')
+const isEmailTriggerMode = computed(() => activeMenu.value === 'email-trigger')
 
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -641,8 +643,11 @@ async function onSubmit(evt: string) {
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden main-content">
+      <!-- 邮件触发配置模式 -->
+      <EmailTriggerConfig v-if="isEmailTriggerMode" />
+      
       <!-- 流程查询模式 -->
-      <WorkflowListDialog v-if="isWorkflowListMode" />
+      <WorkflowListDialog v-else-if="isWorkflowListMode" />
       
       <!-- 代码助手模式 -->
       <CodeAssistantView v-else-if="isCodeAssistantMode" class="flex-1" />

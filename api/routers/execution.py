@@ -640,3 +640,183 @@ async def test_workflow(request: WorkflowTestRequest):
             yield f"data: {json.dumps({'type': 'log', 'message': f'执行失败: {str(e)}'})}\n\n"
     
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+async def run_predefined_workflow_internal(
+    workflow_name: str,
+    user_input: str,
+    history_messages: list = None
+) -> dict:
+    """内部调用工作流执行（非流式，用于邮件触发等场景）
+    
+    Args:
+        workflow_name: 工作流名称
+        user_input: 用户输入
+        history_messages: 历史消息列表
+        
+    Returns:
+        执行结果字典
+    """
+    from api.services.context_builder import build_context_prompt
+    
+    if workflow_name not in predefined_workflows:
+        return {"success": False, "error": f"工作流 '{workflow_name}' 不存在"}
+    
+    workflow = predefined_workflows[workflow_name]
+    api_key = AgentManager.get_api_key()
+    
+    try:
+        nodes = workflow.get("nodes", [])
+        edges = workflow.get("edges", [])
+        
+        # 构建上下文
+        history = history_messages or []
+        context_prompt = build_context_prompt(history)
+        
+        # 创建智能体
+        agent_nodes = [n for n in nodes if n["type"] == "agent"]
+        skill_agent_nodes = [n for n in nodes if n["type"] == "skill-agent"]
+        simple_agent_nodes = [n for n in nodes if n["type"] == "simple-agent"]
+        
+        agents = {}
+        
+        for node in agent_nodes:
+            config = node["data"].get("agentConfig", {})
+            if config:
+                agent = AgentManager.create_from_config(config, api_key)
+                agents[node["id"]] = agent
+        
+        for node in skill_agent_nodes:
+            config = node["data"].get("skillAgentConfig", {})
+            skills = config.get("skills", [])
+            if skills:
+                agent = create_agent_by_skills(
+                    name=config.get("name", "SkillAgent"),
+                    skill_names=skills,
+                    sys_prompt=config.get("systemPrompt", ""),
+                    api_key=api_key,
+                    model_name=config.get("model", "qwen3-max"),
+                    max_iters=config.get("maxIters", 30)
+                )
+                agents[node["id"]] = agent
+        
+        for node in simple_agent_nodes:
+            config = node["data"].get("simpleAgentConfig", {})
+            from agents.simple import SimpleAgent
+            agent = SimpleAgent(
+                name=config.get("name", "SimpleAgent"),
+                sys_prompt=config.get("systemPrompt", ""),
+                api_key=api_key,
+                model_name=config.get("model", "qwen3-max"),
+            )
+            agents[node["id"]] = agent
+        
+        # 获取执行顺序
+        execution_order = get_execution_order(nodes, edges)
+        
+        current_input = context_prompt + user_input if context_prompt else user_input
+        full_input_with_history = current_input
+        final_output = ""
+        executed_branch_nodes = set()
+        skipped_branch_nodes = set()
+        
+        # 收集分类器的所有分支目标节点
+        classifier_nodes = [n for n in nodes if n.get("type") == "classifier"]
+        for classifier_node in classifier_nodes:
+            classifier_id = classifier_node["id"]
+            for edge in edges:
+                if edge.get("source") == classifier_id and edge.get("sourceHandle"):
+                    target_id = edge.get("target")
+                    if target_id:
+                        skipped_branch_nodes.add(target_id)
+        
+        # 执行工作流
+        for node_id in execution_order:
+            if node_id in executed_branch_nodes:
+                continue
+            
+            # 跳过未被分类器选中的分支节点
+            if node_id in skipped_branch_nodes:
+                continue
+            
+            node = next((n for n in nodes if n["id"] == node_id), None)
+            if not node:
+                continue
+            
+            node_type = node.get("type")
+            node_label = node.get("data", {}).get("label", node_id)
+            
+            if node_type == "input":
+                current_input = user_input
+                print(f"[Internal Workflow] 输入节点: {node_label}")
+            
+            elif node_type in ["agent", "skill-agent", "simple-agent"] and node_id in agents:
+                agent = agents[node_id]
+                print(f"[Internal Workflow] 执行节点: {node_label}")
+                
+                agent_input = full_input_with_history
+                response = await agent(Msg("user", agent_input, "user"))
+                
+                output = response.content if hasattr(response, "content") else str(response)
+                if isinstance(output, list):
+                    text_parts = [item.get("text", "") for item in output if isinstance(item, dict) and "text" in item]
+                    output = "\n".join(text_parts) if text_parts else str(output)
+                
+                current_input = output
+                final_output = output
+                print(f"[Internal Workflow] 节点 {node_label} 输出: {output[:100] if output else 'empty'}...")
+            
+            elif node_type == "classifier":
+                classifier_config = node.get("data", {}).get("classifierConfig", {})
+                categories = classifier_config.get("categories", [])
+                model = classifier_config.get("model", "qwen3-max")
+                
+                classifier = ClassifierService(api_key=api_key, default_model=model)
+                result = await classifier.classify(current_input, categories)
+                matched_category = result.get("id") if result else None
+                
+                print(f"[Internal Workflow] 分类结果: {matched_category}")
+                
+                # 查找匹配的分支并执行
+                for edge in edges:
+                    if edge.get("source") == node_id and edge.get("sourceHandle") == matched_category:
+                        target_node_id = edge.get("target")
+                        target_node = next((n for n in nodes if n["id"] == target_node_id), None)
+                        
+                        if target_node and target_node_id in agents:
+                            # 从跳过集合中移除，标记为已执行
+                            skipped_branch_nodes.discard(target_node_id)
+                            executed_branch_nodes.add(target_node_id)
+                            
+                            agent = agents[target_node_id]
+                            target_label = target_node.get("data", {}).get("label", target_node_id)
+                            print(f"[Internal Workflow] 执行分支节点: {target_label}")
+                            
+                            response = await agent(Msg("user", full_input_with_history, "user"))
+                            output = response.content if hasattr(response, "content") else str(response)
+                            
+                            if isinstance(output, list):
+                                text_parts = [item.get("text", "") for item in output if isinstance(item, dict) and "text" in item]
+                                output = "\n".join(text_parts) if text_parts else str(output)
+                            
+                            current_input = output
+                            final_output = output
+                            print(f"[Internal Workflow] 分支节点 {target_label} 输出: {output[:100] if output else 'empty'}...")
+                        break
+            
+            elif node_type == "output":
+                print(f"[Internal Workflow] 输出节点: {node_label}")
+        
+        return {
+            "success": True,
+            "workflow_name": workflow_name,
+            "output": final_output
+        }
+    
+    except Exception as e:
+        print(f"[Internal Workflow] 执行失败: {e}")
+        return {
+            "success": False,
+            "workflow_name": workflow_name,
+            "error": str(e)
+        }

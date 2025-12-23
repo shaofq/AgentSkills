@@ -8,7 +8,7 @@
 - agent_manager: 智能体管理器
 """
 # 延迟导入，避免循环依赖和模块加载问题
-__all__ = ['build_context_prompt', 'ClassifierService', 'AgentManager']
+__all__ = ['build_context_prompt', 'ClassifierService', 'AgentManager', 'EmailListener', 'EmailListenerManager']
 
 def __getattr__(name):
     if name == 'build_context_prompt':
@@ -20,4 +20,10 @@ def __getattr__(name):
     elif name == 'AgentManager':
         from .agent_manager import AgentManager
         return AgentManager
+    elif name == 'EmailListener':
+        from .email_listener import EmailListener
+        return EmailListener
+    elif name == 'EmailListenerManager':
+        from .email_listener import EmailListenerManager
+        return EmailListenerManager
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

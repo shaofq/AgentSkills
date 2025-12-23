@@ -109,6 +109,17 @@
           "workflowName": null,
           "description": "查询和管理已加载的工作流",
           "model": null
+        },
+        {
+          "id": "email-trigger",
+          "name": "邮件触发",
+          "icon": "icon-email-set",
+          "type": "email-trigger",
+          "apiType": null,
+          "apiUrl": null,
+          "workflowName": null,
+          "description": "配置邮箱监听，自动触发工作流",
+          "model": null
         }
       ]
     }

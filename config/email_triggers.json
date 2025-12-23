@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "poll_interval_seconds": 30,
+  "email_accounts": [
+    {
+      "id": "dispatch_inbox",
+      "name": "派单邮箱",
+      "enabled": true,
+      "email": "shaofq5055240@163.com",
+      "imap_server": "imap.163.com",
+      "imap_port": 993,
+      "use_ssl": true,
+      "username": "shaofq5055240@163.com",
+      "password_env": "DISPATCH_EMAIL_PASSWORD",
+      "workflow_bindings": [
+        {
+          "workflow_name": "auto_dispatch_flow",
+          "conditions": {
+            "allowed_senders": [
+              "*"
+            ],
+            "subject_contains": []
+          },
+          "default": true
+        }
+      ],
+      "password_configured": false
+    }
+  ]
+}
