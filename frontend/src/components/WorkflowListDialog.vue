@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useTheme } from '../composables/useTheme'
+
+const { currentTheme } = useTheme()
+const isDark = computed(() => currentTheme.value === 'dark')
 
 interface BoundMenu {
   id: string
@@ -55,12 +59,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="workflow-list-container p-6">
+  <div class="workflow-list-container p-6" :class="isDark ? 'theme-dark' : 'theme-light'">
     <div class="header flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-800">已加载的工作流</h2>
+      <h2 class="text-2xl font-bold" :class="isDark ? 'text-gray-100' : 'text-gray-800'">已加载的工作流</h2>
       <button 
         @click="refreshList"
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
         :disabled="loading"
       >
         <i class="icon-refresh" :class="{ 'animate-spin': loading }"></i>
@@ -68,11 +72,11 @@ onMounted(() => {
       </button>
     </div>
 
-    <div v-if="error" class="error-message mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+    <div v-if="error" class="error-message mb-4 p-4 rounded-lg" :class="isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'">
       {{ error }}
     </div>
 
-    <div v-if="loading && workflows.length === 0" class="loading text-center py-12 text-gray-500">
+    <div v-if="loading && workflows.length === 0" class="loading text-center py-12" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
       <i class="icon-loading animate-spin text-3xl mb-2"></i>
       <p>加载中...</p>
     </div>
@@ -87,17 +91,18 @@ onMounted(() => {
       <div 
         v-for="workflow in workflows" 
         :key="workflow.name"
-        class="workflow-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-5 border border-gray-200"
+        class="workflow-card rounded-lg shadow-lg hover:shadow-xl transition-shadow p-5"
+        :class="isDark ? 'bg-gray-800/80 border border-gray-700' : 'bg-white border border-gray-200'"
       >
         <div class="flex items-start justify-between mb-3">
           <div class="flex items-center gap-2">
-            <i class="icon-application text-2xl text-blue-600"></i>
-            <h3 class="text-lg font-semibold text-gray-800">{{ workflow.title }}</h3>
+            <i class="icon-application text-2xl text-indigo-500"></i>
+            <h3 class="text-lg font-semibold" :class="isDark ? 'text-gray-100' : 'text-gray-800'">{{ workflow.title }}</h3>
           </div>
-          <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">已加载</span>
+          <span class="px-2 py-1 text-xs rounded-full" :class="isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'">已加载</span>
         </div>
 
-        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+        <p class="text-sm mb-4 line-clamp-2" :class="isDark ? 'text-gray-400' : 'text-gray-600'">
           {{ workflow.description || '暂无描述' }}
         </p>
 
@@ -112,36 +117,30 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="workflow-name text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+        <div class="workflow-name text-xs font-mono px-2 py-1 rounded" :class="isDark ? 'text-gray-500 bg-gray-900/50' : 'text-gray-400 bg-gray-50'">
           {{ workflow.name }}
         </div>
 
         <!-- 绑定的功能菜单 -->
-        <div v-if="workflow.boundMenus && workflow.boundMenus.length > 0" class="bound-menus mt-3 pt-3 border-t border-gray-100">
+        <div v-if="workflow.boundMenus && workflow.boundMenus.length > 0" class="bound-menus mt-3 pt-3 border-t" :class="isDark ? 'border-gray-700' : 'border-gray-100'">
           <div class="text-xs text-gray-500 mb-2">绑定功能:</div>
           <div class="flex flex-wrap gap-2">
             <span 
               v-for="menu in workflow.boundMenus" 
               :key="menu.id"
-              class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+              class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full"
+              :class="isDark ? 'bg-indigo-900/50 text-indigo-300' : 'bg-blue-50 text-blue-700'"
             >
               <i :class="menu.icon" class="text-sm"></i>
               {{ menu.name }}
             </span>
           </div>
         </div>
-        <div v-else class="bound-menus mt-3 pt-3 border-t border-gray-100">
-          <div class="text-xs text-gray-400 italic">未绑定功能菜单</div>
+        <div v-else class="bound-menus mt-3 pt-3 border-t" :class="isDark ? 'border-gray-700' : 'border-gray-100'">
+          <div class="text-xs text-gray-500 italic">未绑定功能菜单</div>
         </div>
       </div>
     </div>
-
-    <!-- <div v-if="workflows.length > 0" class="summary mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <p class="text-sm text-blue-800">
-        <i class="icon-info-circle mr-2"></i>
-        共加载 <strong>{{ workflows.length }}</strong> 个工作流
-      </p>
-    </div> -->
   </div>
 </template>
 
@@ -149,6 +148,13 @@ onMounted(() => {
 .workflow-list-container {
   height: 100%;
   overflow-y: auto;
+}
+
+.workflow-list-container.theme-dark {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.workflow-list-container.theme-light {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 

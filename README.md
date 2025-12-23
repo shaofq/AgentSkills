@@ -139,35 +139,6 @@ lowcode-ai/
 4. Connect nodes to create workflows
 5. Click "Save" to export workflow configuration
 
-### Command Line Execution
-
-#### Multi-Agent Mode
-
-```bash
-# Default test mode
-python multi_agent_main.py
-
-# Interactive mode
-python multi_agent_main.py -i
-
-# Serial collaboration example
-python multi_agent_main.py -seq
-
-# Parallel collaboration example
-python multi_agent_main.py -par
-```
-
-#### Run Exported Workflows
-
-```bash
-# Single execution
-python run_workflow.py workflow.json "your input content"
-
-# Interactive mode
-python run_workflow.py workflow.json -i
-```
-
----
 
 ## 🤖 Agent List
 

@@ -1,30 +1,31 @@
 <template>
-  <div class="email-trigger-config h-full overflow-auto">
+  <div class="email-trigger-config h-full overflow-auto" :class="isDark ? 'theme-dark' : 'theme-light'">
     <div class="max-w-4xl mx-auto p-6">
     <!-- 头部 -->
-    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+    <div class="flex items-center justify-between mb-6 pb-4 border-b" :class="isDark ? 'border-gray-700' : 'border-gray-200'">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg" :class="isDark ? 'shadow-indigo-900/50' : 'shadow-indigo-200'">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
         </div>
         <div>
-          <h2 class="text-xl font-bold text-gray-800">邮件触发配置</h2>
-          <p class="text-sm text-gray-400">配置邮箱监听，自动触发工作流执行</p>
+          <h2 class="text-xl font-bold" :class="isDark ? 'text-gray-100' : 'text-gray-800'">邮件触发配置</h2>
+          <p class="text-sm text-gray-500">配置邮箱监听，自动触发工作流执行</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full" :class="serviceStatus.is_running ? 'bg-green-50' : 'bg-gray-50'">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full" :class="serviceStatus.is_running ? (isDark ? 'bg-green-900/30' : 'bg-green-50') : (isDark ? 'bg-gray-800' : 'bg-gray-100')">
           <span class="w-2 h-2 rounded-full" :class="serviceStatus.is_running ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"></span>
-          <span class="text-sm font-medium" :class="serviceStatus.is_running ? 'text-green-700' : 'text-gray-500'">
+          <span class="text-sm font-medium" :class="serviceStatus.is_running ? (isDark ? 'text-green-400' : 'text-green-700') : (isDark ? 'text-gray-400' : 'text-gray-500')">
             {{ serviceStatus.is_running ? '运行中' : '已停止' }}
           </span>
         </div>
         <button
           v-if="!serviceStatus.is_running"
           @click="startService"
-          class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md shadow-indigo-200 text-sm font-medium"
+          class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md text-sm font-medium"
+          :class="isDark ? 'shadow-indigo-900/50' : 'shadow-indigo-200'"
           :disabled="loading"
         >
           {{ loading ? '启动中...' : '启动服务' }}
@@ -32,7 +33,8 @@
         <button
           v-else
           @click="stopService"
-          class="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+          class="px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+          :class="isDark ? 'bg-gray-800 border border-red-700 text-red-400 hover:bg-red-900/30' : 'bg-white border border-red-200 text-red-600 hover:bg-red-50'"
           :disabled="loading"
         >
           {{ loading ? '停止中...' : '停止服务' }}
@@ -41,25 +43,26 @@
     </div>
 
     <!-- 全局开关 -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div class="rounded-xl border p-4 mb-6" :class="isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-200'">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-medium text-gray-800">启用邮件触发</h3>
+          <h3 class="font-medium" :class="isDark ? 'text-gray-100' : 'text-gray-800'">启用邮件触发</h3>
           <p class="text-sm text-gray-500">开启后，系统将自动监听配置的邮箱</p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" v-model="config.enabled" class="sr-only peer" @change="saveConfig">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          <div class="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600" :class="isDark ? 'bg-gray-700 after:bg-gray-300 after:border-gray-600 after:border peer-focus:ring-4 peer-focus:ring-indigo-800' : 'bg-gray-200 after:bg-white after:border-gray-300 after:border peer-focus:ring-4 peer-focus:ring-indigo-300'"></div>
         </label>
       </div>
       <div class="mt-4 flex items-center gap-4">
-        <label class="text-sm text-gray-600">轮询间隔:</label>
+        <label class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-600'">轮询间隔:</label>
         <input 
           type="number" 
           v-model.number="config.poll_interval_seconds" 
           min="10" 
           max="300"
-          class="w-20 px-3 py-1 border border-gray-300 rounded-lg text-sm"
+          class="w-20 px-3 py-1 rounded-lg text-sm"
+          :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200' : 'border border-gray-300 bg-white text-gray-800'"
           @change="saveConfig"
         >
         <span class="text-sm text-gray-500">秒</span>
@@ -67,18 +70,19 @@
     </div>
 
     <!-- 邮箱账户列表 -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div class="rounded-xl border p-4 mb-6" :class="isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-200'">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="font-medium text-gray-800">邮箱账户</h3>
+        <h3 class="font-medium" :class="isDark ? 'text-gray-100' : 'text-gray-800'">邮箱账户</h3>
         <button 
           @click="addAccount"
-          class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm"
+          class="px-3 py-1.5 rounded-lg transition-colors text-sm"
+          :class="isDark ? 'bg-indigo-900/50 text-indigo-300 hover:bg-indigo-800/50' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'"
         >
           + 添加邮箱
         </button>
       </div>
 
-      <div v-if="config.email_accounts.length === 0" class="text-center py-8 text-gray-400">
+      <div v-if="config.email_accounts.length === 0" class="text-center py-8 text-gray-500">
         <span class="text-4xl">📭</span>
         <p class="mt-2">暂无邮箱账户，点击上方按钮添加</p>
       </div>
@@ -87,7 +91,8 @@
         <div 
           v-for="(account, index) in config.email_accounts" 
           :key="account.id"
-          class="border border-gray-200 rounded-lg p-4"
+          class="border rounded-lg p-4"
+          :class="isDark ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'"
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-3">
@@ -95,7 +100,8 @@
               <div>
                 <input 
                   v-model="account.name" 
-                  class="font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-indigo-500 outline-none"
+                  class="font-medium bg-transparent border-b border-transparent outline-none"
+                  :class="isDark ? 'text-gray-100 hover:border-gray-600 focus:border-indigo-500' : 'text-gray-800 hover:border-gray-300 focus:border-indigo-500'"
                   placeholder="账户名称"
                 >
                 <p class="text-sm text-gray-500">{{ account.email || '未配置邮箱' }}</p>
@@ -104,18 +110,20 @@
             <div class="flex items-center gap-2">
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" v-model="account.enabled" class="sr-only peer">
-                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                <div class="w-9 h-5 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600" :class="isDark ? 'bg-gray-700 after:bg-gray-300 after:border-gray-600 after:border' : 'bg-gray-200 after:bg-white after:border-gray-300 after:border'"></div>
               </label>
               <button 
                 @click="testConnection(account)"
-                class="px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded"
+                class="px-3 py-1 text-sm rounded"
+                :class="isDark ? 'text-indigo-400 hover:bg-indigo-900/30' : 'text-indigo-600 hover:bg-indigo-50'"
                 :disabled="testing === account.id"
               >
                 {{ testing === account.id ? '测试中...' : '测试连接' }}
               </button>
               <button 
                 @click="removeAccount(index)"
-                class="px-2 py-1 text-red-500 hover:bg-red-50 rounded"
+                class="px-2 py-1 rounded"
+                :class="isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-50'"
               >
                 删除
               </button>
@@ -129,7 +137,8 @@
               <input 
                 v-model="account.email" 
                 type="email"
-                class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
+                class="w-full px-3 py-1.5 rounded-lg text-sm outline-none transition-all"
+                :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-white text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                 placeholder="example@company.com"
               >
             </div>
@@ -139,11 +148,12 @@
                 <input 
                   v-model.number="account.imap_port" 
                   type="number"
-                  class="w-20 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
+                  class="w-20 px-3 py-1.5 rounded-lg text-sm outline-none transition-all"
+                  :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-white text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                   placeholder="993"
                 >
-                <label class="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
-                  <input type="checkbox" v-model="account.use_ssl" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <label class="flex items-center gap-1.5 text-sm cursor-pointer" :class="isDark ? 'text-gray-400' : 'text-gray-600'">
+                  <input type="checkbox" v-model="account.use_ssl" class="w-4 h-4 rounded text-indigo-600" :class="isDark ? 'border-gray-600 bg-gray-900 focus:ring-indigo-800' : 'border-gray-300 focus:ring-indigo-500'">
                   <span>SSL</span>
                 </label>
               </div>
@@ -152,7 +162,8 @@
               <label class="block text-xs font-medium text-gray-500 mb-1">IMAP 服务器</label>
               <input 
                 v-model="account.imap_server" 
-                class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
+                class="w-full px-3 py-1.5 rounded-lg text-sm outline-none transition-all"
+                :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-white text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                 placeholder="imap.company.com"
               >
             </div>
@@ -160,7 +171,8 @@
               <label class="block text-xs font-medium text-gray-500 mb-1">用户名</label>
               <input 
                 v-model="account.username" 
-                class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
+                class="w-full px-3 py-1.5 rounded-lg text-sm outline-none transition-all"
+                :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-white text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                 placeholder="用户名"
               >
             </div>
@@ -169,27 +181,29 @@
               <div class="flex items-center gap-2">
                 <input 
                   v-model="account.password_env" 
-                  class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-mono bg-gray-50 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
+                  class="flex-1 px-3 py-1.5 rounded-lg text-sm font-mono outline-none transition-all"
+                  :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-gray-50 text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                   placeholder="EMAIL_PASSWORD"
                 >
-                <span class="text-xs text-gray-400">密码通过环境变量配置</span>
+                <span class="text-xs text-gray-500">密码通过环境变量配置</span>
               </div>
             </div>
           </div>
 
           <!-- 工作流绑定 -->
-          <div class="border-t border-gray-100 pt-3 mt-3">
+          <div class="border-t pt-3 mt-3" :class="isDark ? 'border-gray-700' : 'border-gray-100'">
             <div class="flex items-center justify-between mb-2">
               <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide">工作流绑定</h4>
               <button 
                 @click="addWorkflowBinding(account)"
-                class="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                class="text-xs font-medium"
+                :class="isDark ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'"
               >
                 + 添加
               </button>
             </div>
             
-            <div v-if="!account.workflow_bindings || account.workflow_bindings.length === 0" class="text-xs text-gray-400 py-2 italic">
+            <div v-if="!account.workflow_bindings || account.workflow_bindings.length === 0" class="text-xs text-gray-500 py-2 italic">
               暂无工作流绑定，点击上方添加
             </div>
 
@@ -197,12 +211,14 @@
               <div 
                 v-for="(binding, bIndex) in account.workflow_bindings" 
                 :key="bIndex"
-                class="flex items-center gap-2 bg-gradient-to-r from-gray-50 to-white rounded-lg px-3 py-2 border border-gray-100"
+                class="flex items-center gap-2 rounded-lg px-3 py-2 border"
+                :class="isDark ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-r from-gray-50 to-white border-gray-100'"
               >
-                <span class="text-indigo-500 text-sm">📋</span>
+                <span class="text-sm" :class="isDark ? 'text-indigo-400' : 'text-indigo-500'">📋</span>
                 <select 
                   v-model="binding.workflow_name"
-                  class="flex-1 px-2 py-1 border border-gray-200 rounded text-sm bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none"
+                  class="flex-1 px-2 py-1 rounded text-sm outline-none"
+                  :class="isDark ? 'border border-gray-600 bg-gray-900 text-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-800' : 'border border-gray-200 bg-white text-gray-800 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200'"
                 >
                   <option value="">选择工作流...</option>
                   <option v-for="wf in availableWorkflows" :key="wf" :value="wf">{{ wf }}</option>
@@ -211,13 +227,15 @@
                   <input 
                     type="checkbox" 
                     v-model="binding.default" 
-                    class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600"
+                    class="w-3.5 h-3.5 rounded text-indigo-600"
+                    :class="isDark ? 'border-gray-600 bg-gray-900' : 'border-gray-300'"
                   >
                   默认
                 </label>
                 <button 
                   @click="removeWorkflowBinding(account, bIndex)"
-                  class="text-gray-400 hover:text-red-500 transition-colors p-0.5"
+                  class="transition-colors p-0.5"
+                  :class="isDark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -231,21 +249,22 @@
     </div>
 
     <!-- 允许的发送者白名单 -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div class="rounded-xl border p-4 mb-6" :class="isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-200'">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-medium text-gray-800">允许的发送者</h3>
+          <h3 class="font-medium" :class="isDark ? 'text-gray-100' : 'text-gray-800'">允许的发送者</h3>
           <p class="text-sm text-gray-500">只有这些地址发送的邮件才能触发工作流（支持通配符 *）</p>
         </div>
         <button 
           @click="addAllowedSender"
-          class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm"
+          class="px-3 py-1.5 rounded-lg transition-colors text-sm"
+          :class="isDark ? 'bg-indigo-900/50 text-indigo-300 hover:bg-indigo-800/50' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'"
         >
           + 添加
         </button>
       </div>
 
-      <div v-if="config.allowed_senders_whitelist.length === 0" class="text-sm text-gray-400 py-2">
+      <div v-if="config.allowed_senders_whitelist.length === 0" class="text-sm text-gray-500 py-2">
         未配置白名单，将接受所有发送者
       </div>
 
@@ -253,12 +272,13 @@
         <div 
           v-for="(sender, index) in config.allowed_senders_whitelist" 
           :key="index"
-          class="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1"
+          class="flex items-center gap-2 rounded-full px-3 py-1"
+          :class="isDark ? 'bg-gray-700' : 'bg-gray-100'"
         >
-          <span class="text-sm">{{ sender }}</span>
+          <span class="text-sm" :class="isDark ? 'text-gray-200' : 'text-gray-700'">{{ sender }}</span>
           <button 
             @click="removeAllowedSender(index)"
-            class="text-gray-400 hover:text-red-500"
+            :class="isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-red-500'"
           >
             ✕
           </button>
@@ -270,13 +290,14 @@
     <div class="flex justify-end gap-3">
       <button 
         @click="loadConfig"
-        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        class="px-4 py-2 rounded-lg transition-colors"
+        :class="isDark ? 'border border-gray-600 text-gray-300 hover:bg-gray-800' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'"
       >
         重置
       </button>
       <button 
         @click="saveConfig"
-        class="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         :disabled="saving"
       >
         {{ saving ? '保存中...' : '保存配置' }}
@@ -285,20 +306,20 @@
     </div>
 
     <!-- 测试结果弹窗 -->
-    <div v-if="testResult" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="testResult = null">
-      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4" @click.stop>
+    <div v-if="testResult" class="fixed inset-0 flex items-center justify-center z-50" :class="isDark ? 'bg-black/70' : 'bg-black/50'" @click="testResult = null">
+      <div class="rounded-xl p-6 max-w-md w-full mx-4 border" :class="isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'" @click.stop>
         <div class="flex items-center gap-3 mb-4">
           <span class="text-2xl">{{ testResult.success ? '✅' : '❌' }}</span>
-          <h3 class="text-lg font-medium">{{ testResult.success ? '连接成功' : '连接失败' }}</h3>
+          <h3 class="text-lg font-medium" :class="isDark ? 'text-gray-100' : 'text-gray-800'">{{ testResult.success ? '连接成功' : '连接失败' }}</h3>
         </div>
-        <p class="text-gray-600 mb-4">{{ testResult.message }}</p>
-        <div v-if="testResult.details" class="bg-gray-50 rounded-lg p-3 text-sm">
+        <p class="mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-600'">{{ testResult.message }}</p>
+        <div v-if="testResult.details" class="rounded-lg p-3 text-sm" :class="isDark ? 'bg-gray-900 text-gray-300' : 'bg-gray-50 text-gray-700'">
           <p>文件夹数量: {{ testResult.details.folder_count }}</p>
           <p>未读邮件: {{ testResult.details.unread_count }}</p>
         </div>
         <button 
           @click="testResult = null"
-          class="mt-4 w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+          class="mt-4 w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           确定
         </button>
@@ -308,7 +329,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useTheme } from '../composables/useTheme'
+
+const { currentTheme } = useTheme()
+const isDark = computed(() => currentTheme.value === 'dark')
 
 interface WorkflowBinding {
   workflow_name: string
@@ -536,7 +561,11 @@ function removeAllowedSender(index: number) {
 </script>
 
 <style scoped>
-.email-trigger-config {
+.email-trigger-config.theme-dark {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.email-trigger-config.theme-light {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
@@ -550,11 +579,11 @@ function removeAllowedSender(index: number) {
 }
 
 .email-trigger-config::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #4b5563;
   border-radius: 3px;
 }
 
 .email-trigger-config::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #6b7280;
 }
 </style>
