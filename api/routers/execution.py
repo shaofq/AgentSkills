@@ -14,6 +14,7 @@ from api.services.classifier import ClassifierService
 from api.services.agent_manager import AgentManager
 from api.services.token_logger import log_agent_call
 from api.services.console_logger import capture_console_for_session, log_to_session
+from api.services.tool_executor import tool_executor
 from api.utils.graph import get_execution_order
 from agents.base import create_agent_by_skills, set_log_callback
 
@@ -102,6 +103,33 @@ async def run_predefined_workflow(request: PredefinedWorkflowRequest):
                     classifier = ClassifierService(api_key)
                     matched = await classifier.classify(current_input, categories, model)
                     print(f"[Workflow] 分类器结果: {matched['name'] if matched else 'None'}")
+            elif node["type"] == "tool":
+                # 执行工具节点
+                tool_config = node["data"].get("toolConfig", {})
+                tool_type = tool_config.get("toolType", "")
+                tool_params = tool_config.get("params", {})
+                node_label = node["data"].get("label", node_id)
+                
+                print(f"[Workflow] 执行工具节点: {node_label}, 类型: {tool_type}")
+                
+                # 构建上下文变量
+                context = {
+                    "input": current_input,
+                    "content": current_input,
+                    "output": final_output,
+                }
+                
+                result = tool_executor.execute(tool_type, tool_params, context)
+                
+                if result.get("success"):
+                    output = json.dumps(result, ensure_ascii=False)
+                    current_input = output
+                    final_output = output
+                    print(f"[Workflow] 工具执行成功: {result.get('message', '')}")
+                else:
+                    error_msg = result.get("error", "工具执行失败")
+                    print(f"[Workflow] 工具执行失败: {error_msg}")
+                    final_output = f"工具执行失败: {error_msg}"
             elif node["type"] == "input":
                 current_input = user_input
             elif node["type"] == "output":
@@ -393,6 +421,37 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                                         final_output = str(output)
                                     break
                 
+                elif node_type == "tool":
+                    # 执行工具节点
+                    tool_config = node.get("data", {}).get("toolConfig", {})
+                    tool_type = tool_config.get("toolType", "")
+                    tool_params = tool_config.get("params", {})
+                    
+                    yield f"data: {json.dumps({'type': 'node_start', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'正在执行工具: {node_label}'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'thinking', 'message': f'执行工具 {node_label}...'})}\n\n"
+                    
+                    # 构建上下文变量
+                    context = {
+                        "input": current_input,
+                        "content": current_input,
+                        "output": final_output,
+                    }
+                    
+                    result = tool_executor.execute(tool_type, tool_params, context)
+                    
+                    if result.get("success"):
+                        output = json.dumps(result, ensure_ascii=False)
+                        current_input = output
+                        final_output = output
+                        tool_msg = result.get("message", "")
+                        yield f"data: {json.dumps({'type': 'console_log', 'source': 'tool', 'log_type': 'success', 'message': f'[Tool] {node_label} 执行成功: {tool_msg}'})}\n\n"
+                    else:
+                        error_msg = result.get("error", "工具执行失败")
+                        yield f"data: {json.dumps({'type': 'console_log', 'source': 'tool', 'log_type': 'error', 'message': f'[Tool] {node_label} 执行失败: {error_msg}'})}\n\n"
+                        final_output = f"工具执行失败: {error_msg}"
+                    
+                    yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'{node_label} 执行完成'})}\n\n"
+                
                 elif node_type == "input":
                     # 保持完整输入（包含对话历史），不要重置为只有user_input
                     current_input = full_input_with_history
@@ -557,6 +616,32 @@ async def test_workflow(request: WorkflowTestRequest):
                     elif node_type == "parallel":
                         context["parallel_mode"] = True
                         output = input_data
+                    
+                    elif node_type == "tool":
+                        # 执行工具节点
+                        tool_config = node.get("data", {}).get("toolConfig", {})
+                        tool_type = tool_config.get("toolType", "")
+                        tool_params = tool_config.get("params", {})
+                        
+                        yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'执行工具: {tool_type}'})}\n\n"
+                        
+                        # 构建上下文变量
+                        tool_context = {
+                            "input": input_data,
+                            "content": input_data,
+                            "output": input_data,
+                        }
+                        
+                        result = tool_executor.execute(tool_type, tool_params, tool_context)
+                        
+                        if result.get("success"):
+                            output = json.dumps(result, ensure_ascii=False)
+                            tool_msg = result.get("message", "")
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'工具执行成功: {tool_msg}'})}\n\n"
+                        else:
+                            error_msg = result.get("error", "工具执行失败")
+                            yield f"data: {json.dumps({'type': 'log', 'nodeId': node_id, 'nodeLabel': node_label, 'message': f'工具执行失败: {error_msg}'})}\n\n"
+                            output = f"工具执行失败: {error_msg}"
                     
                     yield f"data: {json.dumps({'type': 'node_complete', 'nodeId': node_id, 'nodeLabel': node_label})}\n\n"
                     
@@ -765,6 +850,34 @@ async def run_predefined_workflow_internal(
                 current_input = output
                 final_output = output
                 print(f"[Internal Workflow] 节点 {node_label} 输出: {output[:100] if output else 'empty'}...")
+            
+            elif node_type == "tool":
+                # 执行工具节点
+                tool_config = node.get("data", {}).get("toolConfig", {})
+                tool_type = tool_config.get("toolType", "")
+                tool_params = tool_config.get("params", {})
+                
+                print(f"[Internal Workflow] 执行工具节点: {node_label}, 类型: {tool_type}")
+                
+                # 构建上下文变量，包括上游节点输出
+                context = {
+                    "input": current_input,
+                    "content": current_input,
+                    "output": final_output,
+                }
+                
+                # 执行工具
+                result = tool_executor.execute(tool_type, tool_params, context)
+                
+                if result.get("success"):
+                    output = json.dumps(result, ensure_ascii=False)
+                    current_input = output
+                    final_output = output
+                    print(f"[Internal Workflow] 工具执行成功: {result.get('message', '')}")
+                else:
+                    error_msg = result.get("error", "工具执行失败")
+                    print(f"[Internal Workflow] 工具执行失败: {error_msg}")
+                    final_output = f"工具执行失败: {error_msg}"
             
             elif node_type == "classifier":
                 classifier_config = node.get("data", {}).get("classifierConfig", {})

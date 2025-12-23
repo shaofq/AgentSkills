@@ -6,17 +6,123 @@
     {
       "id": "node_input",
       "type": "input",
-      "position": { "x": 50, "y": 150 },
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 50,
+        "y": 150,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_input",
+            "position": "right",
+            "x": 133.99998982747397,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 50,
+        "y": 150
+      },
       "data": {
         "label": "邮件输入",
         "icon": "📧",
         "color": "bg-green-500"
-      }
+      },
+      "events": {}
     },
     {
       "id": "node_classifier",
       "type": "classifier",
-      "position": { "x": 250, "y": 100 },
+      "dimensions": {
+        "width": 160,
+        "height": 124
+      },
+      "computedPosition": {
+        "x": 250,
+        "y": 100,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "cat_fault",
+            "type": "source",
+            "nodeId": "node_classifier",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 48.00000508626302,
+            "width": 12,
+            "height": 12
+          },
+          {
+            "id": "cat_booking",
+            "type": "source",
+            "nodeId": "node_classifier",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 68.00000508626303,
+            "width": 12,
+            "height": 12
+          },
+          {
+            "id": "cat_inquiry",
+            "type": "source",
+            "nodeId": "node_classifier",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 88.00000508626303,
+            "width": 12,
+            "height": 12
+          },
+          {
+            "id": "cat_complaint",
+            "type": "source",
+            "nodeId": "node_classifier",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 108.00000508626303,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_classifier",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 56.000010172526046,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 250,
+        "y": 100
+      },
       "data": {
         "label": "邮件分类器",
         "icon": "🏷️",
@@ -46,12 +152,56 @@
             }
           ]
         }
-      }
+      },
+      "events": {}
     },
     {
       "id": "node_fault_agent",
       "type": "simple-agent",
-      "position": { "x": 500, "y": 0 },
+      "dimensions": {
+        "width": 140,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": 500,
+        "y": 0,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_fault_agent",
+            "position": "right",
+            "x": 134.00004069010419,
+            "y": 37.00000127156576,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_fault_agent",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 37.00000127156576,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 500,
+        "y": 0
+      },
       "data": {
         "label": "故障处理",
         "icon": "🔧",
@@ -61,28 +211,118 @@
           "model": "qwen3-max",
           "systemPrompt": "你是一个故障处理专家。根据邮件内容，提取以下信息并生成工单：\n1. 故障类型\n2. 影响范围\n3. 紧急程度（P1/P2/P3）\n4. 问题描述摘要\n5. 建议处理方案\n\n请以结构化格式输出，便于创建工单。"
         }
-      }
+      },
+      "events": {}
     },
     {
       "id": "node_booking_agent",
       "type": "skill-agent",
-      "position": { "x": 500, "y": 120 },
+      "dimensions": {
+        "width": 160,
+        "height": 113
+      },
+      "computedPosition": {
+        "x": 500,
+        "y": 120,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_booking_agent",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 50.24998982747396,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_booking_agent",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 50.24998982747396,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 500,
+        "y": 120
+      },
       "data": {
         "label": "订舱处理",
         "icon": "🚢",
         "color": "bg-blue-500",
         "skillAgentConfig": {
-          "skills": ["booking-skill"],
+          "skills": [
+            "booking-skill"
+          ],
           "model": "qwen3-max",
           "maxIters": 30,
           "systemPrompt": "根据邮件内容提取订舱信息，包括：船公司、航线、货物信息、发货人、收货人等，并调用订舱接口创建订单。"
         }
-      }
+      },
+      "events": {}
     },
     {
       "id": "node_inquiry_agent",
       "type": "simple-agent",
-      "position": { "x": 500, "y": 240 },
+      "dimensions": {
+        "width": 140,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": 500,
+        "y": 240,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_inquiry_agent",
+            "position": "right",
+            "x": 134.00004069010419,
+            "y": 37.000020345052086,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_inquiry_agent",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 37.000020345052086,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 500,
+        "y": 240
+      },
       "data": {
         "label": "咨询回复",
         "icon": "💬",
@@ -92,12 +332,56 @@
           "model": "qwen3-max",
           "systemPrompt": "你是一个客服专家。根据邮件中的咨询问题，提供专业、友好的回复。如果涉及具体业务数据查询，请说明需要查询的信息类型。"
         }
-      }
+      },
+      "events": {}
     },
     {
       "id": "node_complaint_agent",
       "type": "simple-agent",
-      "position": { "x": 500, "y": 360 },
+      "dimensions": {
+        "width": 140,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": 500,
+        "y": 360,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_complaint_agent",
+            "position": "right",
+            "x": 134.00004069010419,
+            "y": 36.999994913736984,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_complaint_agent",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 36.999994913736984,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 500,
+        "y": 360
+      },
       "data": {
         "label": "投诉处理",
         "icon": "📝",
@@ -107,88 +391,1577 @@
           "model": "qwen3-max",
           "systemPrompt": "你是一个投诉处理专家。根据邮件内容：\n1. 识别投诉类型和严重程度\n2. 提取关键问题点\n3. 生成投诉工单信息\n4. 建议处理方案和回复话术\n\n请保持专业、同理心的态度。"
         }
-      }
+      },
+      "events": {}
     },
     {
-      "id": "node_output",
-      "type": "output",
-      "position": { "x": 750, "y": 150 },
+      "id": "node_1766481015227_qps0rj94x",
+      "type": "tool",
+      "dimensions": {
+        "width": 140,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": 813.3975022003402,
+        "y": 177.07772891057766,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766481015227_qps0rj94x",
+            "position": "right",
+            "x": 134.00000254313153,
+            "y": 37.000020345052086,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766481015227_qps0rj94x",
+            "position": "left",
+            "x": -5.99999745686849,
+            "y": 37.000020345052086,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 813.3975022003402,
+        "y": 177.07772891057766
+      },
       "data": {
-        "label": "派单结果",
-        "icon": "📤",
-        "color": "bg-orange-500"
-      }
+        "label": "输出文件",
+        "icon": "📝",
+        "color": "bg-amber-500",
+        "toolConfig": {
+          "toolType": "file-write",
+          "toolName": "写入文件",
+          "params": {
+            "path": "/Users/shaoqiang/work/temp/tes.txt",
+            "content": "{{content}}",
+            "append": false
+          }
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
     }
   ],
   "edges": [
     {
       "id": "edge_input_classifier",
+      "type": "default",
       "source": "node_input",
       "target": "node_classifier",
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#6366f1", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_input",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 50,
+          "y": 150,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_input",
+              "position": "right",
+              "x": 133.99998982747397,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 50,
+          "y": 150
+        },
+        "data": {
+          "label": "邮件输入",
+          "icon": "📧",
+          "color": "bg-green-500"
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_classifier",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 124
+        },
+        "computedPosition": {
+          "x": 250,
+          "y": 100,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_fault",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_booking",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_inquiry",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 88.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_complaint",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 108.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_classifier",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 56.000010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 250,
+          "y": 100
+        },
+        "data": {
+          "label": "邮件分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_fault",
+                "name": "故障报告",
+                "description": "系统故障、服务中断、技术问题等需要紧急处理的问题"
+              },
+              {
+                "id": "cat_booking",
+                "name": "订舱请求",
+                "description": "订舱、退关、复关、舱单修改等物流业务请求"
+              },
+              {
+                "id": "cat_inquiry",
+                "name": "咨询查询",
+                "description": "状态查询、信息咨询、价格询问等一般性问题"
+              },
+              {
+                "id": "cat_complaint",
+                "name": "投诉建议",
+                "description": "客户投诉、服务反馈、改进建议等"
+              }
+            ]
+          }
+        },
+        "events": {}
+      },
+      "sourceX": 195.99998982747397,
+      "sourceY": 183.5,
+      "targetX": 244.00004069010416,
+      "targetY": 162.00001017252606
     },
     {
       "id": "edge_classifier_fault",
+      "type": "default",
       "source": "node_classifier",
       "target": "node_fault_agent",
       "sourceHandle": "cat_fault",
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#ef4444", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#ef4444",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_classifier",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 124
+        },
+        "computedPosition": {
+          "x": 250,
+          "y": 100,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_fault",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_booking",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_inquiry",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 88.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_complaint",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 108.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_classifier",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 56.000010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 250,
+          "y": 100
+        },
+        "data": {
+          "label": "邮件分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_fault",
+                "name": "故障报告",
+                "description": "系统故障、服务中断、技术问题等需要紧急处理的问题"
+              },
+              {
+                "id": "cat_booking",
+                "name": "订舱请求",
+                "description": "订舱、退关、复关、舱单修改等物流业务请求"
+              },
+              {
+                "id": "cat_inquiry",
+                "name": "咨询查询",
+                "description": "状态查询、信息咨询、价格询问等一般性问题"
+              },
+              {
+                "id": "cat_complaint",
+                "name": "投诉建议",
+                "description": "客户投诉、服务反馈、改进建议等"
+              }
+            ]
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_fault_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 0,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_fault_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 37.00000127156576,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_fault_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 37.00000127156576,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 0
+        },
+        "data": {
+          "label": "故障处理",
+          "icon": "🔧",
+          "color": "bg-red-500",
+          "simpleAgentConfig": {
+            "name": "故障处理智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个故障处理专家。根据邮件内容，提取以下信息并生成工单：\n1. 故障类型\n2. 影响范围\n3. 紧急程度（P1/P2/P3）\n4. 问题描述摘要\n5. 建议处理方案\n\n请以结构化格式输出，便于创建工单。"
+          }
+        },
+        "events": {}
+      },
+      "sourceX": 416.0000406901042,
+      "sourceY": 154.00000508626303,
+      "targetX": 494.0000406901042,
+      "targetY": 43.00000127156576
     },
     {
       "id": "edge_classifier_booking",
+      "type": "default",
       "source": "node_classifier",
       "target": "node_booking_agent",
       "sourceHandle": "cat_booking",
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#3b82f6", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#3b82f6",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_classifier",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 124
+        },
+        "computedPosition": {
+          "x": 250,
+          "y": 100,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_fault",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_booking",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_inquiry",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 88.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_complaint",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 108.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_classifier",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 56.000010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 250,
+          "y": 100
+        },
+        "data": {
+          "label": "邮件分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_fault",
+                "name": "故障报告",
+                "description": "系统故障、服务中断、技术问题等需要紧急处理的问题"
+              },
+              {
+                "id": "cat_booking",
+                "name": "订舱请求",
+                "description": "订舱、退关、复关、舱单修改等物流业务请求"
+              },
+              {
+                "id": "cat_inquiry",
+                "name": "咨询查询",
+                "description": "状态查询、信息咨询、价格询问等一般性问题"
+              },
+              {
+                "id": "cat_complaint",
+                "name": "投诉建议",
+                "description": "客户投诉、服务反馈、改进建议等"
+              }
+            ]
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_booking_agent",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 120,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_booking_agent",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_booking_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 120
+        },
+        "data": {
+          "label": "订舱处理",
+          "icon": "🚢",
+          "color": "bg-blue-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": "根据邮件内容提取订舱信息，包括：船公司、航线、货物信息、发货人、收货人等，并调用订舱接口创建订单。"
+          }
+        },
+        "events": {}
+      },
+      "sourceX": 416.0000406901042,
+      "sourceY": 174.00000508626303,
+      "targetX": 494.0000406901042,
+      "targetY": 176.24998982747397
     },
     {
       "id": "edge_classifier_inquiry",
+      "type": "default",
       "source": "node_classifier",
       "target": "node_inquiry_agent",
       "sourceHandle": "cat_inquiry",
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#8b5cf6", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#8b5cf6",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_classifier",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 124
+        },
+        "computedPosition": {
+          "x": 250,
+          "y": 100,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_fault",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_booking",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_inquiry",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 88.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_complaint",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 108.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_classifier",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 56.000010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 250,
+          "y": 100
+        },
+        "data": {
+          "label": "邮件分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_fault",
+                "name": "故障报告",
+                "description": "系统故障、服务中断、技术问题等需要紧急处理的问题"
+              },
+              {
+                "id": "cat_booking",
+                "name": "订舱请求",
+                "description": "订舱、退关、复关、舱单修改等物流业务请求"
+              },
+              {
+                "id": "cat_inquiry",
+                "name": "咨询查询",
+                "description": "状态查询、信息咨询、价格询问等一般性问题"
+              },
+              {
+                "id": "cat_complaint",
+                "name": "投诉建议",
+                "description": "客户投诉、服务反馈、改进建议等"
+              }
+            ]
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_inquiry_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 240,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_inquiry_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_inquiry_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 240
+        },
+        "data": {
+          "label": "咨询回复",
+          "icon": "💬",
+          "color": "bg-purple-500",
+          "simpleAgentConfig": {
+            "name": "咨询回复智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个客服专家。根据邮件中的咨询问题，提供专业、友好的回复。如果涉及具体业务数据查询，请说明需要查询的信息类型。"
+          }
+        },
+        "events": {}
+      },
+      "sourceX": 416.0000406901042,
+      "sourceY": 194.00000508626303,
+      "targetX": 494.0000406901042,
+      "targetY": 283.00002034505206
     },
     {
       "id": "edge_classifier_complaint",
+      "type": "default",
       "source": "node_classifier",
       "target": "node_complaint_agent",
       "sourceHandle": "cat_complaint",
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#f97316", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#f97316",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_classifier",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 124
+        },
+        "computedPosition": {
+          "x": 250,
+          "y": 100,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_fault",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_booking",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_inquiry",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 88.00000508626303,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_complaint",
+              "type": "source",
+              "nodeId": "node_classifier",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 108.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_classifier",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 56.000010172526046,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 250,
+          "y": 100
+        },
+        "data": {
+          "label": "邮件分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_fault",
+                "name": "故障报告",
+                "description": "系统故障、服务中断、技术问题等需要紧急处理的问题"
+              },
+              {
+                "id": "cat_booking",
+                "name": "订舱请求",
+                "description": "订舱、退关、复关、舱单修改等物流业务请求"
+              },
+              {
+                "id": "cat_inquiry",
+                "name": "咨询查询",
+                "description": "状态查询、信息咨询、价格询问等一般性问题"
+              },
+              {
+                "id": "cat_complaint",
+                "name": "投诉建议",
+                "description": "客户投诉、服务反馈、改进建议等"
+              }
+            ]
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_complaint_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 360,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_complaint_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_complaint_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 360
+        },
+        "data": {
+          "label": "投诉处理",
+          "icon": "📝",
+          "color": "bg-orange-500",
+          "simpleAgentConfig": {
+            "name": "投诉处理智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个投诉处理专家。根据邮件内容：\n1. 识别投诉类型和严重程度\n2. 提取关键问题点\n3. 生成投诉工单信息\n4. 建议处理方案和回复话术\n\n请保持专业、同理心的态度。"
+          }
+        },
+        "events": {}
+      },
+      "sourceX": 416.0000406901042,
+      "sourceY": 214.00000508626303,
+      "targetX": 494.0000406901042,
+      "targetY": 402.999994913737
     },
     {
-      "id": "edge_fault_output",
+      "id": "edge_node_fault_agent_node_1766481015227_qps0rj94x",
+      "type": "default",
       "source": "node_fault_agent",
-      "target": "node_output",
+      "target": "node_1766481015227_qps0rj94x",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#6366f1", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_fault_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 0,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_fault_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 37.00000127156576,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_fault_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 37.00000127156576,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 0
+        },
+        "data": {
+          "label": "故障处理",
+          "icon": "🔧",
+          "color": "bg-red-500",
+          "simpleAgentConfig": {
+            "name": "故障处理智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个故障处理专家。根据邮件内容，提取以下信息并生成工单：\n1. 故障类型\n2. 影响范围\n3. 紧急程度（P1/P2/P3）\n4. 问题描述摘要\n5. 建议处理方案\n\n请以结构化格式输出，便于创建工单。"
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_1766481015227_qps0rj94x",
+        "type": "tool",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "right",
+              "x": 134.00000254313153,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766
+        },
+        "data": {
+          "label": "输出文件",
+          "icon": "📝",
+          "color": "bg-amber-500",
+          "toolConfig": {
+            "toolType": "file-write",
+            "toolName": "写入文件",
+            "params": {
+              "path": "/Users/shaoqiang/work/temp/tes.txt",
+              "content": "{{content}}",
+              "append": false
+            }
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 646.0000406901042,
+      "sourceY": 43.00000127156576,
+      "targetX": 807.3975047434717,
+      "targetY": 220.07774925562975
     },
     {
-      "id": "edge_booking_output",
+      "id": "edge_node_booking_agent_node_1766481015227_qps0rj94x",
+      "type": "default",
       "source": "node_booking_agent",
-      "target": "node_output",
+      "target": "node_1766481015227_qps0rj94x",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#6366f1", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_booking_agent",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 113
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 120,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_booking_agent",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_booking_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 50.24998982747396,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 120
+        },
+        "data": {
+          "label": "订舱处理",
+          "icon": "🚢",
+          "color": "bg-blue-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": "根据邮件内容提取订舱信息，包括：船公司、航线、货物信息、发货人、收货人等，并调用订舱接口创建订单。"
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_1766481015227_qps0rj94x",
+        "type": "tool",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "right",
+              "x": 134.00000254313153,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766
+        },
+        "data": {
+          "label": "输出文件",
+          "icon": "📝",
+          "color": "bg-amber-500",
+          "toolConfig": {
+            "toolType": "file-write",
+            "toolName": "写入文件",
+            "params": {
+              "path": "/Users/shaoqiang/work/temp/tes.txt",
+              "content": "{{content}}",
+              "append": false
+            }
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 666.0000406901042,
+      "sourceY": 176.24998982747397,
+      "targetX": 807.3975047434717,
+      "targetY": 220.07774925562975
     },
     {
-      "id": "edge_inquiry_output",
+      "id": "edge_node_inquiry_agent_node_1766481015227_qps0rj94x",
+      "type": "default",
       "source": "node_inquiry_agent",
-      "target": "node_output",
+      "target": "node_1766481015227_qps0rj94x",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#6366f1", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_inquiry_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 240,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_inquiry_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_inquiry_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 240
+        },
+        "data": {
+          "label": "咨询回复",
+          "icon": "💬",
+          "color": "bg-purple-500",
+          "simpleAgentConfig": {
+            "name": "咨询回复智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个客服专家。根据邮件中的咨询问题，提供专业、友好的回复。如果涉及具体业务数据查询，请说明需要查询的信息类型。"
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_1766481015227_qps0rj94x",
+        "type": "tool",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "right",
+              "x": 134.00000254313153,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766
+        },
+        "data": {
+          "label": "输出文件",
+          "icon": "📝",
+          "color": "bg-amber-500",
+          "toolConfig": {
+            "toolType": "file-write",
+            "toolName": "写入文件",
+            "params": {
+              "path": "/Users/shaoqiang/work/temp/tes.txt",
+              "content": "{{content}}",
+              "append": false
+            }
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 646.0000406901042,
+      "sourceY": 283.00002034505206,
+      "targetX": 807.3975047434717,
+      "targetY": 220.07774925562975
     },
     {
-      "id": "edge_complaint_output",
+      "id": "edge_node_complaint_agent_node_1766481015227_qps0rj94x",
+      "type": "default",
       "source": "node_complaint_agent",
-      "target": "node_output",
+      "target": "node_1766481015227_qps0rj94x",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
       "animated": true,
-      "style": { "stroke": "#6366f1", "strokeWidth": 2 }
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_complaint_agent",
+        "type": "simple-agent",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 500,
+          "y": 360,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_complaint_agent",
+              "position": "right",
+              "x": 134.00004069010419,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_complaint_agent",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 36.999994913736984,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 500,
+          "y": 360
+        },
+        "data": {
+          "label": "投诉处理",
+          "icon": "📝",
+          "color": "bg-orange-500",
+          "simpleAgentConfig": {
+            "name": "投诉处理智能体",
+            "model": "qwen3-max",
+            "systemPrompt": "你是一个投诉处理专家。根据邮件内容：\n1. 识别投诉类型和严重程度\n2. 提取关键问题点\n3. 生成投诉工单信息\n4. 建议处理方案和回复话术\n\n请保持专业、同理心的态度。"
+          }
+        },
+        "events": {}
+      },
+      "targetNode": {
+        "id": "node_1766481015227_qps0rj94x",
+        "type": "tool",
+        "dimensions": {
+          "width": 140,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "right",
+              "x": 134.00000254313153,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766481015227_qps0rj94x",
+              "position": "left",
+              "x": -5.99999745686849,
+              "y": 37.000020345052086,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 813.3975022003402,
+          "y": 177.07772891057766
+        },
+        "data": {
+          "label": "输出文件",
+          "icon": "📝",
+          "color": "bg-amber-500",
+          "toolConfig": {
+            "toolType": "file-write",
+            "toolName": "写入文件",
+            "params": {
+              "path": "/Users/shaoqiang/work/temp/tes.txt",
+              "content": "{{content}}",
+              "append": false
+            }
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 646.0000406901042,
+      "sourceY": 402.999994913737,
+      "targetX": 807.3975047434717,
+      "targetY": 220.07774925562975
     }
   ],
   "createdAt": "2025-12-23T03:30:00.000Z",
-  "updatedAt": "2025-12-23T03:30:00.000Z"
+  "updatedAt": "2025-12-23T09:12:46.999Z"
 }

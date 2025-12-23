@@ -1824,5 +1824,38 @@
     "total_tokens": 1980,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-23T17:22:29.246191",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 235,
+    "total_tokens": 244,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-23T17:53:25.861471",
+    "agent_id": "code-agent",
+    "agent_name": "代码助手",
+    "model": "qwen3-max",
+    "prompt_tokens": 56,
+    "completion_tokens": 941,
+    "total_tokens": 997,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-23T17:54:09.033582",
+    "agent_id": "code-agent",
+    "agent_name": "代码助手",
+    "model": "qwen3-max",
+    "prompt_tokens": 1006,
+    "completion_tokens": 995,
+    "total_tokens": 2001,
+    "user_id": null,
+    "session_id": null
   }
 ]

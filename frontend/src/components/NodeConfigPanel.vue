@@ -35,6 +35,24 @@ const localConfig = ref({
   simpleAgentName: 'SimpleAgent',
   simpleAgentSystemPrompt: '',
   simpleAgentModel: 'qwen3-max',
+  // 工具节点配置
+  toolType: '',
+  toolName: '',
+  toolParams: {} as Record<string, any>,
+  // 邮件发送工具参数
+  emailTo: '',
+  emailSubject: '',
+  emailBody: '',
+  emailBodyType: 'text' as 'text' | 'html',
+  // HTTP请求工具参数
+  httpUrl: '',
+  httpMethod: 'GET' as 'GET' | 'POST' | 'PUT' | 'DELETE',
+  httpHeaders: '' as string,
+  httpBody: '',
+  // 文件写入工具参数
+  filePath: '',
+  fileContent: '',
+  fileAppend: false,
 })
 
 // 可用技能列表（从后端加载）
@@ -193,6 +211,47 @@ watch(selectedNode, (node) => {
       simpleAgentSystemPrompt: '',
       simpleAgentModel: 'qwen3-max',
     }
+  } else if (node?.data?.toolConfig) {
+    // 工具节点配置
+    const config = node.data.toolConfig
+    const params = config.params || {}
+    localConfig.value = {
+      name: node.data.label,
+      systemPrompt: '',
+      skills: [],
+      model: 'qwen3-max',
+      maxIters: 30,
+      temperature: 0.7,
+      enableThinking: false,
+      stream: true,
+      customParams: [],
+      inputVariables: [],
+      conditionExpression: '',
+      parallelDescription: '',
+      classifierModel: 'qwen3-max',
+      classifierCategories: [],
+      skillAgentSkills: [],
+      skillAgentModel: 'qwen3-max',
+      skillAgentMaxIters: 30,
+      skillAgentSystemPrompt: '',
+      simpleAgentName: 'SimpleAgent',
+      simpleAgentSystemPrompt: '',
+      simpleAgentModel: 'qwen3-max',
+      toolType: config.toolType || '',
+      toolName: config.toolName || '',
+      toolParams: params,
+      emailTo: params.to || '',
+      emailSubject: params.subject || '',
+      emailBody: params.body || '',
+      emailBodyType: params.bodyType || 'text',
+      httpUrl: params.url || '',
+      httpMethod: params.method || 'GET',
+      httpHeaders: params.headers || '',
+      httpBody: params.body || '',
+      filePath: params.path || '',
+      fileContent: params.content || '',
+      fileAppend: params.append || false,
+    }
   } else if (node) {
     localConfig.value = {
       name: node.data.label,
@@ -216,6 +275,20 @@ watch(selectedNode, (node) => {
       simpleAgentName: 'SimpleAgent',
       simpleAgentSystemPrompt: '',
       simpleAgentModel: 'qwen3-max',
+      toolType: '',
+      toolName: '',
+      toolParams: {},
+      emailTo: '',
+      emailSubject: '',
+      emailBody: '',
+      emailBodyType: 'text',
+      httpUrl: '',
+      httpMethod: 'GET',
+      httpHeaders: '',
+      httpBody: '',
+      filePath: '',
+      fileContent: '',
+      fileAppend: false,
     }
   }
   activeTab.value = 'basic'
@@ -293,6 +366,41 @@ function handleSave() {
             name: localConfig.value.simpleAgentName,
             systemPrompt: localConfig.value.simpleAgentSystemPrompt,
             model: localConfig.value.simpleAgentModel,
+          },
+        },
+      })
+    } else if (nodeType === 'tool') {
+      // 工具节点
+      let params: Record<string, any> = {}
+      if (localConfig.value.toolType === 'email-send') {
+        params = {
+          to: localConfig.value.emailTo,
+          subject: localConfig.value.emailSubject,
+          body: localConfig.value.emailBody,
+          bodyType: localConfig.value.emailBodyType,
+        }
+      } else if (localConfig.value.toolType === 'http-request') {
+        params = {
+          url: localConfig.value.httpUrl,
+          method: localConfig.value.httpMethod,
+          headers: localConfig.value.httpHeaders,
+          body: localConfig.value.httpBody,
+        }
+      } else if (localConfig.value.toolType === 'file-write') {
+        params = {
+          path: localConfig.value.filePath,
+          content: localConfig.value.fileContent,
+          append: localConfig.value.fileAppend,
+        }
+      }
+      store.updateNode(selectedNode.value.id, {
+        data: {
+          ...selectedNode.value.data,
+          label: localConfig.value.name,
+          toolConfig: {
+            toolType: localConfig.value.toolType,
+            toolName: localConfig.value.toolName,
+            params,
           },
         },
       })
@@ -631,6 +739,154 @@ const availableModels = [
                 <li>技能会自动加载到智能体的工具集中</li>
                 <li>执行时会根据技能动态创建智能体</li>
                 <li>可自定义系统提示词或使用自动生成</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 工具节点配置 -->
+      <template v-if="selectedNode.type === 'tool'">
+        <!-- 工具类型 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">工具类型</label>
+          <select 
+            v-model="localConfig.toolType"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+          >
+            <option value="">选择工具类型...</option>
+            <option value="email-send">邮件发送</option>
+            <option value="http-request">HTTP请求</option>
+            <option value="file-write">文件写入</option>
+          </select>
+        </div>
+
+        <!-- 邮件发送配置 -->
+        <template v-if="localConfig.toolType === 'email-send'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">收件人 <span class="text-red-500">*</span></label>
+            <input 
+              v-model="localConfig.emailTo"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              placeholder="多个收件人用逗号分隔，支持变量 {{email}}"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">邮件主题 <span class="text-red-500">*</span></label>
+            <input 
+              v-model="localConfig.emailSubject"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              placeholder="支持变量 {{subject}}"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">邮件内容 <span class="text-red-500">*</span></label>
+            <textarea 
+              v-model="localConfig.emailBody"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all resize-none"
+              placeholder="支持变量 {{content}}，可引用上游节点输出"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">内容类型</label>
+            <select 
+              v-model="localConfig.emailBodyType"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+            >
+              <option value="text">纯文本</option>
+              <option value="html">HTML</option>
+            </select>
+          </div>
+        </template>
+
+        <!-- HTTP请求配置 -->
+        <template v-if="localConfig.toolType === 'http-request'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">请求URL <span class="text-red-500">*</span></label>
+            <input 
+              v-model="localConfig.httpUrl"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              placeholder="https://api.example.com/endpoint"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">请求方法</label>
+            <select 
+              v-model="localConfig.httpMethod"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+            >
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">请求头 (JSON)</label>
+            <textarea 
+              v-model="localConfig.httpHeaders"
+              rows="2"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all resize-none font-mono text-sm"
+              placeholder='{"Content-Type": "application/json"}'
+            ></textarea>
+          </div>
+          <div v-if="localConfig.httpMethod !== 'GET'">
+            <label class="block text-sm font-medium text-gray-700 mb-1">请求体</label>
+            <textarea 
+              v-model="localConfig.httpBody"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all resize-none font-mono text-sm"
+              placeholder="支持变量 {{data}}"
+            ></textarea>
+          </div>
+        </template>
+
+        <!-- 文件写入配置 -->
+        <template v-if="localConfig.toolType === 'file-write'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">文件路径 <span class="text-red-500">*</span></label>
+            <input 
+              v-model="localConfig.filePath"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              placeholder="/path/to/file.txt"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">文件内容 <span class="text-red-500">*</span></label>
+            <textarea 
+              v-model="localConfig.fileContent"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all resize-none"
+              placeholder="支持变量 {{content}}"
+            ></textarea>
+          </div>
+          <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+            <input 
+              type="checkbox"
+              v-model="localConfig.fileAppend"
+              class="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+            />
+            <span class="text-sm text-gray-700">追加模式（不覆盖原有内容）</span>
+          </label>
+        </template>
+
+        <!-- 使用说明 -->
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-amber-700">
+              <p class="font-medium mb-1">工具节点：</p>
+              <ul class="space-y-1 list-disc list-inside">
+                <li>执行具体的操作任务（发邮件、调接口等）</li>
+                <li>支持使用 { { 变量名 } } 引用上游节点输出</li>
+                <li>执行结果会传递给下游节点</li>
               </ul>
             </div>
           </div>

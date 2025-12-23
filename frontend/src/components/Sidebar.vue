@@ -35,6 +35,14 @@ const nodeTypes = [
       { type: 'condition', label: '条件分支', icon: '🔀', color: 'bg-yellow-500' },
       { type: 'parallel', label: '并行执行', icon: '⚡', color: 'bg-purple-500' },
     ]
+  },
+  {
+    category: '工具',
+    items: [
+      { type: 'tool', label: '邮件发送', icon: '📧', color: 'bg-amber-500', toolType: 'email-send', toolName: '发送邮件' },
+      { type: 'tool', label: 'HTTP请求', icon: '🌐', color: 'bg-amber-500', toolType: 'http-request', toolName: 'HTTP调用' },
+      { type: 'tool', label: '文件写入', icon: '📝', color: 'bg-amber-500', toolType: 'file-write', toolName: '写入文件' },
+    ]
   }
 ]
 
