@@ -1,0 +1,1044 @@
+{
+  "id": "workflow_17664533027172",
+  "name": "msc-booking-flow",
+  "description": "msc订舱流程，包括订舱、退关、复关、新舱单等功能，支持用户提交订舱数据和查询订舱状态",
+  "nodes": [
+    {
+      "id": "node_1766453020063_f2ve9qeyo",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 422.99999999999994,
+        "y": 32.83333333333336,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766453020063_f2ve9qeyo",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766453020063_f2ve9qeyo",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 422.99999999999994,
+        "y": 32.83333333333336
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "mscbooking-skill"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766453027749_0tcil7wom",
+      "type": "input",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 47.83333333333334,
+        "y": 184.33333333333334,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766453027749_0tcil7wom",
+            "position": "right",
+            "x": 134.00001525878906,
+            "y": 27.5,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": null
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 47.83333333333334,
+        "y": 184.33333333333334
+      },
+      "data": {
+        "label": "用户输入",
+        "icon": "📥",
+        "color": "bg-green-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766453030776_hy3cfc1zd",
+      "type": "classifier",
+      "dimensions": {
+        "width": 160,
+        "height": 86
+      },
+      "computedPosition": {
+        "x": 221,
+        "y": 90,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": "cat_1766453037193",
+            "type": "source",
+            "nodeId": "node_1766453030776_hy3cfc1zd",
+            "position": "right",
+            "x": 153.99998982747397,
+            "y": 48.00000508626302,
+            "width": 12,
+            "height": 12
+          },
+          {
+            "id": "cat_1766453128234",
+            "type": "source",
+            "nodeId": "node_1766453030776_hy3cfc1zd",
+            "position": "right",
+            "x": 153.99998982747397,
+            "y": 68.00000508626303,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766453030776_hy3cfc1zd",
+            "position": "left",
+            "x": -6.000010172526042,
+            "y": 37.00000762939453,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 221,
+        "y": 90
+      },
+      "data": {
+        "label": "问题分类器",
+        "icon": "🏷️",
+        "color": "bg-cyan-500",
+        "classifierConfig": {
+          "model": "qwen3-max",
+          "categories": [
+            {
+              "id": "cat_1766453037193",
+              "name": "msc订舱操作问题",
+              "description": "关于msc如何订舱、退关、复关、新舱单等相关操作问题"
+            },
+            {
+              "id": "cat_1766453128234",
+              "name": "订舱功能",
+              "description": "主要实现功能是用户提交订舱数据和订舱状态查询，系统可以根据用户提交订舱数据调用接口写入系统，可以通过提单号查询订舱状态"
+            }
+          ]
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766453277055_z4s2o0w48",
+      "type": "skill-agent",
+      "dimensions": {
+        "width": 160,
+        "height": 102
+      },
+      "computedPosition": {
+        "x": 420.83333333333337,
+        "y": 233.66666666666669,
+        "z": 0
+      },
+      "handleBounds": {
+        "source": [
+          {
+            "id": null,
+            "type": "source",
+            "nodeId": "node_1766453277055_z4s2o0w48",
+            "position": "right",
+            "x": 154.00004069010419,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ],
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766453277055_z4s2o0w48",
+            "position": "left",
+            "x": -5.999959309895834,
+            "y": 44.74998474121094,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 420.83333333333337,
+        "y": 233.66666666666669
+      },
+      "data": {
+        "label": "技能智能体",
+        "icon": "🎯",
+        "color": "bg-emerald-500",
+        "skillAgentConfig": {
+          "skills": [
+            "booking-skill"
+          ],
+          "model": "qwen3-max",
+          "maxIters": 30,
+          "systemPrompt": ""
+        }
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    },
+    {
+      "id": "node_1766453295178_doamze604",
+      "type": "output",
+      "dimensions": {
+        "width": 140,
+        "height": 67
+      },
+      "computedPosition": {
+        "x": 709.5,
+        "y": 132,
+        "z": 1000
+      },
+      "handleBounds": {
+        "source": null,
+        "target": [
+          {
+            "id": null,
+            "type": "target",
+            "nodeId": "node_1766453295178_doamze604",
+            "position": "left",
+            "x": -6.00006103515625,
+            "y": 27.500012715657554,
+            "width": 12,
+            "height": 12
+          }
+        ]
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false,
+      "initialized": false,
+      "isParent": false,
+      "position": {
+        "x": 709.5,
+        "y": 132
+      },
+      "data": {
+        "label": "输出结果",
+        "icon": "📤",
+        "color": "bg-orange-500"
+      },
+      "events": {},
+      "sourcePosition": "right",
+      "targetPosition": "left"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_node_1766453027749_0tcil7wom_node_1766453030776_hy3cfc1zd",
+      "type": "default",
+      "source": "node_1766453027749_0tcil7wom",
+      "target": "node_1766453030776_hy3cfc1zd",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766453027749_0tcil7wom",
+        "type": "input",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 47.83333333333334,
+          "y": 184.33333333333334,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766453027749_0tcil7wom",
+              "position": "right",
+              "x": 134.00001525878906,
+              "y": 27.5,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": null
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 47.83333333333334,
+          "y": 184.33333333333334
+        },
+        "data": {
+          "label": "用户输入",
+          "icon": "📥",
+          "color": "bg-green-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766453030776_hy3cfc1zd",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 221,
+          "y": 90,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766453037193",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766453128234",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 221,
+          "y": 90
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766453037193",
+                "name": "msc订舱操作问题",
+                "description": "关于msc如何订舱、退关、复关、新舱单等相关操作问题"
+              },
+              {
+                "id": "cat_1766453128234",
+                "name": "订舱功能",
+                "description": "主要实现功能是用户提交订舱数据和订舱状态查询，系统可以根据用户提交订舱数据调用接口写入系统，可以通过提单号查询订舱状态"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 193.8333485921224,
+      "sourceY": 217.83333333333334,
+      "targetX": 214.99998982747397,
+      "targetY": 133.00000762939453
+    },
+    {
+      "id": "edge_node_1766453030776_hy3cfc1zd_node_1766453020063_f2ve9qeyo",
+      "type": "default",
+      "source": "node_1766453030776_hy3cfc1zd",
+      "target": "node_1766453020063_f2ve9qeyo",
+      "sourceHandle": "cat_1766453037193",
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766453030776_hy3cfc1zd",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 221,
+          "y": 90,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766453037193",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766453128234",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 221,
+          "y": 90
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766453037193",
+                "name": "msc订舱操作问题",
+                "description": "关于msc如何订舱、退关、复关、新舱单等相关操作问题"
+              },
+              {
+                "id": "cat_1766453128234",
+                "name": "订舱功能",
+                "description": "主要实现功能是用户提交订舱数据和订舱状态查询，系统可以根据用户提交订舱数据调用接口写入系统，可以通过提单号查询订舱状态"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766453020063_f2ve9qeyo",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 422.99999999999994,
+          "y": 32.83333333333336,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766453020063_f2ve9qeyo",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453020063_f2ve9qeyo",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 422.99999999999994,
+          "y": 32.83333333333336
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "mscbooking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 386.999989827474,
+      "sourceY": 144.00000508626303,
+      "targetX": 417.00004069010413,
+      "targetY": 83.5833180745443
+    },
+    {
+      "id": "edge_node_1766453030776_hy3cfc1zd_node_1766453277055_z4s2o0w48",
+      "type": "default",
+      "source": "node_1766453030776_hy3cfc1zd",
+      "target": "node_1766453277055_z4s2o0w48",
+      "sourceHandle": "cat_1766453128234",
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766453030776_hy3cfc1zd",
+        "type": "classifier",
+        "dimensions": {
+          "width": 160,
+          "height": 86
+        },
+        "computedPosition": {
+          "x": 221,
+          "y": 90,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": "cat_1766453037193",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 48.00000508626302,
+              "width": 12,
+              "height": 12
+            },
+            {
+              "id": "cat_1766453128234",
+              "type": "source",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "right",
+              "x": 153.99998982747397,
+              "y": 68.00000508626303,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453030776_hy3cfc1zd",
+              "position": "left",
+              "x": -6.000010172526042,
+              "y": 37.00000762939453,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 221,
+          "y": 90
+        },
+        "data": {
+          "label": "问题分类器",
+          "icon": "🏷️",
+          "color": "bg-cyan-500",
+          "classifierConfig": {
+            "model": "qwen3-max",
+            "categories": [
+              {
+                "id": "cat_1766453037193",
+                "name": "msc订舱操作问题",
+                "description": "关于msc如何订舱、退关、复关、新舱单等相关操作问题"
+              },
+              {
+                "id": "cat_1766453128234",
+                "name": "订舱功能",
+                "description": "主要实现功能是用户提交订舱数据和订舱状态查询，系统可以根据用户提交订舱数据调用接口写入系统，可以通过提单号查询订舱状态"
+              }
+            ]
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766453277055_z4s2o0w48",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 420.83333333333337,
+          "y": 233.66666666666669,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766453277055_z4s2o0w48",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453277055_z4s2o0w48",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 420.83333333333337,
+          "y": 233.66666666666669
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 386.999989827474,
+      "sourceY": 164.00000508626303,
+      "targetX": 414.83337402343756,
+      "targetY": 284.4166514078776
+    },
+    {
+      "id": "edge_node_1766453020063_f2ve9qeyo_node_1766453295178_doamze604",
+      "type": "default",
+      "source": "node_1766453020063_f2ve9qeyo",
+      "target": "node_1766453295178_doamze604",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766453020063_f2ve9qeyo",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 422.99999999999994,
+          "y": 32.83333333333336,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766453020063_f2ve9qeyo",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453020063_f2ve9qeyo",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 422.99999999999994,
+          "y": 32.83333333333336
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "mscbooking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766453295178_doamze604",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 709.5,
+          "y": 132,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453295178_doamze604",
+              "position": "left",
+              "x": -6.00006103515625,
+              "y": 27.500012715657554,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 709.5,
+          "y": 132
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 589.0000406901041,
+      "sourceY": 83.5833180745443,
+      "targetX": 703.4999389648438,
+      "targetY": 165.50001271565756
+    },
+    {
+      "id": "edge_node_1766453277055_z4s2o0w48_node_1766453295178_doamze604",
+      "type": "default",
+      "source": "node_1766453277055_z4s2o0w48",
+      "target": "node_1766453295178_doamze604",
+      "sourceHandle": null,
+      "targetHandle": null,
+      "data": {},
+      "events": {},
+      "label": "",
+      "animated": true,
+      "style": {
+        "stroke": "#6366f1",
+        "strokeWidth": 2
+      },
+      "sourceNode": {
+        "id": "node_1766453277055_z4s2o0w48",
+        "type": "skill-agent",
+        "dimensions": {
+          "width": 160,
+          "height": 102
+        },
+        "computedPosition": {
+          "x": 420.83333333333337,
+          "y": 233.66666666666669,
+          "z": 0
+        },
+        "handleBounds": {
+          "source": [
+            {
+              "id": null,
+              "type": "source",
+              "nodeId": "node_1766453277055_z4s2o0w48",
+              "position": "right",
+              "x": 154.00004069010419,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ],
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453277055_z4s2o0w48",
+              "position": "left",
+              "x": -5.999959309895834,
+              "y": 44.74998474121094,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": false,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 420.83333333333337,
+          "y": 233.66666666666669
+        },
+        "data": {
+          "label": "技能智能体",
+          "icon": "🎯",
+          "color": "bg-emerald-500",
+          "skillAgentConfig": {
+            "skills": [
+              "booking-skill"
+            ],
+            "model": "qwen3-max",
+            "maxIters": 30,
+            "systemPrompt": ""
+          }
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "targetNode": {
+        "id": "node_1766453295178_doamze604",
+        "type": "output",
+        "dimensions": {
+          "width": 140,
+          "height": 67
+        },
+        "computedPosition": {
+          "x": 709.5,
+          "y": 132,
+          "z": 1000
+        },
+        "handleBounds": {
+          "source": null,
+          "target": [
+            {
+              "id": null,
+              "type": "target",
+              "nodeId": "node_1766453295178_doamze604",
+              "position": "left",
+              "x": -6.00006103515625,
+              "y": 27.500012715657554,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        "selected": true,
+        "dragging": false,
+        "resizing": false,
+        "initialized": false,
+        "isParent": false,
+        "position": {
+          "x": 709.5,
+          "y": 132
+        },
+        "data": {
+          "label": "输出结果",
+          "icon": "📤",
+          "color": "bg-orange-500"
+        },
+        "events": {},
+        "sourcePosition": "right",
+        "targetPosition": "left"
+      },
+      "sourceX": 586.8333740234375,
+      "sourceY": 284.4166514078776,
+      "targetX": 703.4999389648438,
+      "targetY": 165.50001271565756
+    }
+  ],
+  "createdAt": "2025-12-23T01:28:22.717Z",
+  "updatedAt": "2025-12-23T01:28:22.717Z"
+}

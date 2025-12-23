@@ -88,7 +88,8 @@ class BaseAgent:
             model=DashScopeChatModel(
                 api_key=api_key,
                 model_name=model_name,
-                enable_thinking=False,
+                # model_name="glm-4.6",
+                enable_thinking=True,
                 stream=True,  # 流式输出
             ),
             formatter=DashScopeChatFormatter(),

@@ -56,7 +56,7 @@
           "type": "agent",
           "apiType": "workflow",
           "apiUrl": "http://localhost:8000/api/workflow/run",
-          "workflowName": "booking_workflow",
+          "workflowName": "msc_booking_flow",
           "description": "订舱功能，支持创建新的订舱申请，查询订舱状态。",
           "model": "qwen3-max"
         } ,

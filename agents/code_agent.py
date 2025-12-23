@@ -51,5 +51,6 @@ class CodeAgent(BaseAgent):
             skills=skills or default_skills,
             api_key=api_key,
             model_name=model_name,
+            # model_name="glm-4.6",
             max_iters=max_iters,
         )

@@ -143,7 +143,7 @@ function handleOpenSettings() {
 <template>
   <div 
     class="left-menu h-full flex flex-col transition-all duration-300"
-    :class="(collapsed && !isHovering) ? 'w-16' : 'w-56'"
+    :class="(collapsed && !isHovering) ? 'w-16' : 'w-72'"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >

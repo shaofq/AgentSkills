@@ -1,11 +1,4 @@
 
-你也可以尝试以下问题来测试不同的 pptx 功能：
-
-读取PPT内容: "请帮我读取并分析 example.pptx 的内容"
-编辑现有PPT: "请帮我修改 template.pptx 中第一张幻灯片的标题"
-使用模板创建: "请使用 template.pptx 作为模板，创建一个关于产品介绍的PPT"
-生成缩略图: "请帮我生成 presentation.pptx 的缩略图预览"
-
 # HTML to PowerPoint Guide
 
 Convert HTML slides to PowerPoint presentations with accurate positioning using the `html2pptx.js` library.
