@@ -15,6 +15,7 @@ import AIExpertHome from './components/AIExpertHome.vue'
 import TokenStatsDialog from './components/TokenStatsDialog.vue'
 import ConsolePanel from './components/ConsolePanel.vue'
 import EmailTriggerConfig from './components/EmailTriggerConfig.vue'
+import ManusView from './components/ManusView.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -54,6 +55,7 @@ const defaultMenuConfigs: MenuConfig[] = [
   { id: 'skill-creator', name: '技能创建', icon: 'icon-identity', type: 'agent', apiType: 'skill-creator', apiUrl: 'http://localhost:8000/api/skill-creator/chat', workflowName: null, description: '技能创建助手。', model: 'qwen3-max' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
   { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '查询和管理已加载的工作流', model: null },
+  { id: 'manus', name: 'Manus AI', icon: 'icon-laptop', type: 'agent', apiType: 'sandbox', apiUrl: 'http://localhost:8000/sandbox/agents/sandbox/execute', workflowName: null, description: 'AI 电脑助手，可在沙箱中执行代码、文件操作和浏览器自动化', model: 'qwen3-max' },
 ]
 const menuConfigs = ref<MenuConfig[]>(defaultMenuConfigs)
 
@@ -63,6 +65,7 @@ const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 const isCodeAssistantMode = computed(() => activeMenu.value === 'code-agent')
 const isOCRMode = computed(() => activeMenu.value === 'ocr-agent')
 const isEmailTriggerMode = computed(() => activeMenu.value === 'email-trigger')
+const isManusMode = computed(() => activeMenu.value === 'manus')
 
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -236,6 +239,7 @@ const agentCards = computed<AgentCard[]>(() => {
     'ocr-agent': { icon: '📄', bg: 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)' },
     'skill-creator': { icon: '🎯', bg: 'linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)' },
     'booking-agent': { icon: '🚢', bg: 'linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)' },
+    'manus': { icon: '🖥️', bg: 'linear-gradient(135deg, #1e1e1e 0%, #3c3c3c 100%)' },
   }
   
   // 过滤出 agent 类型的菜单项
@@ -643,8 +647,11 @@ async function onSubmit(evt: string) {
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden main-content">
+      <!-- Manus AI 模式 -->
+      <ManusView v-if="isManusMode" class="flex-1" />
+      
       <!-- 邮件触发配置模式 -->
-      <EmailTriggerConfig v-if="isEmailTriggerMode" />
+      <EmailTriggerConfig v-else-if="isEmailTriggerMode" />
       
       <!-- 流程查询模式 -->
       <WorkflowListDialog v-else-if="isWorkflowListMode" />

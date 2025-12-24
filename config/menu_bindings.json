@@ -70,6 +70,17 @@
           "workflowName": "webauto_workflow",
           "description": "Web自动化智能体，支持自动化Web页面操作。",
           "model": "qwen3-max"
+        },
+        {
+          "id": "manus",
+          "name": "Manus AI",
+          "icon": "icon-module",
+          "type": "agent",
+          "apiType": "sandbox",
+          "apiUrl": "http://localhost:8000/sandbox/agents/sandbox/execute",
+          "workflowName": null,
+          "description": "AI 电脑助手，可在沙箱中执行代码、文件操作和浏览器自动化",
+          "model": "qwen3-max"
         }
       ]
     },

@@ -64,4 +64,14 @@ async def get_agents():
             model="qwen3-max",
             maxIters=10,
         ),
+        AgentConfig(
+            id="sandbox_agent",
+            name="Manus",
+            type="sandbox",
+            description="Sandbox 执行智能体 - 在安全沙箱中执行代码、文件操作和浏览器自动化",
+            systemPrompt="你是 Manus AI，可以在安全沙箱环境中执行各种操作。你可以执行 Shell 命令、Python 代码、文件读写和浏览器自动化。用户可以实时观看你的操作过程。",
+            skills=["sandbox-executor"],
+            model="qwen3-max",
+            maxIters=30,
+        ),
     ]
