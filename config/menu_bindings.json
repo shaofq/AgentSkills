@@ -73,7 +73,7 @@
         },
         {
           "id": "manus",
-          "name": "Manus AI",
+          "name": "云应用AI",
           "icon": "icon-module",
           "type": "agent",
           "apiType": "sandbox",

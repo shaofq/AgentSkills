@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
 from api.services.sandbox_service import get_sandbox_service, SandboxService
+from api.services.recording_service import get_recording_service
 
 router = APIRouter(prefix="/sandbox", tags=["Sandbox"])
 
@@ -158,10 +159,18 @@ class AgentExecuteRequest(BaseModel):
 @router.post("/agents/sandbox/execute")
 async def execute_sandbox_agent(request: AgentExecuteRequest):
     """
-    执行 Sandbox Agent 任务
+    执行 SandboxUse 智能体任务
     
-    简化版：直接调用 Sandbox 服务执行命令
+    智能体会分析用户指令，自动调用相应的 AIO Sandbox API：
+    - Shell 命令执行
+    - 文件操作（读取、写入、列出目录）
+    - Python 代码执行
+    - 浏览器操作（导航、截图、点击、输入等）
     """
+    import os
+    from agentscope.message import Msg
+    from agents.sandbox_agent import get_sandbox_agent, get_sandbox_tools
+    
     service = get_sandbox_service()
     
     # 检查 Sandbox 连接
@@ -174,57 +183,73 @@ async def execute_sandbox_agent(request: AgentExecuteRequest):
         }
     
     try:
-        message = request.message.strip()
+        # 获取 API 密钥
+        api_key = os.getenv("DASHSCOPE_API_KEY", "")
+        
+        # 获取录制服务
+        recording_service = get_recording_service()
+        
+        # 如果正在录制，记录用户输入
+        if recording_service.is_recording():
+            # 截图
+            screenshot = None
+            try:
+                screenshot_result = service.browser_screenshot()
+                if screenshot_result.get("success"):
+                    screenshot = screenshot_result.get("screenshot")
+            except:
+                pass
+            
+            recording_service.add_step(
+                step_type="user_input",
+                content=request.message,
+                screenshot=screenshot
+            )
+        
+        # 获取 SandboxUse 智能体
+        agent = get_sandbox_agent(
+            api_key=api_key,
+            model_name="qwen3-max",
+            sandbox_url=service.base_url
+        )
+        
+        # 创建用户消息并执行
+        user_msg = Msg("user", request.message, "user")
+        result = await agent(user_msg)
+        
+        # 提取响应内容（确保是字符串）
         response_text = ""
-        
-        # 简单解析用户意图并执行
-        if message.startswith("!") or message.startswith("shell:"):
-            # 直接执行 shell 命令
-            cmd = message.lstrip("!").replace("shell:", "").strip()
-            result = service.exec_shell(cmd)
-            if result.get("success"):
-                response_text = f"命令执行成功:\n```\n{result.get('output', '')}\n```"
+        if hasattr(result, 'content'):
+            content = result.content
+            if isinstance(content, str):
+                response_text = content
+            elif isinstance(content, list):
+                # 可能是 [{type: 'text', text: '...'}] 格式
+                response_text = "\n".join(
+                    c.get('text', '') if isinstance(c, dict) else str(c) 
+                    for c in content
+                )
             else:
-                response_text = f"命令执行失败: {result.get('error', '未知错误')}"
-        
-        elif message.startswith("python:") or "执行python" in message.lower():
-            # 执行 Python 代码
-            code = message.replace("python:", "").strip()
-            if not code or "执行python" in message.lower():
-                code = "print('Hello from Sandbox!')"
-            result = service.execute_python(code)
-            if result.get("success"):
-                response_text = f"Python 执行结果:\n```\n{result.get('output', '')}\n```"
-            else:
-                response_text = f"执行失败: {result.get('error', '未知错误')}"
-        
-        elif "创建文件" in message or "写入文件" in message:
-            # 创建示例文件
-            filename = "/home/user/example.md"
-            content = f"# 由 Manus AI 创建\n\n任务: {message}\n\n创建时间: {__import__('datetime').datetime.now()}"
-            result = service.write_file(filename, content)
-            if result.get("success"):
-                response_text = f"✅ 文件已创建: {filename}"
-            else:
-                response_text = f"创建文件失败: {result.get('error', '未知错误')}"
-        
-        elif "列出文件" in message or "查看文件" in message:
-            # 列出文件
-            result = service.list_files("/home/user")
-            if result.get("success"):
-                files = result.get("files", [])
-                response_text = f"📁 /home/user 目录下的文件:\n" + "\n".join([f"  - {f}" for f in files]) if files else "目录为空"
-            else:
-                response_text = f"列出文件失败: {result.get('error', '未知错误')}"
-        
+                response_text = str(content)
         else:
-            # 默认：执行为 shell 命令
-            result = service.exec_shell(message)
-            if result.get("success"):
-                output = result.get('output', '').strip()
-                response_text = f"执行结果:\n```\n{output}\n```" if output else "✅ 命令已执行（无输出）"
-            else:
-                response_text = f"我收到了你的消息: \"{message}\"\n\n💡 提示：你可以尝试：\n- 输入 shell 命令（如 `ls -la`）\n- 输入 `python: print('hello')` 执行 Python\n- 说 \"创建文件\" 来创建示例文件"
+            response_text = str(result)
+        
+        # 如果正在录制，记录 AI 响应
+        if recording_service.is_recording():
+            # 截图
+            screenshot = None
+            try:
+                screenshot_result = service.browser_screenshot()
+                if screenshot_result.get("success"):
+                    screenshot = screenshot_result.get("screenshot")
+            except:
+                pass
+            
+            recording_service.add_step(
+                step_type="ai_response",
+                content=response_text,
+                screenshot=screenshot
+            )
         
         # 获取文件列表
         files = []
@@ -238,22 +263,137 @@ async def execute_sandbox_agent(request: AgentExecuteRequest):
         except Exception:
             pass
         
+        # 根据响应内容判断应该切换到哪个标签页
+        active_tab = "vnc"  # 默认屏幕
+        response_lower = response_text.lower()
+        if "命令执行" in response_text or "shell" in response_lower or "ls" in response_lower:
+            active_tab = "terminal"
+        elif "文件内容" in response_text or "读取文件" in response_text or "编辑" in response_text:
+            active_tab = "editor"
+        elif "浏览器" in response_text or "导航" in response_text or "网页" in response_text:
+            active_tab = "vnc"
+        
         return {
             "success": True,
             "response": response_text,
             "files": files,
-            "summary": f"已处理: {message[:30]}..." if len(message) > 30 else f"已处理: {message}",
+            "active_tab": active_tab,
+            "summary": f"已处理: {request.message[:30]}..." if len(request.message) > 30 else f"已处理: {request.message}",
             "suggested_questions": [
-                "ls -la 查看文件",
-                "python: import sys; print(sys.version)",
-                "创建文件"
+                "帮我查看当前目录的文件",
+                "执行 Python 代码打印系统信息",
+                "打开浏览器访问百度"
             ]
         }
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "response": f"执行出错: {str(e)}",
             "files": [],
             "summary": ""
         }
+
+
+# ==================== 录制回放 API ====================
+
+class RecordingStartRequest(BaseModel):
+    name: Optional[str] = None
+
+
+@router.post("/recording/start")
+async def start_recording(request: RecordingStartRequest = None):
+    """开始录制"""
+    service = get_recording_service()
+    
+    if service.is_recording():
+        return {
+            "success": False,
+            "message": "已有录制正在进行中",
+            "recording_id": service.get_current_recording_id()
+        }
+    
+    name = request.name if request else None
+    recording_id = service.start_recording(name)
+    
+    return {
+        "success": True,
+        "message": "录制已开始",
+        "recording_id": recording_id
+    }
+
+
+@router.post("/recording/stop")
+async def stop_recording():
+    """停止录制"""
+    service = get_recording_service()
+    
+    if not service.is_recording():
+        return {
+            "success": False,
+            "message": "当前没有进行中的录制"
+        }
+    
+    recording = service.stop_recording()
+    
+    return {
+        "success": True,
+        "message": "录制已保存",
+        "recording": {
+            "id": recording["id"],
+            "name": recording["name"],
+            "duration": recording["duration"],
+            "steps_count": len(recording["steps"])
+        }
+    }
+
+
+@router.get("/recording/status")
+async def get_recording_status():
+    """获取录制状态"""
+    service = get_recording_service()
+    
+    return {
+        "is_recording": service.is_recording(),
+        "recording_id": service.get_current_recording_id()
+    }
+
+
+@router.get("/recordings")
+async def list_recordings():
+    """列出所有录制"""
+    service = get_recording_service()
+    recordings = service.list_recordings()
+    
+    return {
+        "success": True,
+        "recordings": recordings
+    }
+
+
+@router.get("/recording/{recording_id}")
+async def get_recording(recording_id: str):
+    """获取录制详情（用于回放）"""
+    service = get_recording_service()
+    recording = service.get_recording(recording_id)
+    
+    if recording is None:
+        raise HTTPException(status_code=404, detail="录制不存在")
+    
+    return {
+        "success": True,
+        "recording": recording
+    }
+
+
+@router.delete("/recording/{recording_id}")
+async def delete_recording(recording_id: str):
+    """删除录制"""
+    service = get_recording_service()
+    
+    if service.delete_recording(recording_id):
+        return {"success": True, "message": "录制已删除"}
+    else:
+        raise HTTPException(status_code=404, detail="录制不存在")

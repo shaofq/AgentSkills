@@ -203,15 +203,31 @@ class SandboxService:
     
     def browser_screenshot(self) -> Dict[str, Any]:
         """浏览器截图"""
+        import base64
         try:
-            resp = self.client.post(f"{self.base_url}/v1/browser/screenshot")
+            # 截图 API 使用 GET 方法，返回 PNG 二进制数据
+            resp = self.client.get(f"{self.base_url}/v1/browser/screenshot")
             
             if resp.status_code == 200:
-                data = resp.json()
-                return {
-                    "success": True,
-                    "screenshot": data.get("data", {}).get("screenshot", "")
-                }
+                # 检查是否是图片数据
+                content_type = resp.headers.get("content-type", "")
+                if "image" in content_type or resp.content[:4] == b'\x89PNG':
+                    # 直接返回 PNG 二进制数据，转为 base64
+                    screenshot_base64 = base64.b64encode(resp.content).decode('utf-8')
+                    return {
+                        "success": True,
+                        "screenshot": screenshot_base64
+                    }
+                else:
+                    # 可能是 JSON 格式
+                    try:
+                        data = resp.json()
+                        return {
+                            "success": True,
+                            "screenshot": data.get("data", {}).get("screenshot", "")
+                        }
+                    except:
+                        return {"success": False, "error": "Invalid response format"}
             else:
                 return {"success": False, "error": f"HTTP {resp.status_code}"}
         except Exception as e:

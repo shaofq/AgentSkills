@@ -184,6 +184,11 @@ OCR API endpoint:
 - `POST http://localhost:8009/api/ocr/filepath` - Recognize file content
 
 ---
+## sandbox
+
+```bash
+docker run --security-opt seccomp=unconfined --rm -it -p 988:8080 ghcr.io/agent-infra/sandbox:latest
+```
 
 ## 📝 Skill Generation Tool
 

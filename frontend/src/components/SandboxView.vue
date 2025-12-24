@@ -320,11 +320,17 @@ onMounted(() => {
   checkConnection()
 })
 
+// 切换标签页
+function switchTab(tab: 'vnc' | 'editor' | 'terminal' | 'files') {
+  activeView.value = tab
+}
+
 // 暴露方法给父组件
 defineExpose({
   addLog,
   checkConnection,
-  loadFiles
+  loadFiles,
+  switchTab
 })
 </script>
 
