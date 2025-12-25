@@ -43,6 +43,10 @@ class BrowserGotoRequest(BaseModel):
     url: str
 
 
+class OpenFileRequest(BaseModel):
+    file_path: str
+
+
 # ==================== API 端点 ====================
 
 @router.get("/status")
@@ -59,6 +63,7 @@ async def get_sandbox_urls():
     return {
         "vnc": service.get_vnc_url(),
         "vscode": service.get_vscode_url(),
+        "terminal": service.get_terminal_url(),
         "docs": service.get_docs_url(),
         "base": service.base_url,
     }
@@ -79,6 +84,19 @@ async def read_file(request: FileReadRequest):
     """读取文件"""
     service = get_sandbox_service()
     result = service.read_file(request.file_path)
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("error"))
+    return result
+
+
+@router.post("/file/open")
+async def open_file_in_editor(request: OpenFileRequest):
+    """在 code-server 编辑器中打开文件
+    
+    通过 code 命令在 code-server 中打开指定文件
+    """
+    service = get_sandbox_service()
+    result = service.open_file_in_editor(request.file_path)
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("error"))
     return result

@@ -60,37 +60,68 @@ onMounted(() => {
 
 <template>
   <div class="login-page">
-    <!-- 左侧装饰区域 -->
+    <!-- 左侧装饰区域 (login9 风格) -->
     <div class="login-side-info">
+      <!-- 背景装饰图形 -->
+      <div class="bg-shapes">
+        <div class="shape-circle shape-1"></div>
+        <div class="shape-circle shape-2"></div>
+        <div class="shape-circle shape-3"></div>
+        <div class="shape-dots"></div>
+      </div>
+      
+      <!-- 内容区域 -->
       <div class="side-info-content">
-        <!-- 装饰图形 -->
-        <div class="decorative-shapes">
-          <div class="shape shape-1"></div>
-          <div class="shape shape-2"></div>
-          <div class="shape shape-3"></div>
-          <div class="shape shape-4"></div>
-          <div class="dots-pattern"></div>
-        </div>
+        <!-- 大标题 -->
+        <h1 class="main-title">
+          智能体编排与运行平台
+          <span class="highlight">LowCode AI</span> 
+          platform.
+        </h1>
         
-        <!-- Logo -->
-        <div class="side-logo">
-          <div class="logo-circle">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <span class="logo-text">LowCode AI</span>
-        </div>
+        <!-- 描述文字 -->
+        <p class="main-desc">
+          Access to the most powerful tool in the entire AI agent design and automation industry.
+        </p>
         
-        <!-- 宣传文案 -->
-        <div class="side-text">
-          <h2>智能体编排平台</h2>
-          <p>通过可视化工作流，轻松构建和部署 AI 智能体应用</p>
+        <!-- 底部装饰点 -->
+        <div class="nav-dots">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
-        
-       
+      </div>
+      
+      <!-- 3D 装饰图片 (login9 风格 SVG) -->
+      <div class="decoration-image">
+        <svg class="login9-svg" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 背景圆形 -->
+          <circle cx="250" cy="250" r="200" fill="rgba(255,255,255,0.1)"/>
+          <circle cx="250" cy="250" r="150" fill="rgba(255,255,255,0.08)"/>
+          
+          <!-- 主要图形 - 3D 盒子 -->
+          <g transform="translate(150, 120)">
+            <!-- 顶面 -->
+            <path d="M100 0 L200 50 L100 100 L0 50 Z" fill="rgba(255,255,255,0.3)"/>
+            <!-- 左侧面 -->
+            <path d="M0 50 L100 100 L100 200 L0 150 Z" fill="rgba(255,255,255,0.2)"/>
+            <!-- 右侧面 -->
+            <path d="M100 100 L200 50 L200 150 L100 200 Z" fill="rgba(255,255,255,0.15)"/>
+          </g>
+          
+          <!-- 浮动小元素 -->
+          <circle cx="120" cy="150" r="20" fill="rgba(251,191,36,0.8)"/>
+          <circle cx="380" cy="200" r="15" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="350" cy="380" r="25" fill="rgba(255,255,255,0.3)"/>
+          
+          <!-- 装饰线条 -->
+          <path d="M80 300 Q150 280 200 320" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/>
+          <path d="M300 100 Q350 150 320 200" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+          
+          <!-- 小方块 -->
+          <rect x="400" cy="300" width="30" height="30" rx="5" fill="rgba(255,255,255,0.2)" transform="rotate(15 415 315)"/>
+          <rect x="100" y="380" width="20" height="20" rx="3" fill="rgba(251,191,36,0.6)" transform="rotate(-10 110 390)"/>
+        </svg>
       </div>
     </div>
     
@@ -197,25 +228,20 @@ onMounted(() => {
 }
 
 /* 左侧装饰区域 */
+/* ==================== 左侧区域 (login9 风格) ==================== */
 .login-side-info {
   flex: 1;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  padding: 60px;
   overflow: hidden;
 }
 
-.side-info-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 40px;
-}
-
-/* 装饰图形 */
-.decorative-shapes {
+/* 背景装饰图形 */
+.bg-shapes {
   position: absolute;
   top: 0;
   left: 0;
@@ -224,128 +250,118 @@ onMounted(() => {
   pointer-events: none;
 }
 
-.shape {
+.shape-circle {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.15;
 }
 
-.shape-1 {
-  width: 400px;
-  height: 400px;
-  border: 60px solid rgba(255, 255, 255, 0.1);
-  top: -150px;
+.shape-circle.shape-1 {
+  width: 500px;
+  height: 500px;
+  border: 80px solid rgba(255, 255, 255, 0.08);
+  top: -200px;
+  right: -150px;
+}
+
+.shape-circle.shape-2 {
+  width: 300px;
+  height: 300px;
+  border: 50px solid rgba(255, 255, 255, 0.06);
+  bottom: -100px;
   left: -100px;
 }
 
-.shape-2 {
-  width: 300px;
-  height: 300px;
-  border: 50px solid rgba(255, 255, 255, 0.08);
-  bottom: -100px;
-  right: -80px;
-}
-
-.shape-3 {
-  width: 150px;
-  height: 150px;
-  background: rgba(255, 255, 255, 0.1);
-  top: 30%;
-  right: 10%;
-}
-
-.shape-4 {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.15);
-  bottom: 25%;
-  left: 15%;
-}
-
-.dots-pattern {
-  position: absolute;
+.shape-circle.shape-3 {
   width: 200px;
   height: 200px;
-  top: 20%;
-  left: 10%;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.3) 2px, transparent 2px);
-  background-size: 20px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  top: 50%;
+  left: 20%;
 }
 
-/* Logo */
-.side-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 40px;
-}
-
-.logo-circle {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  margin-bottom: 16px;
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.logo-circle svg {
-  width: 40px;
-  height: 40px;
-}
-
-.logo-text {
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 1px;
-}
-
-/* 宣传文案 */
-.side-text {
-  max-width: 320px;
-  margin: 0 auto;
-}
-
-.side-text h2 {
-  font-size: 32px;
-  font-weight: 700;
-  color: white;
-  margin: 0 0 16px 0;
-  line-height: 1.3;
-}
-
-.side-text p {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* 底部装饰线 */
-.bottom-decoration {
+.shape-dots {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
+  width: 150px;
+  height: 150px;
+  bottom: 20%;
+  right: 15%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.4) 2px, transparent 2px);
+  background-size: 15px 15px;
+}
+
+/* 内容区域 */
+.side-info-content {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+}
+
+/* 大标题 */
+.main-title {
+  font-size: 42px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.3;
+  margin: 0 0 24px 0;
+}
+
+.main-title .highlight {
+  color: #fbbf24;
+}
+
+/* 描述文字 */
+.main-desc {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  margin: 0 0 40px 0;
+}
+
+/* 底部导航点 */
+.nav-dots {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
-.bottom-decoration .line {
-  width: 40px;
-  height: 4px;
+.nav-dots .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.bottom-decoration .line:first-child {
+.nav-dots .dot.active {
   background: white;
+  width: 30px;
+  border-radius: 6px;
+}
+
+/* 装饰 SVG 图片 */
+.decoration-image {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 400px;
+  height: 400px;
+  opacity: 0.9;
+}
+
+.login9-svg {
+  width: 100%;
+  height: 100%;
+  animation: float-svg 4s ease-in-out infinite;
+}
+
+@keyframes float-svg {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(2deg);
+  }
 }
 
 /* 右侧登录表单区域 */

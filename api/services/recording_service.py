@@ -19,6 +19,12 @@ class RecordingStep:
     step_type: str  # 类型: user_input, tool_call, tool_result, ai_response
     content: Any  # 内容
     screenshot: Optional[str] = None  # base64 截图
+    tool_name: Optional[str] = None  # 工具名称
+    tool_input: Optional[Dict] = None  # 工具输入参数
+    tool_output: Optional[str] = None  # 工具原始输出
+    file_content: Optional[str] = None  # 文件内容（用于file_read/file_write）
+    shell_command: Optional[str] = None  # Shell 命令
+    shell_output: Optional[str] = None  # Shell 输出
 
 
 @dataclass
@@ -88,9 +94,27 @@ class RecordingService:
         self, 
         step_type: str, 
         content: Any, 
-        screenshot: str = None
+        screenshot: str = None,
+        tool_name: str = None,
+        tool_input: Dict = None,
+        tool_output: str = None,
+        file_content: str = None,
+        shell_command: str = None,
+        shell_output: str = None
     ) -> bool:
-        """添加录制步骤"""
+        """添加录制步骤
+        
+        Args:
+            step_type: 步骤类型 (user_input, tool_call, ai_response)
+            content: 内容描述
+            screenshot: base64 截图
+            tool_name: 工具名称
+            tool_input: 工具输入参数
+            tool_output: 工具原始输出
+            file_content: 文件内容（用于file_read/file_write）
+            shell_command: Shell 命令
+            shell_output: Shell 输出
+        """
         if self._current_recording is None:
             return False
         
@@ -98,7 +122,13 @@ class RecordingService:
             timestamp=time.time() - self._start_time,
             step_type=step_type,
             content=content,
-            screenshot=screenshot
+            screenshot=screenshot,
+            tool_name=tool_name,
+            tool_input=tool_input,
+            tool_output=tool_output,
+            file_content=file_content,
+            shell_command=shell_command,
+            shell_output=shell_output
         )
         
         self._current_recording.steps.append(asdict(step))

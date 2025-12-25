@@ -1857,5 +1857,16 @@
     "total_tokens": 2001,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-24T20:34:58.752639",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 220,
+    "total_tokens": 229,
+    "user_id": null,
+    "session_id": null
   }
 ]

@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <!-- 终端视图 -->
+      <!-- 终端视图 (自定义命令行界面) -->
       <div v-else-if="activeView === 'terminal'" class="terminal-container">
         <div class="terminal-output" ref="terminalOutput">
           <div 
@@ -83,6 +83,10 @@
           >
             <span class="log-time">{{ log.time }}</span>
             <span class="log-content">{{ log.content }}</span>
+          </div>
+          <div v-if="terminalLogs.length === 0" class="terminal-welcome">
+            <p>💻 Sandbox 终端已就绪</p>
+            <p class="hint">输入命令并按回车执行</p>
           </div>
         </div>
         <div class="terminal-input">
@@ -169,6 +173,7 @@ const activeView = ref<'vnc' | 'editor' | 'terminal' | 'files'>('vnc')
 const sandboxUrls = ref({
   vnc: '',
   vscode: '',
+  terminal: '',
   docs: '',
   base: ''
 })
@@ -212,6 +217,7 @@ async function checkConnection() {
       sandboxUrls.value = {
         vnc: resp.data.vnc_url,
         vscode: resp.data.vscode_url,
+        terminal: resp.data.terminal_url || `${resp.data.base_url}/ttyd/`,
         docs: resp.data.docs_url,
         base: resp.data.base_url
       }
@@ -487,7 +493,8 @@ defineExpose({
 }
 
 .vnc-iframe,
-.vscode-iframe {
+.vscode-iframe,
+.terminal-iframe {
   width: 100%;
   height: 100%;
   border: none;
@@ -538,6 +545,24 @@ defineExpose({
 
 .log-line.error .log-content {
   color: #f44336;
+}
+
+.terminal-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+}
+
+.terminal-welcome p {
+  margin: 4px 0;
+}
+
+.terminal-welcome .hint {
+  font-size: 12px;
+  color: #666;
 }
 
 .terminal-input {

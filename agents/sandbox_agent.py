@@ -56,8 +56,24 @@ def get_sandbox_tools(base_url: str = "http://localhost:988") -> SandboxTools:
     return _sandbox_tools
 
 
-def make_response(text: str, tool_name: str = "") -> ToolResponse:
-    """创建 ToolResponse 对象，并在录制时自动添加步骤"""
+def make_response(
+    text: str, 
+    tool_name: str = "",
+    tool_input: Dict = None,
+    file_content: str = None,
+    shell_command: str = None,
+    shell_output: str = None
+) -> ToolResponse:
+    """创建 ToolResponse 对象，并在录制时自动添加步骤
+    
+    Args:
+        text: 响应文本
+        tool_name: 工具名称
+        tool_input: 工具输入参数
+        file_content: 文件内容（用于file_read/file_write）
+        shell_command: Shell 命令
+        shell_output: Shell 输出
+    """
     # 如果正在录制，添加工具调用步骤
     try:
         from api.services.recording_service import get_recording_service
@@ -75,11 +91,17 @@ def make_response(text: str, tool_name: str = "") -> ToolResponse:
             except:
                 pass
             
-            # 添加工具调用步骤
+            # 添加工具调用步骤（包含详细信息）
             recording_service.add_step(
                 step_type="tool_call",
                 content=f"[{tool_name}] {text}" if tool_name else text,
-                screenshot=screenshot
+                screenshot=screenshot,
+                tool_name=tool_name,
+                tool_input=tool_input,
+                tool_output=text,
+                file_content=file_content,
+                shell_command=shell_command,
+                shell_output=shell_output
             )
     except:
         pass
@@ -113,9 +135,11 @@ def sandbox_shell(command: str, cwd: str = "/home/user") -> ToolResponse:
     
     result = tools._request("POST", "/v1/shell/exec", json=payload)
     
+    shell_output = ""
     if result.get("success"):
         data = result.get("data", {})
         output = data.get("output", "")
+        shell_output = output
         exit_code = data.get("exit_code", 0)
         if exit_code == 0:
             text = f"命令执行成功:\n{output}" if output else "命令执行成功（无输出）"
@@ -123,7 +147,15 @@ def sandbox_shell(command: str, cwd: str = "/home/user") -> ToolResponse:
             text = f"命令执行完成（退出码: {exit_code}）:\n{output}"
     else:
         text = f"命令执行失败: {result.get('error', '未知错误')}"
-    return make_response(text, "shell")
+        shell_output = result.get('error', '')
+    
+    return make_response(
+        text, 
+        tool_name="shell",
+        tool_input={"command": command, "cwd": cwd},
+        shell_command=command,
+        shell_output=shell_output
+    )
 
 
 # ==================== 文件操作工具 ====================
@@ -145,12 +177,20 @@ def sandbox_file_read(file_path: str) -> ToolResponse:
     tools = get_sandbox_tools()
     result = tools._request("POST", "/v1/file/read", json={"file": file_path})
     
+    file_content = ""
     if result.get("success"):
         content = result.get("data", {}).get("content", "")
+        file_content = content
         text = f"文件内容:\n{content}"
     else:
         text = f"读取文件失败: {result.get('error', '未知错误')}"
-    return make_response(text, "file_read")
+    
+    return make_response(
+        text, 
+        tool_name="file_read",
+        tool_input={"file_path": file_path},
+        file_content=file_content
+    )
 
 
 def sandbox_file_write(file_path: str, content: str) -> ToolResponse:
@@ -175,7 +215,13 @@ def sandbox_file_write(file_path: str, content: str) -> ToolResponse:
         text = f"文件已成功写入: {file_path}"
     else:
         text = f"写入文件失败: {result.get('error', '未知错误')}"
-    return make_response(text, "file_write")
+    
+    return make_response(
+        text, 
+        tool_name="file_write",
+        tool_input={"file_path": file_path, "content": content},
+        file_content=content
+    )
 
 
 def sandbox_file_list(directory: str = "/home/user") -> ToolResponse:
@@ -203,7 +249,12 @@ def sandbox_file_list(directory: str = "/home/user") -> ToolResponse:
             text = f"目录 {directory} 为空"
     else:
         text = f"列出目录失败: {result.get('error', '未知错误')}"
-    return make_response(text, "file_list")
+    
+    return make_response(
+        text, 
+        tool_name="file_list",
+        tool_input={"directory": directory}
+    )
 
 
 # ==================== Python 代码执行工具 ====================
@@ -226,21 +277,32 @@ def sandbox_python(code: str) -> ToolResponse:
     tools = get_sandbox_tools()
     result = tools._request("POST", "/v1/jupyter/execute", json={"code": code})
     
+    python_output = ""
     if result.get("success"):
         data = result.get("data", {})
         output = data.get("output", "")
         exec_result = data.get("result")
+        python_output = output
         
         text = "Python 执行结果:\n"
         if output:
             text += output
         if exec_result:
             text += f"\n返回值: {exec_result}"
+            python_output += f"\n返回值: {exec_result}"
         if not output and not exec_result:
             text = "代码执行成功（无输出）"
     else:
         text = f"Python 执行失败: {result.get('error', '未知错误')}"
-    return make_response(text, "python")
+        python_output = result.get('error', '')
+    
+    return make_response(
+        text, 
+        tool_name="python",
+        tool_input={"code": code},
+        shell_command=code,  # 用 shell_command 存储代码
+        shell_output=python_output  # 用 shell_output 存储执行结果
+    )
 
 
 # ==================== 浏览器操作工具 ====================
@@ -304,7 +366,11 @@ def sandbox_browser_goto(url: str) -> ToolResponse:
         failed = [s[0] for s in steps if not s[1]]
         text = f"浏览器导航部分失败: {', '.join(failed)}"
     
-    return make_response(text, "browser_goto")
+    return make_response(
+        text, 
+        tool_name="browser_goto",
+        tool_input={"url": url}
+    )
 
 
 def sandbox_browser_screenshot() -> ToolResponse:
@@ -328,7 +394,10 @@ def sandbox_browser_screenshot() -> ToolResponse:
             text = "截图成功"
     else:
         text = f"截图失败: {result.get('error', '未知错误')}"
-    return make_response(text, "browser_screenshot")
+    return make_response(
+        text, 
+        tool_name="browser_screenshot"
+    )
 
 
 def sandbox_browser_click(x: int, y: int, num_clicks: int = 1) -> ToolResponse:
@@ -360,7 +429,11 @@ def sandbox_browser_click(x: int, y: int, num_clicks: int = 1) -> ToolResponse:
         text = f"已点击位置 ({x}, {y})"
     else:
         text = f"点击操作失败: {result.get('error', '未知错误')}"
-    return make_response(text, "browser_click")
+    return make_response(
+        text, 
+        tool_name="browser_click",
+        tool_input={"x": x, "y": y, "num_clicks": num_clicks}
+    )
 
 
 def sandbox_browser_type(text: str) -> ToolResponse:
@@ -389,7 +462,11 @@ def sandbox_browser_type(text: str) -> ToolResponse:
         response_text = f"已输入文本: {text}"
     else:
         response_text = f"输入操作失败: {result.get('error', '未知错误')}"
-    return make_response(response_text, "browser_type")
+    return make_response(
+        response_text, 
+        tool_name="browser_type",
+        tool_input={"text": text}
+    )
 
 
 def sandbox_browser_scroll(dx: int = 0, dy: int = 100) -> ToolResponse:
@@ -419,7 +496,11 @@ def sandbox_browser_scroll(dx: int = 0, dy: int = 100) -> ToolResponse:
         text = f"已滚动页面 (dx={dx}, dy={dy})"
     else:
         text = f"滚动操作失败: {result.get('error', '未知错误')}"
-    return make_response(text, "browser_scroll")
+    return make_response(
+        text, 
+        tool_name="browser_scroll",
+        tool_input={"dx": dx, "dy": dy}
+    )
 
 
 def sandbox_browser_hotkey(keys: str) -> ToolResponse:
@@ -449,7 +530,11 @@ def sandbox_browser_hotkey(keys: str) -> ToolResponse:
         text = f"已执行快捷键: {keys}"
     else:
         text = f"快捷键操作失败: {result.get('error', '未知错误')}"
-    return make_response(text, "browser_hotkey")
+    return make_response(
+        text, 
+        tool_name="browser_hotkey",
+        tool_input={"keys": keys}
+    )
 
 
 def sandbox_browser_info() -> ToolResponse:
@@ -472,7 +557,10 @@ def sandbox_browser_info() -> ToolResponse:
         text = f"浏览器信息:\n  CDP URL: {cdp_url}\n  视口: {viewport}"
     else:
         text = f"获取浏览器信息失败: {result.get('error', '未知错误')}"
-    return make_response(text, "browser_info")
+    return make_response(
+        text, 
+        tool_name="browser_info"
+    )
 
 
 # ==================== Sandbox 信息工具 ====================
@@ -496,7 +584,10 @@ def sandbox_status() -> ToolResponse:
         text = f"Sandbox 状态: 正常运行\n  地址: {tools.base_url}\n  VNC: {tools.base_url}/vnc/\n  VSCode: {tools.base_url}/code-server/"
     else:
         text = f"Sandbox 状态: 连接失败 - {result.get('error', '未知错误')}"
-    return make_response(text, "sandbox_status")
+    return make_response(
+        text, 
+        tool_name="sandbox_status"
+    )
 
 
 # ==================== SandboxUse 智能体类 ====================

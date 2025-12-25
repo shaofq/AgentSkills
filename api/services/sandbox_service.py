@@ -73,9 +73,62 @@ class SandboxService:
         """获取 VNC 可视化地址"""
         return f"{self.base_url}/vnc/index.html?autoconnect=true"
     
-    def get_vscode_url(self) -> str:
-        """获取 VSCode Server 地址"""
-        return f"{self.base_url}/code-server/"
+    def get_terminal_url(self) -> str:
+        """获取 Web 终端地址
+        
+        AIO Sandbox 使用 code-server 内置终端
+        通过 URL 参数打开终端面板
+        """
+        # code-server 内置终端，无需独立 ttyd 服务
+        return f"{self.base_url}/code-server/?folder=/home/user"
+    
+    def get_vscode_url(self, file_path: str = None) -> str:
+        """获取 VSCode Server 地址
+        
+        Args:
+            file_path: 可选，要打开的文件路径。如果提供，会在 URL 中添加参数直接打开该文件
+            
+        Returns:
+            VSCode Server 的 URL
+        """
+        base = f"{self.base_url}/code-server/"
+        if file_path:
+            # code-server 支持通过 URL 参数打开文件
+            # 格式: /code-server/?folder=/home/user 或 ?file=/path/to/file
+            return f"{base}?file={file_path}"
+        return base
+    
+    def open_file_in_editor(self, file_path: str) -> Dict[str, Any]:
+        """在 code-server 编辑器中打开文件
+        
+        通过 shell 命令使用 code 命令打开文件
+        
+        Args:
+            file_path: 要打开的文件路径
+            
+        Returns:
+            操作结果
+        """
+        try:
+            # 使用 code-server 的 code 命令打开文件
+            resp = self.client.post(
+                f"{self.base_url}/v1/shell/exec",
+                json={"command": f"code {file_path}"}
+            )
+            
+            if resp.status_code == 200:
+                return {
+                    "success": True,
+                    "message": f"已在编辑器中打开文件: {file_path}",
+                    "editor_url": self.get_vscode_url(file_path)
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"HTTP {resp.status_code}: {resp.text}"
+                }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
     def get_docs_url(self) -> str:
         """获取 API 文档地址"""

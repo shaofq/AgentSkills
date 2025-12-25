@@ -1,57 +1,39 @@
 <template>
-  <div class="manus-view">
-    <!-- 左侧：对话区域 -->
+  <div class="manus-view" :class="{ 'sandbox-expanded': isSandboxExpanded }">
+    <!-- 主内容区 -->
     <div class="chat-panel">
-      <div class="chat-header">
-        <div class="header-info">
-          <span class="ai-icon">🤖</span>
-          <span class="title">云应用 AI</span>
+      <!-- 欢迎页面（没有对话时显示） -->
+      <div class="welcome-page" v-if="messages.length === 0">
+        <div class="welcome-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#wg1)"></path><path d="M2 17L12 22L22 17" stroke="url(#wg2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2 12L12 17L22 12" stroke="url(#wg3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><defs><linearGradient id="wg1" x1="2" y1="7" x2="22" y2="7" gradientUnits="userSpaceOnUse"><stop stop-color="#6366f1"></stop><stop offset="1" stop-color="#8b5cf6"></stop></linearGradient><linearGradient id="wg2" x1="2" y1="19.5" x2="22" y2="19.5" gradientUnits="userSpaceOnUse"><stop stop-color="#06b6d4"></stop><stop offset="1" stop-color="#3b82f6"></stop></linearGradient><linearGradient id="wg3" x1="2" y1="14.5" x2="22" y2="14.5" gradientUnits="userSpaceOnUse"><stop stop-color="#8b5cf6"></stop><stop offset="1" stop-color="#06b6d4"></stop></linearGradient></defs></svg></div>
+        <h1 class="welcome-title">云应用 AI</h1>
+        <p class="welcome-desc">云应用AI智能体，支持自动化操作和任务执行。</p>
+        <div class="welcome-tags">
+          <span class="tag">✓ 智能对话</span>
+          <span class="tag">◉ 实时响应</span>
+          <span class="tag">♡ 安全可靠</span>
         </div>
-        <div class="header-actions">
-          <!-- 录制控制 -->
-          <button 
-            v-if="!isRecording" 
-            class="btn-record"
-            @click="startRecording"
-            title="开始录制"
-          >
-            🔴 录制
-          </button>
-          <button 
-            v-else 
-            class="btn-record recording"
-            @click="stopRecording"
-            title="停止录制"
-          >
-            ⏹️ 停止
-          </button>
-          <button 
-            class="btn-recordings"
-            @click="openRecordingsPanel"
-            title="查看录制"
-          >
-            📼 回放
-          </button>
-          <span class="date-tag">{{ currentDate }}</span>
+        <div class="welcome-hints">
+          <p class="hints-title">试试这样问我：</p>
+          <div class="hint-item" @click="askHint('介绍一下你的功能')">
+            <span class="hint-icon">💬</span>
+            <span>介绍一下你的功能</span>
+          </div>
+          <div class="hint-item" @click="askHint('帮我完成一个任务')">
+            <span class="hint-icon">🔧</span>
+            <span>帮我完成一个任务</span>
+          </div>
         </div>
       </div>
 
-      <!-- 任务摘要 -->
-      <div v-if="taskSummary" class="task-summary">
-        <h4>摘要</h4>
-        <p>{{ taskSummary }}</p>
-      </div>
-
-      <!-- 消息列表 -->
-      <div class="message-list" ref="messageList">
+      <!-- 消息列表（有对话时显示） -->
+      <div class="message-list" ref="messageList" v-else>
         <div 
           v-for="(msg, index) in messages" 
           :key="index"
           :class="['message', msg.role]"
         >
-          <div class="message-avatar">
+          <div class="message-avatar" v-if="msg.role === 'assistant'">
             <span v-if="msg.role === 'assistant'">🤖</span>
-            <span v-else>👤</span>
           </div>
           <div class="message-content">
             <div class="message-text" v-html="formatMessage(msg.content)"></div>
@@ -85,69 +67,99 @@
         </div>
       </div>
 
-      <!-- 生成的文件 -->
-      <div v-if="generatedFiles.length > 0" class="generated-files">
-        <div class="files-header">
-          <span>📁</span>
-          <span>查看此任务中的所有文件</span>
-        </div>
-        <div class="files-grid">
-          <div 
-            v-for="file in generatedFiles" 
-            :key="file.path"
-            class="file-item"
-            @click="previewFile(file)"
-          >
-            <span>📄</span>
-            <span>{{ file.name }}</span>
+      <!-- 底部输入区域（Web自动化智能体风格） -->
+      <div class="bottom-area">
+        <!-- 工具栏：附件 + 执行日志按钮 -->
+        <div class="toolbar-row">
+          
+          <div class="log-button" @click="expandSandbox">
+            <div class="log-left">
+              <span class="log-icon">🖥️</span>
+              <span class="log-text">连接云电脑</span>
+            </div>
+            <span class="log-arrow">∧</span>
           </div>
         </div>
-      </div>
 
-      <!-- 任务状态 -->
-      <div v-if="taskStatus" class="task-status" :class="taskStatus">
-        <span v-if="taskStatus === 'completed'">✅</span>
-        <span v-else class="loading-spinner"></span>
-        <span>{{ taskStatusText }}</span>
-      </div>
-
-      <!-- 推荐追问 -->
-      <div v-if="suggestedQuestions.length > 0" class="suggested-questions">
-        <h4>推荐追问</h4>
-        <div 
-          v-for="(q, idx) in suggestedQuestions" 
-          :key="idx"
-          class="question-item"
-          @click="askQuestion(q)"
-        >
-          {{ q }}
-        </div>
-      </div>
-
-      <!-- 输入框 -->
-      <div class="input-area">
-        <textarea
-          v-model="userInput"
-          rows="2"
-          placeholder="发送消息给 Manus (Ctrl+Enter 发送)"
-          @keyup.ctrl.enter="sendMessage"
-          class="input-textarea"
-        ></textarea>
-        <div class="input-actions">
-          <button class="btn-icon" title="附件">➕</button>
-          <button 
-            class="btn-send"
-            @click="sendMessage"
-            :disabled="!userInput.trim() || isLoading"
-          >
-            发送
-          </button>
+        <!-- 输入框（包含操作栏） -->
+        <div class="input-box">
+          <textarea
+            v-model="userInput"
+            rows="2"
+            placeholder="请输入您的问题，并按Enter发送，按Shift + Enter换行"
+            @keyup.enter.exact="sendMessage"
+            @keydown.enter.shift.exact.prevent="userInput += '\n'"
+            class="input-textarea"
+          ></textarea>
+          <!-- 操作栏在输入框内部 -->
+          <div class="action-row">
+            <div class="action-left">
+              <button 
+                v-if="!isRecording" 
+                class="btn-record"
+                @click="startRecording"
+              >🔴 录制</button>
+              <button 
+                v-else 
+                class="btn-record active"
+                @click="stopRecording"
+              >⏹️ 停止</button>
+              <button class="btn-replay" @click="openRecordingsPanel">📼 回放</button>
+              <span class="char-count">{{ userInput.length }}/2000</span>
+            </div>
+            <div class="action-right">
+              
+              <button class="btn-clear" @click="userInput = ''">🗑 清空</button>
+              <button 
+                class="btn-send"
+                @click="sendMessage"
+                :disabled="!userInput.trim() || isLoading"
+              >
+                ✏️ 发送
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 右侧：Sandbox 可视化 -->
-    <div class="sandbox-panel">
+    <!-- 右侧：Sandbox 展开面板 -->
+    <div class="sandbox-panel" v-if="isSandboxExpanded">
+      <div class="sandbox-panel-header">
+        <div class="panel-title">
+          <span>🖥️</span>
+          <span>Manus 的电脑</span>
+        </div>
+        <div class="panel-actions">
+          <!-- 录制控制 -->
+          <button 
+            v-if="!isRecording" 
+            class="btn-record"
+            @click="startRecording"
+            title="开始录制"
+          >
+            🔴 录制
+          </button>
+          <button 
+            v-else 
+            class="btn-record recording"
+            @click="stopRecording"
+            title="停止录制"
+          >
+            ⏹️ 停止
+          </button>
+          <button 
+            class="btn-recordings"
+            @click="openRecordingsPanel"
+            title="查看回放"
+          >
+            📼 回放
+          </button>
+          <button class="btn-collapse" @click="collapseSandbox" title="收起">
+            ✕
+          </button>
+        </div>
+      </div>
       <SandboxView 
         ref="sandboxView"
         :task="currentTask"
@@ -243,6 +255,10 @@ const showRecordingsPanel = ref(false)
 const recordings = ref<any[]>([])
 const selectedRecording = ref<Recording | null>(null)
 const showPlayer = ref(false)
+
+// 沙箱展开状态
+const isSandboxExpanded = ref(false)
+const sandboxConnected = ref(false)
 
 // 计算属性
 const currentDate = computed(() => {
@@ -363,11 +379,12 @@ function scrollToBottom() {
   })
 }
 
-// 追问
-function askQuestion(question: string) {
+// 点击提示问题
+function askHint(question: string) {
   userInput.value = question
   sendMessage()
 }
+
 
 // 预览文件
 async function previewFile(file: GeneratedFile) {
@@ -466,6 +483,28 @@ function closePlayer() {
   selectedRecording.value = null
 }
 
+// 展开沙箱
+function expandSandbox() {
+  isSandboxExpanded.value = true
+  // 检查沙箱连接
+  checkSandboxConnection()
+}
+
+// 收起沙箱
+function collapseSandbox() {
+  isSandboxExpanded.value = false
+}
+
+// 检查沙箱连接
+async function checkSandboxConnection() {
+  try {
+    const resp = await axios.get(`${API_BASE}/sandbox/status`)
+    sandboxConnected.value = resp.data.connected
+  } catch {
+    sandboxConnected.value = false
+  }
+}
+
 // 格式化时长
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60)
@@ -481,35 +520,114 @@ async function openRecordingsPanel() {
 
 // 初始化
 onMounted(async () => {
-  // 添加欢迎消息
-  messages.value.push({
-    role: 'assistant',
-    content: '你好！我是 云应用 AI，可以帮你完成各种任务。我可以：\n\n- 📝 生成文档和报告\n- 💻 执行代码和脚本\n- 🌐 浏览网页并提取信息\n- 📁 创建和编辑文件\n\n你可以在右侧实时观看我的操作过程。有什么需要帮助的吗？'
-  })
-  
-  suggestedQuestions.value = [
-    '帮我写一份项目技术方案文档',
-    '用 Python 分析这个数据文件',
-    '帮我抓取网页内容并整理成报告'
-  ]
+  // 检查沙箱连接状态
+  await checkSandboxConnection()
 })
 </script>
 
 <style scoped>
 .manus-view {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   background: #f5f5f5;
+  position: relative;
 }
 
-/* 左侧对话面板 */
+/* 展开状态：左右布局 */
+.manus-view.sandbox-expanded {
+  flex-direction: row;
+}
+
+/* 对话面板 */
 .chat-panel {
-  width: 45%;
-  min-width: 400px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   background: #fff;
+  min-height: 0;
+}
+
+.manus-view.sandbox-expanded .chat-panel {
+  width: 50%;
+  flex: none;
   border-right: 1px solid #e0e0e0;
+}
+
+/* ==================== 欢迎页面样式 ==================== */
+.welcome-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.welcome-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.welcome-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.welcome-desc {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 24px 0;
+}
+
+.welcome-tags {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.welcome-tags .tag {
+  padding: 6px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
+}
+
+.welcome-hints {
+  width: 100%;
+  max-width: 400px;
+}
+
+.hints-title {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hint-item:hover {
+  background: #f0f0f0;
+  border-color: #409eff;
+}
+
+.hint-icon {
+  font-size: 16px;
 }
 
 .chat-header {
@@ -658,6 +776,7 @@ onMounted(async () => {
 
 .message-content {
   max-width: 80%;
+  /* background: #f5f5f5; */
 }
 
 .message-text {
@@ -668,12 +787,12 @@ onMounted(async () => {
 }
 
 .message.user .message-text {
-  background: #409eff;
-  color: #fff;
+  /* background: #409eff; */
+  /* color: #fff; */
 }
 
 .message.assistant .message-text {
-  background: #f8f9fa;
+  background: white;
 }
 
 /* 文件卡片 */
@@ -1016,5 +1135,366 @@ onMounted(async () => {
   width: 90%;
   max-width: 1200px;
   height: 80vh;
+}
+
+/* ==================== 底部输入区域样式（Web自动化智能体风格） ==================== */
+.bottom-area {
+  background: #fff;
+  flex-shrink: 0;
+  /* border-top: 1px solid #e8e8e8; */
+  padding: 20px 25px;
+}
+
+/* 工具栏 */
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.btn-add {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add:hover {
+  background: #f5f5f5;
+}
+
+.log-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 280px;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.log-button:hover {
+  background: #252542;
+}
+
+.log-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-icon {
+  font-size: 14px;
+}
+
+.log-arrow {
+  font-size: 12px;
+  color: #888;
+}
+
+/* 沙箱浮动小窗 */
+.sandbox-float {
+  position: absolute;
+  left: 44px;
+  bottom: 48px;
+  width: 200px;
+  height: 120px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.float-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+}
+
+.float-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.float-placeholder:hover {
+  color: #fff;
+}
+
+/* 输入框 */
+.input-box {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.input-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  line-height: 1.6;
+  color: #333;
+}
+
+.input-textarea::placeholder {
+  color: #999;
+}
+
+/* 底部操作栏（在输入框内） */
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  /* border-top: 1px solid #f0f0f0; */
+}
+
+.action-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.action-item {
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+}
+
+.action-item:hover {
+  color: #409eff;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #999;
+}
+
+.action-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-record,
+.btn-replay {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+}
+
+.btn-record:hover,
+.btn-replay:hover {
+  color: #333;
+}
+
+.btn-record.active {
+  color: #ff4d4f;
+}
+
+.btn-clear {
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+}
+
+.btn-clear:hover {
+  background: #f5f5f5;
+}
+
+.btn-send {
+  padding: 8px 20px;
+  border: none;
+  background: #409eff;
+  color: #fff;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-send:hover {
+  background: #66b1ff;
+}
+
+.btn-send:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ==================== 沙箱预览小窗口样式 ==================== */
+.sandbox-preview-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sandbox-preview-card:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.preview-thumbnail {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1a1a2e;
+  flex-shrink: 0;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+}
+
+.preview-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #888;
+}
+
+.placeholder-icon {
+  font-size: 24px;
+}
+
+.placeholder-text {
+  text-align: left;
+}
+
+.placeholder-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.placeholder-desc {
+  font-size: 10px;
+  color: #888;
+}
+
+.preview-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.status-dot.connected {
+  background: #52c41a;
+}
+
+.preview-expand {
+  font-size: 14px;
+  color: #999;
+}
+
+/* ==================== 沙箱展开面板样式 ==================== */
+.sandbox-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  min-width: 0;
+}
+
+.sandbox-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-collapse {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.btn-collapse:hover {
+  background: #e0e0e0;
 }
 </style>
