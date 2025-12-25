@@ -180,7 +180,7 @@ function handleOpenSettings() {
           ]"
         >
           <i :class="item.icon" class="text-lg"></i>
-          <span v-if="!collapsed || isHovering" class="text-sm">{{ item.name }}</span>
+          <span v-if="!collapsed || isHovering" class="text-sm font-medium">{{ item.name }}</span>
         </div>
       </template>
     </div>

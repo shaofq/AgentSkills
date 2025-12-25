@@ -667,7 +667,7 @@ onMounted(async () => {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   resize: none;
-  font-family: inherit;
+  /* font-family: inherit; */
   font-size: 14px;
 }
 
@@ -1253,7 +1253,7 @@ onMounted(async () => {
   border: none;
   outline: none;
   font-size: 14px;
-  font-family: inherit;
+  /* font-family: inherit; */
   resize: none;
   line-height: 1.6;
   color: #333;

@@ -129,7 +129,7 @@ watch(() => props.logs.length, (newLen, oldLen) => {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  /* font-family: 'JetBrains Mono', 'Fira Code', monospace; */
   transition: all 0.3s ease;
   margin-left: 8px;
 }

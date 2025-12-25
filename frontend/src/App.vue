@@ -1390,7 +1390,7 @@ async function onSubmit(evt: string) {
 }
 
 .model-content :deep(code) {
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  /* font-family: 'Fira Code', 'Monaco', 'Consolas', monospace; */
   font-size: 13px;
 }
 
