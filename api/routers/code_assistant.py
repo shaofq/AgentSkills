@@ -30,7 +30,7 @@ async def code_assistant_stream(request: CodeAssistantRequest):
             # 构建包含历史上下文的提示
             context_prompt = build_context_prompt(history)
             
-            # 创建代码生成智能体
+            # 创建代码生成智能体（使用环境变量配置的 provider）
             code_agent = create_agent_by_skills(
                 name="CodeAssistant",
                 skill_names=["amis-generator"],
@@ -51,8 +51,6 @@ async def code_assistant_stream(request: CodeAssistantRequest):
 - cards: 卡片列表
 - chart: 图表
 """,
-                api_key=AgentManager.get_api_key(),
-                model_name="qwen3-max",
                 max_iters=30,
             )
             
@@ -67,10 +65,12 @@ async def code_assistant_stream(request: CodeAssistantRequest):
                 result = result[0].get("text", str(result[0])) if result else ""
             
             # 记录 Token 消耗
+            from config.settings import MODEL_PROVIDER, AIGATEWAY_MODEL, DEFAULT_MODEL
+            current_model = AIGATEWAY_MODEL if MODEL_PROVIDER == "aigateway" else DEFAULT_MODEL
             log_agent_call(
                 agent_id="code-agent",
                 agent_name="代码助手",
-                model="qwen3-max",
+                model=current_model,
                 input_text=full_input,
                 output_text=str(result) if result else "",
             )

@@ -217,6 +217,8 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                     agents[node["id"]] = agent
             
             # 创建对话智能体（SimpleAgent）
+            # 使用 AgentManager 获取正确的模型配置
+            model_config = AgentManager.get_model_config()
             for node in simple_agent_nodes:
                 config = node["data"].get("simpleAgentConfig", {})
                 agent_name = config.get("name", "SimpleAgent")
@@ -225,8 +227,10 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                 agent = SimpleAgent(
                     name=agent_name,
                     sys_prompt=config.get("systemPrompt", ""),
-                    api_key=api_key,
-                    model_name=config.get("model", "qwen3-max"),
+                    api_key=model_config["api_key"],
+                    model_name=config.get("model") or model_config["model_name"],
+                    provider=model_config["provider"],
+                    base_url=model_config["base_url"],
                 )
                 agents[node["id"]] = agent
             
@@ -236,16 +240,18 @@ async def run_predefined_workflow_stream(request: PredefinedWorkflowRequest):
                 if skills:
                     skill_names = ", ".join(skills)
                     yield f"data: {json.dumps({'type': 'thinking', 'message': f'初始化技能智能体: {skill_names}'})}\n\n"
-                    model = skill_config.get("model", "qwen3-max")
+                    model = skill_config.get("model") or model_config["model_name"]
                     max_iters = skill_config.get("maxIters", 30)
                     sys_prompt = skill_config.get("systemPrompt") or None
                     agent = create_agent_by_skills(
                         name=f"SkillAgent_{node['id']}",
                         skill_names=skills,
                         sys_prompt=sys_prompt,
-                        api_key=api_key,
+                        api_key=model_config["api_key"],
                         model_name=model,
                         max_iters=max_iters,
+                        provider=model_config["provider"],
+                        base_url=model_config["base_url"],
                     )
                     agents[node["id"]] = agent
             

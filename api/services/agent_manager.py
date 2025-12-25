@@ -8,6 +8,7 @@ import os
 from typing import Dict, Any, Optional
 
 from agents.base import BaseAgent, create_agent_by_skills
+from config.settings import MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL
 from agents.simple import SimpleAgent
 from agents.policy_qa_agent import PolicyQAAgent
 from agents.code_agent import CodeAgent
@@ -29,10 +30,31 @@ class AgentManager:
     
     @classmethod
     def get_api_key(cls) -> str:
-        """获取 API 密钥"""
+        """获取 API 密钥（根据 provider 自动选择）"""
         if cls._api_key is None:
-            cls._api_key = os.environ.get("DASHSCOPE_API_KEY", "")
+            if MODEL_PROVIDER == "aigateway":
+                cls._api_key = AIGATEWAY_API_KEY
+            else:
+                cls._api_key = os.environ.get("DASHSCOPE_API_KEY", "")
         return cls._api_key
+    
+    @classmethod
+    def get_model_config(cls) -> dict:
+        """获取模型配置（根据 provider 自动选择）"""
+        if MODEL_PROVIDER == "aigateway":
+            return {
+                "provider": "aigateway",
+                "api_key": AIGATEWAY_API_KEY,
+                "model_name": AIGATEWAY_MODEL,
+                "base_url": AIGATEWAY_BASE_URL,
+            }
+        else:
+            return {
+                "provider": "dashscope",
+                "api_key": os.environ.get("DASHSCOPE_API_KEY", ""),
+                "model_name": "qwen3-max",
+                "base_url": "",
+            }
     
     @classmethod
     def get(cls, agent_type: str, **kwargs) -> Any:
@@ -53,8 +75,11 @@ class AgentManager:
     @classmethod
     def _create(cls, agent_type: str, **kwargs) -> Any:
         """创建智能体实例"""
-        api_key = kwargs.get("api_key") or cls.get_api_key()
-        model = kwargs.get("model", "qwen3-max")
+        model_config = cls.get_model_config()
+        api_key = kwargs.get("api_key") or model_config["api_key"]
+        model = kwargs.get("model") or model_config["model_name"]
+        provider = kwargs.get("provider") or model_config["provider"]
+        base_url = kwargs.get("base_url") or model_config["base_url"]
         max_iters = kwargs.get("max_iters", 30)
         
         if agent_type == "policy_qa":
@@ -63,6 +88,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=kwargs.get("max_iters", 10),
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "ocr":
             print("[AgentManager] 创建 OCRAgent...")
@@ -70,6 +97,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=kwargs.get("max_iters", 10),
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "skill_creator":
             print("[AgentManager] 创建 SkillCreatorAgent...")
@@ -77,6 +106,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "code":
             print("[AgentManager] 创建 CodeAgent...")
@@ -84,6 +115,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "pptx":
             print("[AgentManager] 创建 PPTXAgent...")
@@ -91,6 +124,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
         else:
             raise ValueError(f"未知的智能体类型: {agent_type}")
@@ -107,10 +142,14 @@ class AgentManager:
         Returns:
             智能体实例
         """
-        api_key = api_key or cls.get_api_key()
+        model_config = cls.get_model_config()
+        api_key = api_key or model_config["api_key"]
+        provider = config.get("provider") or model_config["provider"]
+        base_url = config.get("base_url") or model_config["base_url"]
+        model = config.get("model") or model_config["model_name"]
+        
         agent_type = config.get("type", "custom")
         agent_id = config.get("id", "")
-        model = config.get("model", "qwen3-max")
         max_iters = config.get("maxIters", 30)
         
         # 使用预定义的 Agent 类
@@ -119,18 +158,24 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "pptx" or agent_id == "pptx_agent":
             return PPTXAgent(
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "policy" or agent_id == "policy_qa_agent":
             return PolicyQAAgent(
                 api_key=api_key,
                 model_name=model,
                 max_iters=config.get("maxIters", 10),
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "router" or agent_id == "router":
             return SimpleAgent(
@@ -138,6 +183,8 @@ class AgentManager:
                 sys_prompt=config.get("systemPrompt", "你是一个智能路由助手，负责分析用户请求并提供建议。"),
                 api_key=api_key,
                 model_name=model,
+                provider=provider,
+                base_url=base_url,
             )
         elif agent_type == "analyzer":
             # 分析型 Agent，使用 SimpleAgent（纯对话模型，不带工具）
@@ -146,6 +193,8 @@ class AgentManager:
                 sys_prompt=config.get("systemPrompt", "你是一个内容分析助手。"),
                 api_key=api_key,
                 model_name=model,
+                provider=provider,
+                base_url=base_url,
             )
         else:
             # 自定义 Agent，使用 BaseAgent
@@ -157,6 +206,8 @@ class AgentManager:
                 api_key=api_key,
                 model_name=model,
                 max_iters=max_iters,
+                provider=provider,
+                base_url=base_url,
             )
     
     @classmethod

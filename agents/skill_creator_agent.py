@@ -55,9 +55,11 @@ class SkillCreatorAgent(BaseAgent):
     def __init__(
         self,
         api_key: str = "",
-        model_name: str = "qwen3-max",
+        model_name: str = "",
         max_iters: int = 30,
         skills: list = None,
+        provider: str = "",
+        base_url: str = "",
     ):
         """Initialize the skill creator agent."""
         default_skills = ["./skill/skill-creator"]
@@ -69,4 +71,6 @@ class SkillCreatorAgent(BaseAgent):
             api_key=api_key,
             model_name=model_name,
             max_iters=max_iters,
+            provider=provider,
+            base_url=base_url,
         )

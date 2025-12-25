@@ -8,7 +8,8 @@ from typing import List, Optional, Dict, Any, Callable
 from agentscope.agent import ReActAgent
 from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
-from agentscope.model import DashScopeChatModel
+from agentscope.model import DashScopeChatModel, OpenAIChatModel
+from config.settings import MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL
 from agentscope.tool import Toolkit, execute_shell_command, execute_python_code, view_text_file
 
 
@@ -43,6 +44,59 @@ def emit_log(source: str, log_type: str, message: str):
             pass
 
 
+def create_model(
+    provider: str = "",
+    api_key: str = "",
+    model_name: str = "",
+    base_url: str = "",
+    **kwargs
+):
+    """
+    根据提供商创建模型实例。
+    
+    Args:
+        provider: 模型提供商 ("dashscope" 或 "aigateway")
+        api_key: API 密钥
+        model_name: 模型名称
+        base_url: API 基础 URL (仅 aigateway 需要)
+    """
+    provider = provider or MODEL_PROVIDER
+    
+    if provider == "aigateway":
+        # 使用 agentscope 内置的 OpenAIChatModel
+        actual_api_key = api_key or AIGATEWAY_API_KEY
+        actual_base_url = base_url or AIGATEWAY_BASE_URL
+        # 如果 model_name 是 DashScope 模型（如 qwen3-max），则使用 AIGATEWAY_MODEL
+        if not model_name or model_name.startswith("qwen"):
+            actual_model = AIGATEWAY_MODEL
+        else:
+            actual_model = model_name
+        
+        print(f"[create_model] Using OpenAIChatModel with:")
+        print(f"  - api_key: {actual_api_key}")
+        print(f"  - base_url: {actual_base_url}")
+        print(f"  - model_name: {actual_model}")
+        
+        return OpenAIChatModel(
+            api_key=actual_api_key,
+            model_name=actual_model,
+            client_kwargs={"base_url": actual_base_url},
+            generate_kwargs={
+                "temperature": kwargs.get("temperature", 0.7),
+                "max_tokens": kwargs.get("max_tokens", 4096),
+            },
+            stream=kwargs.get("stream", True),
+        )
+    else:
+        # 默认使用 DashScope
+        return DashScopeChatModel(
+            api_key=api_key,
+            model_name=model_name or "qwen3-max",
+            enable_thinking=kwargs.get("enable_thinking", True),
+            stream=kwargs.get("stream", True),
+        )
+
+
 class BaseAgent:
     """Base class for creating specialized agents with skills."""
     
@@ -52,8 +106,10 @@ class BaseAgent:
         sys_prompt: str,
         skills: Optional[List[str]] = None,
         api_key: str = "",
-        model_name: str = "qwen3-max",
+        model_name: str = "",
         max_iters: int = 30,
+        provider: str = "",
+        base_url: str = "",
     ):
         """
         Initialize a specialized agent.
@@ -81,17 +137,21 @@ class BaseAgent:
         for skill_path in self.skills:
             self.toolkit.register_agent_skill(skill_path)
         
+        # Create the model based on provider
+        model = create_model(
+            provider=provider,
+            api_key=api_key,
+            model_name=model_name,
+            base_url=base_url,
+            enable_thinking=True,
+            stream=True,
+        )
+        
         # Create the agent
         self.agent = ReActAgent(
             name=name,
             sys_prompt=sys_prompt,
-            model=DashScopeChatModel(
-                api_key=api_key,
-                model_name=model_name,
-                # model_name="glm-4.6",
-                enable_thinking=True,
-                stream=True,  # 流式输出
-            ),
+            model=model,
             formatter=DashScopeChatFormatter(),
             toolkit=self.toolkit,
             memory=InMemoryMemory(),
@@ -218,8 +278,10 @@ def create_agent_by_skills(
     skill_names: List[str],
     sys_prompt: Optional[str] = None,
     api_key: str = "",
-    model_name: str = "qwen3-max",
+    model_name: str = "",
     max_iters: int = 30,
+    provider: str = "",
+    base_url: str = "",
 ) -> BaseAgent:
     """
     根据技能名称动态创建智能体的工厂函数。
@@ -231,6 +293,8 @@ def create_agent_by_skills(
         api_key: API 密钥
         model_name: 模型名称
         max_iters: 最大迭代次数
+        provider: 模型提供商 ("dashscope" 或 "aigateway")
+        base_url: API 基础 URL (仅 aigateway 需要)
         
     Returns:
         配置好的 BaseAgent 实例
@@ -295,6 +359,8 @@ def create_agent_by_skills(
         api_key=api_key,
         model_name=model_name,
         max_iters=max_iters,
+        provider=provider,
+        base_url=base_url,
     )
 
 
@@ -328,6 +394,8 @@ def create_agent_from_config(config: Dict[str, Any], api_key: str = "") -> BaseA
     sys_prompt = config.get("systemPrompt") or config.get("sys_prompt")
     model_name = config.get("model") or config.get("model_name", "qwen3-max")
     max_iters = config.get("maxIters") or config.get("max_iters", 30)
+    provider = config.get("provider", "")
+    base_url = config.get("base_url") or config.get("baseUrl", "")
     
     return create_agent_by_skills(
         name=name,
@@ -336,4 +404,6 @@ def create_agent_from_config(config: Dict[str, Any], api_key: str = "") -> BaseA
         api_key=api_key,
         model_name=model_name,
         max_iters=max_iters,
+        provider=provider,
+        base_url=base_url,
     )

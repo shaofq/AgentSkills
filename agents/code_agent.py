@@ -38,9 +38,11 @@ class CodeAgent(BaseAgent):
     def __init__(
         self,
         api_key: str = "",
-        model_name: str = "qwen3-max",
+        model_name: str = "",
         max_iters: int = 30,
         skills: list = None,
+        provider: str = "",
+        base_url: str = "",
     ):
         """Initialize the code agent."""
         default_skills = ["./skill/amis-generator"]
@@ -51,6 +53,7 @@ class CodeAgent(BaseAgent):
             skills=skills or default_skills,
             api_key=api_key,
             model_name=model_name,
-            # model_name="glm-4.6",
             max_iters=max_iters,
+            provider=provider,
+            base_url=base_url,
         )

@@ -135,7 +135,7 @@ watch(() => props.logs.length, (newLen, oldLen) => {
 }
 
 .console-panel--expanded {
-  width: 450px;
+  width: 850px;
 }
 
 .console-panel--expanded .console-header {

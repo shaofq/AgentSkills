@@ -77,14 +77,23 @@ pip install -r requirements.txt
 ### 3. Configure Environment Variables
 
 ```bash
-# Set API Key (supports Qwen, OpenAI, etc.)
+# 方式一：使用 DashScope (阿里云通义千问)
 export DASHSCOPE_API_KEY="your-api-key"
+
+# 方式二：使用 AIGateway (OpenAI 兼容接口)
+export MODEL_PROVIDER="aigateway"  # 设置为 aigateway 启用
+export AIGATEWAY_API_KEY="your-aigateway-api-key"
+export AIGATEWAY_BASE_URL="https://aigateway.edgecloudapp.com/v1/{your_id}/{your_name}"
+export AIGATEWAY_MODEL="claude-4.5-sonnet"  # 可选，默认 claude-4.5-sonnet
+
+# 其他配置
+export DISPATCH_EMAIL_PASSWORD="your-dispatch-email-password"
 ```
 
 ### 4. Start Backend Service
 
 ```bash
-python api.main
+python -m api.main
 # Service runs at http://localhost:8000
 ```
 
@@ -176,8 +185,8 @@ OCR functionality requires starting the OCR service separately:
 
 ```bash
 # Start OCR service (port 8009)
-cd /path/to/dots.ocr-adapter_mps
-python main.py
+cd /path/to/dots.ocr-adapter_mps/demo
+python api_server.py
 ```
 
 OCR API endpoint:
@@ -185,7 +194,7 @@ OCR API endpoint:
 
 ---
 ## sandbox
-
+sandbox use aio_sandbox
 ```bash
 docker run --security-opt seccomp=unconfined --rm -it -p 988:8080 ghcr.io/agent-infra/sandbox:latest
 ```
