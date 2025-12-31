@@ -37,6 +37,7 @@
           "description": "OCR 文件识别助手,识别 PDF 和图片中的文字内容。",
           "model": "qwen3-max"
         },
+       
         {
           "id": "ppt-agent",
           "name": "PPT生成",
@@ -131,6 +132,17 @@
           "workflowName": null,
           "description": "配置邮箱监听，自动触发工作流",
           "model": null
+        },
+         {
+          "id": "vl-ocr",
+          "name": "AI单证审核",
+          "icon": "icon-beginner-guidance",
+          "type": "agent",
+          "apiType": "vl-ocr",
+          "apiUrl": "http://localhost:8000/api/vl-ocr/recognize",
+          "workflowName": null,
+          "description": "基于视觉语言模型的OCR识别，支持定位信息和文件夹监控。",
+          "model": "qwen-vl-max-latest"
         }
       ]
     }

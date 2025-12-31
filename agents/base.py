@@ -9,7 +9,10 @@ from agentscope.agent import ReActAgent
 from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
 from agentscope.model import DashScopeChatModel, OpenAIChatModel
-from config.settings import MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL
+from config.settings import (
+    MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL,
+    ZHIPU_API_KEY, ZHIPU_BASE_URL, ZHIPU_MODEL
+)
 from agentscope.tool import Toolkit, execute_shell_command, execute_python_code, view_text_file
 
 
@@ -55,14 +58,34 @@ def create_model(
     根据提供商创建模型实例。
     
     Args:
-        provider: 模型提供商 ("dashscope" 或 "aigateway")
+        provider: 模型提供商 ("dashscope", "aigateway" 或 "zhipu")
         api_key: API 密钥
         model_name: 模型名称
-        base_url: API 基础 URL (仅 aigateway 需要)
+        base_url: API 基础 URL
     """
     provider = provider or MODEL_PROVIDER
     
-    if provider == "aigateway":
+    if provider == "zhipu":
+        # 使用智谱 GLM 模型
+        actual_api_key = api_key or ZHIPU_API_KEY
+        actual_base_url = base_url or ZHIPU_BASE_URL
+        actual_model = model_name or ZHIPU_MODEL
+        
+        print(f"[create_model] Using Zhipu GLM with:")
+        print(f"  - base_url: {actual_base_url}")
+        print(f"  - model_name: {actual_model}")
+        
+        return OpenAIChatModel(
+            api_key=actual_api_key,
+            model_name=actual_model,
+            client_kwargs={"base_url": actual_base_url},
+            generate_kwargs={
+                "temperature": kwargs.get("temperature", 0.7),
+                "max_tokens": kwargs.get("max_tokens", 4096),
+            },
+            stream=kwargs.get("stream", True),
+        )
+    elif provider == "aigateway":
         # 使用 agentscope 内置的 OpenAIChatModel
         actual_api_key = api_key or AIGATEWAY_API_KEY
         actual_base_url = base_url or AIGATEWAY_BASE_URL
@@ -90,7 +113,7 @@ def create_model(
     else:
         # 默认使用 DashScope
         return DashScopeChatModel(
-            api_key=api_key,
+            api_key=api_key or AIGATEWAY_API_KEY,
             model_name=model_name or "qwen3-max",
             enable_thinking=kwargs.get("enable_thinking", True),
             stream=kwargs.get("stream", True),

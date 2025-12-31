@@ -16,8 +16,8 @@ defusedxml>=0.7.1
 aiohttp>=3.9.0
 aiofiles>=23.2.1
 
-# 可选：图像处理（PPT缩略图生成）
-# Pillow>=10.0.0
+# 图像处理
+Pillow>=10.0.0
 
 # 可选：Markdown 处理
 # markitdown>=0.0.1
@@ -26,3 +26,13 @@ aiofiles>=23.2.1
 fastapi>=0.104.0
 uvicorn>=0.24.0
 pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# 文件监控
+watchdog>=3.0.0
+
+# PDF 处理
+PyMuPDF>=1.23.0
+
+# OpenAI 兼容 API
+openai>=1.0.0

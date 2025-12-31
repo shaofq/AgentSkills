@@ -2011,5 +2011,82 @@
     "total_tokens": 270,
     "user_id": null,
     "session_id": null
+  },
+  {
+    "timestamp": "2025-12-26T22:22:22.555431",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 9,
+    "completion_tokens": 205,
+    "total_tokens": 214,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-29T20:26:25.060879",
+    "agent_id": "node_1766453020063_f2ve9qeyo",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 187,
+    "total_tokens": 194,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-29T20:27:41.661235",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 7,
+    "completion_tokens": 136,
+    "total_tokens": 143,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-30T16:43:30.402610",
+    "agent_id": "vl-ocr-agent",
+    "agent_name": "VL OCR识别",
+    "model": "qwen-vl-max-latest",
+    "prompt_tokens": 14,
+    "completion_tokens": 4,
+    "total_tokens": 18,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-30T16:45:12.714580",
+    "agent_id": "vl-ocr-agent",
+    "agent_name": "VL OCR识别",
+    "model": "qwen-vl-max-latest",
+    "prompt_tokens": 14,
+    "completion_tokens": 4,
+    "total_tokens": 18,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-30T19:50:05.932154",
+    "agent_id": "vl-ocr-agent",
+    "agent_name": "VL OCR识别",
+    "model": "qwen-vl-max-latest",
+    "prompt_tokens": 10,
+    "completion_tokens": 135,
+    "total_tokens": 145,
+    "user_id": null,
+    "session_id": null
+  },
+  {
+    "timestamp": "2025-12-31T12:19:46.662552",
+    "agent_id": "node_1766278244405_lpei71e9f",
+    "agent_name": "技能智能体",
+    "model": "qwen3-max",
+    "prompt_tokens": 10,
+    "completion_tokens": 269,
+    "total_tokens": 279,
+    "user_id": null,
+    "session_id": null
   }
 ]

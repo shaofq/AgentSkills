@@ -16,6 +16,7 @@ import TokenStatsDialog from './components/TokenStatsDialog.vue'
 import ConsolePanel from './components/ConsolePanel.vue'
 import EmailTriggerConfig from './components/EmailTriggerConfig.vue'
 import ManusView from './components/ManusView.vue'
+import VLOCRView from './components/VLOCRView.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -52,6 +53,7 @@ const defaultMenuConfigs: MenuConfig[] = [
   { id: 'data-agent', name: '数据分析', icon: 'icon-data-storage', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run', workflowName: 'data_flow', description: '数据分析和可视化助手。', model: 'qwen3-max' },
   { id: 'policy-qa', name: '制度问答', icon: 'icon-help', type: 'agent', apiType: 'workflow', apiUrl: 'http://localhost:8000/api/workflow/run/stream', workflowName: 'qa_classifier_example', description: '公司制度问答助手。', model: 'qwen3-max' },
   { id: 'ocr-agent', name: 'OCR识别', icon: 'icon-base-info', type: 'agent', apiType: 'ocr', apiUrl: 'http://localhost:8000/api/ocr/recognize', workflowName: null, description: 'OCR 文件识别助手。', model: 'qwen3-max' },
+  { id: 'vl-ocr', name: 'VL OCR', icon: 'icon-scan', type: 'agent', apiType: 'vl-ocr', apiUrl: 'http://localhost:8000/api/vl-ocr/recognize', workflowName: null, description: '基于视觉语言模型的OCR识别，支持定位信息和文件夹监控。', model: 'qwen-vl-max-latest' },
   { id: 'skill-creator', name: '技能创建', icon: 'icon-identity', type: 'agent', apiType: 'skill-creator', apiUrl: 'http://localhost:8000/api/skill-creator/chat', workflowName: null, description: '技能创建助手。', model: 'qwen3-max' },
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
   { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '查询和管理已加载的工作流', model: null },
@@ -64,6 +66,7 @@ const isWorkflowMode = computed(() => activeMenu.value === 'workflow')
 const isWorkflowListMode = computed(() => activeMenu.value === 'workflow-list')
 const isCodeAssistantMode = computed(() => activeMenu.value === 'code-agent')
 const isOCRMode = computed(() => activeMenu.value === 'ocr-agent')
+const isVLOCRMode = computed(() => activeMenu.value === 'vl-ocr')
 const isEmailTriggerMode = computed(() => activeMenu.value === 'email-trigger')
 const isManusMode = computed(() => activeMenu.value === 'manus')
 
@@ -649,6 +652,9 @@ async function onSubmit(evt: string) {
     <div class="flex-1 flex flex-col overflow-hidden main-content">
       <!-- Manus AI 模式 -->
       <ManusView v-if="isManusMode" class="flex-1" />
+      
+      <!-- VL OCR 识别模式 -->
+      <VLOCRView v-else-if="isVLOCRMode" class="flex-1" />
       
       <!-- 邮件触发配置模式 -->
       <EmailTriggerConfig v-else-if="isEmailTriggerMode" />
