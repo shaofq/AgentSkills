@@ -17,6 +17,7 @@ import ConsolePanel from './components/ConsolePanel.vue'
 import EmailTriggerConfig from './components/EmailTriggerConfig.vue'
 import ManusView from './components/ManusView.vue'
 import VLOCRView from './components/VLOCRView.vue'
+import ChatReplayPlayer from './components/ChatReplayPlayer.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -36,6 +37,7 @@ const activeMenu = ref('chat')
 const showConfigPanel = ref(false)
 const showPolicyQA = ref(false)
 const showTokenStats = ref(false)
+const showReplayPlayer = ref(false)
 
 // 控制台日志
 interface ConsoleLog {
@@ -859,7 +861,8 @@ async function onSubmit(evt: string) {
             <ConsolePanel 
               v-if="!isWorkflowMode && !isWorkflowListMode && !startPage"
               :logs="consoleLogs" 
-              @clear="consoleLogs = []" 
+              @clear="consoleLogs = []"
+              @openReplay="showReplayPlayer = true"
               class="inline-console"
             />
           </div>
@@ -972,6 +975,13 @@ async function onSubmit(evt: string) {
     
     <!-- Token 统计对话框 -->
     <TokenStatsDialog :visible="showTokenStats" @close="showTokenStats = false" />
+    
+    <!-- 回放播放器弹窗 -->
+    <div v-if="showReplayPlayer" class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm" style="z-index: 9999;">
+      <div class="w-[900px] h-[700px] max-w-[90vw] max-h-[90vh]">
+        <ChatReplayPlayer @close="showReplayPlayer = false" />
+      </div>
+    </div>
   </div>
 </template>
 

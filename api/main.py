@@ -50,7 +50,7 @@ app.add_middleware(
 
 
 # 注册路由
-from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking, token_stats, upload, email_trigger, sandbox, vl_ocr
+from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking, token_stats, upload, email_trigger, sandbox, vl_ocr, replay
 
 app.include_router(agents.router)
 app.include_router(workflows.router)
@@ -66,6 +66,7 @@ app.include_router(upload.router)
 app.include_router(email_trigger.router)
 app.include_router(sandbox.router)
 app.include_router(vl_ocr.router)
+app.include_router(replay.router)
 
 
 # 健康检查

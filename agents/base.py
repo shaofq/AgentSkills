@@ -19,6 +19,9 @@ from agentscope.tool import Toolkit, execute_shell_command, execute_python_code,
 # 技能目录的基础路径
 SKILL_BASE_PATH = "./skill"
 
+# 是否启用钩子日志（可通过环境变量控制）
+ENABLE_AGENT_HOOKS = os.environ.get("ENABLE_AGENT_HOOKS", "true").lower() == "true"
+
 # 全局日志回调（用于捕获 agent 执行过程中的日志）
 _log_callback: Optional[Callable[[str, str, str], None]] = None
 
@@ -180,11 +183,34 @@ class BaseAgent:
             memory=InMemoryMemory(),
             max_iters=max_iters,
         )
+        
+        # 注册执行日志钩子
+        if ENABLE_AGENT_HOOKS:
+            try:
+                from api.services.agent_hooks import register_hooks_to_agent
+                register_hooks_to_agent(self.agent)
+            except Exception as e:
+                print(f"[BaseAgent] 注册钩子失败: {e}")
     
     async def __call__(self, msg):
         """Process a message with logging support."""
+        import uuid
+        
         # 发送开始日志
         emit_log(self.name, "info", f"开始处理请求...")
+        
+        # 启动回放会话
+        session_id = None
+        if ENABLE_AGENT_HOOKS:
+            try:
+                from api.services.agent_hooks import start_replay_session, end_replay_session
+                session_id = f"{self.name}_{uuid.uuid4().hex[:8]}"
+                user_input = str(msg.content) if hasattr(msg, 'content') else str(msg)
+                start_replay_session(session_id, self.name, user_input[:200])
+                # 设置 session_id 到 agent，供钩子函数使用
+                self.agent._replay_session_id = session_id
+            except Exception as e:
+                print(f"[BaseAgent] 启动回放会话失败: {e}")
         
         # 捕获 stdout 输出
         original_stdout = sys.stdout
@@ -222,6 +248,13 @@ class BaseAgent:
             raise
         finally:
             sys.stdout = original_stdout
+            # 结束回放会话
+            if session_id and ENABLE_AGENT_HOOKS:
+                try:
+                    from api.services.agent_hooks import end_replay_session
+                    end_replay_session(session_id)
+                except Exception as e:
+                    print(f"[BaseAgent] 结束回放会话失败: {e}")
     
     @property
     def sys_prompt(self):

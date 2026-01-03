@@ -3,6 +3,15 @@
     class="console-panel"
     :class="{ 'console-panel--expanded': isExpanded }"
   >
+    <!-- 回放按钮 -->
+    <div class="replay-button" @click="$emit('openReplay')" title="对话回放">
+      <svg class="replay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>回放</span>
+    </div>
+    
     <!-- 头部 -->
     <div class="console-header" @click="toggleExpand">
       <div class="console-title">
@@ -78,6 +87,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'clear'): void
+  (e: 'openReplay'): void
 }>()
 
 const isExpanded = ref(false)
@@ -124,29 +134,53 @@ watch(() => props.logs.length, (newLen, oldLen) => {
 <style scoped>
 .console-panel {
   position: relative;
-  width: 350px;
-  background: #1e1e2e;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   z-index: 100;
-  /* font-family: 'JetBrains Mono', 'Fira Code', monospace; */
   transition: all 0.3s ease;
   margin-left: 8px;
 }
 
-.console-panel--expanded {
+.replay-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 12px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.replay-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.replay-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.console-header-wrapper {
+  width: 350px;
+  background: #1e1e2e;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.console-panel--expanded .console-header-wrapper {
   width: 850px;
 }
 
-.console-panel--expanded .console-header {
-  border-radius: 12px 12px 0 0;
-}
-
-.console-panel--expanded .console-content {
-  border-radius: 0 0 12px 12px;
-}
-
 .console-header {
+  width: 350px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,6 +189,17 @@ watch(() => props.logs.length, (newLen, oldLen) => {
   border-radius: 12px;
   cursor: pointer;
   user-select: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.console-panel--expanded .console-header {
+  width: 850px;
+  border-radius: 12px 12px 0 0;
+}
+
+.console-panel--expanded .console-content {
+  border-radius: 0 0 12px 12px;
 }
 
 .console-title {

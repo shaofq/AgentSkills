@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from agents.vl_ocr_agent import get_vl_ocr_agent
 from api.services.file_monitor import get_file_monitor_service
 from api.services.token_logger import log_agent_call
+from api.services.invoice_verify import get_invoice_verify_service, InvoiceVerifyService
 
 
 router = APIRouter(prefix="/api/vl-ocr", tags=["VL OCR识别"])
@@ -39,6 +40,22 @@ class ScanDirRequest(BaseModel):
 class ProcessFileRequest(BaseModel):
     """处理文件请求"""
     file_path: str
+
+
+class VerifyInvoiceRequest(BaseModel):
+    """发票验证请求"""
+    invoice_no: str
+    amount: Optional[float] = None
+    invoice_date: Optional[str] = None
+    seller_name: Optional[str] = None
+
+
+class AddValidInvoiceRequest(BaseModel):
+    """添加有效发票请求（用于测试）"""
+    invoice_no: str
+    amount: float
+    date: str
+    seller: str
 
 
 # ============= OCR 识别接口 =============
@@ -335,3 +352,97 @@ async def preview_file(path: str, page: int = 0):
         media_type=media_type,
         headers={"Content-Disposition": "inline"}
     )
+
+
+# ============= 发票验证接口 =============
+
+@router.post("/verify")
+async def verify_invoice(request: VerifyInvoiceRequest):
+    """
+    验证发票信息。
+    
+    根据发票号、金额等信息验证发票是否有效。
+    """
+    service = get_invoice_verify_service()
+    result = service.verify_invoice(
+        invoice_no=request.invoice_no,
+        amount=request.amount,
+        invoice_date=request.invoice_date,
+        seller_name=request.seller_name,
+    )
+    return {"success": True, "data": result}
+
+
+@router.post("/verify/from-ocr")
+async def verify_from_ocr(file_path: str):
+    """
+    从 OCR 结果中提取发票信息并验证。
+    
+    自动从已识别的文件中提取关键字段并验证。
+    """
+    import urllib.parse
+    file_path = urllib.parse.unquote(file_path)
+    
+    # 获取 OCR 结果
+    monitor_service = get_file_monitor_service()
+    ocr_result = monitor_service.get_result(file_path)
+    
+    if not ocr_result:
+        raise HTTPException(status_code=404, detail="未找到该文件的 OCR 结果，请先进行识别")
+    
+    # 提取发票字段
+    verify_service = get_invoice_verify_service()
+    extracted = verify_service.extract_invoice_fields(ocr_result.get("result", {}))
+    
+    if not extracted.get("invoice_no"):
+        return {
+            "success": False,
+            "message": "无法从 OCR 结果中提取发票号码",
+            "extracted": extracted
+        }
+    
+    # 验证发票
+    verify_result = verify_service.verify_invoice(
+        invoice_no=extracted["invoice_no"],
+        amount=extracted.get("amount"),
+        invoice_date=extracted.get("invoice_date"),
+        seller_name=extracted.get("seller_name"),
+    )
+    
+    # 将字段位置信息添加到验证结果中
+    verify_result["field_positions"] = extracted.get("field_positions", {})
+    verify_result["extracted_fields"] = extracted
+    
+    # 更新 OCR 结果中的验证状态
+    if file_path in monitor_service.ocr_results:
+        monitor_service.ocr_results[file_path]["verify_result"] = verify_result
+        monitor_service.ocr_results[file_path]["verify_status"] = "passed" if verify_result["passed"] else "failed"
+    
+    return {"success": True, "data": verify_result}
+
+
+@router.post("/verify/add-valid")
+async def add_valid_invoice(request: AddValidInvoiceRequest):
+    """
+    添加有效发票到模拟库（用于测试）。
+    """
+    service = get_invoice_verify_service()
+    service.add_valid_invoice(
+        invoice_no=request.invoice_no,
+        amount=request.amount,
+        date=request.date,
+        seller=request.seller,
+    )
+    return {
+        "success": True,
+        "message": f"已添加发票 {request.invoice_no} 到有效发票库"
+    }
+
+
+@router.get("/verify/valid-invoices")
+async def get_valid_invoices():
+    """获取模拟库中的有效发票列表"""
+    return {
+        "success": True,
+        "data": InvoiceVerifyService.VALID_INVOICES
+    }

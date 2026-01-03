@@ -135,7 +135,7 @@
         },
          {
           "id": "vl-ocr",
-          "name": "AI单证审核",
+          "name": "单证审核",
           "icon": "icon-beginner-guidance",
           "type": "agent",
           "apiType": "vl-ocr",

@@ -33,7 +33,7 @@
         <div 
           v-for="item in results" 
           :key="item.file_path"
-          class="result-item"
+          :class="['result-item', { 'verify-failed': item.verify_status === 'failed' }]"
           @click="viewResult(item)"
         >
           <div class="item-icon">
@@ -44,8 +44,22 @@
             <div class="item-path">{{ item.file_path }}</div>
             <div class="item-time">{{ formatTime(item.processed_at) }}</div>
           </div>
-          <div :class="['item-status', item.status]">
-            {{ item.status === 'completed' ? '已完成' : '失败' }}
+          <div class="item-actions">
+            <button 
+              v-if="item.status === 'completed' && !item.verify_status"
+              class="verify-btn"
+              @click.stop="verifyInvoice(item)"
+              title="验证发票"
+            >
+              <i class="pi pi-shield"></i>
+              <span>验证</span>
+            </button>
+            <div :class="['item-status', item.status]">
+              {{ item.status === 'completed' ? '已完成' : '失败' }}
+            </div>
+            <div v-if="item.verify_status" :class="['verify-status', item.verify_status]">
+              {{ item.verify_status === 'passed' ? '✓ 验证通过' : '✗ 验证失败' }}
+            </div>
           </div>
         </div>
         
@@ -102,10 +116,15 @@
                     :key="index"
                     class="annotation-box"
                     :style="getBlockStyle(block)"
-                    :class="{ active: selectedBlockId === block.id }"
+                    :class="{ 
+                      active: selectedBlockId === block.id,
+                      'has-error': isBlockError(block)
+                    }"
                     @click="selectBlock(block)"
+                    :title="getBlockError(block)?.message || ''"
                   >
                     <span class="block-id">{{ block.id }}</span>
+                    <span v-if="isBlockError(block)" class="error-icon">!</span>
                   </div>
                 </div>
               </div>
@@ -474,6 +493,11 @@ const viewResult = (item) => {
     }
   }
   
+  // 加载验证结果（如果有）
+  if (item.verify_result) {
+    result.verify_result = item.verify_result
+  }
+  
   currentResult.value = result
   activeTab.value = 'recognize'
   
@@ -496,6 +520,69 @@ const fetchResults = async () => {
   } catch (error) {
     console.error('获取结果列表失败:', error)
   }
+}
+
+// 验证发票
+const verifyInvoice = async (item) => {
+  try {
+    const response = await axios.post(`${API_BASE}/verify/from-ocr?file_path=${encodeURIComponent(item.file_path)}`)
+    if (response.data.success) {
+      const verifyResult = response.data.data
+      // 更新本地结果
+      item.verify_status = verifyResult.passed ? 'passed' : 'failed'
+      item.verify_result = verifyResult
+      
+      // 显示验证结果
+      if (verifyResult.passed) {
+        alert('✓ 发票验证通过')
+      } else {
+        const errors = verifyResult.errors.map(e => e.message).join('\n')
+        alert(`✗ 发票验证失败:\n${errors}`)
+      }
+      
+      // 刷新列表
+      fetchResults()
+    } else {
+      alert('验证失败: ' + response.data.message)
+    }
+  } catch (error) {
+    console.error('验证发票失败:', error)
+    alert('验证失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 获取验证结果中的错误字段
+const verifyResult = ref(null)
+
+// 判断 block 是否有错误
+const isBlockError = (block) => {
+  if (!currentResult.value?.verify_result) return false
+  const errors = currentResult.value.verify_result.errors || []
+  const fieldPositions = currentResult.value.verify_result.field_positions || {}
+  
+  // 检查是否是错误字段对应的 block
+  for (const error of errors) {
+    const blockId = fieldPositions[error.field]
+    if (blockId && blockId === block.id) {
+      return true
+    }
+  }
+  return false
+}
+
+// 获取 block 的错误信息
+const getBlockError = (block) => {
+  if (!currentResult.value?.verify_result) return null
+  const errors = currentResult.value.verify_result.errors || []
+  const fieldPositions = currentResult.value.verify_result.field_positions || {}
+  
+  for (const error of errors) {
+    const blockId = fieldPositions[error.field]
+    if (blockId && blockId === block.id) {
+      return error
+    }
+  }
+  return null
 }
 
 // 获取监控状态
@@ -761,6 +848,52 @@ onMounted(() => {
   color: #ef4444;
 }
 
+/* 验证相关样式 */
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verify-btn {
+  padding: 6px 10px;
+  background: #f59e0b;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.verify-btn:hover {
+  background: #d97706;
+}
+
+.verify-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.verify-status.passed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #16a34a;
+}
+
+.verify-status.failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+.result-item.verify-failed {
+  border-left: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
 /* 识别视图 */
 .recognize-view {
   padding: 0 !important;
@@ -900,6 +1033,33 @@ onMounted(() => {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.annotation-box.has-error {
+  border: 3px solid #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  animation: error-pulse 1.5s infinite;
+}
+
+.annotation-box.has-error .block-id {
+  background: #ef4444;
+}
+
+.annotation-box .error-icon {
+  position: absolute;
+  top: -18px;
+  right: -2px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+@keyframes error-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
 }
 
 .preview-actions {
