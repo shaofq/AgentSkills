@@ -21,9 +21,9 @@ AIGATEWAY_BASE_URL = os.environ.get("AIGATEWAY_BASE_URL", "")  # 例如: https:/
 AIGATEWAY_MODEL = os.environ.get("AIGATEWAY_MODEL", "claude-4.5-sonnet")
 
 # 智谱 API 配置 (GLM 模型)
-ZHIPU_API_KEY = os.environ.get("ZHIPU_API_KEY", "f7a3ae11f77f4d66afbb2e79f5d4fdd7.LgM1fUfaoTLEjTOG")
+ZHIPU_API_KEY = os.environ.get("ZHIPU_API_KEY", "9dd97b4a683347a38b23cecf50748287.pd3ZQ6eZx9Nw1chp")
 ZHIPU_BASE_URL = os.environ.get("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
-ZHIPU_MODEL = os.environ.get("ZHIPU_MODEL", "glm-4.7")
+ZHIPU_MODEL = os.environ.get("ZHIPU_MODEL", "glm-4-flash")
 
 # 默认模型配置
 DEFAULT_MODEL = "qwen3-max"

@@ -8,7 +8,7 @@ import os
 from typing import Dict, Any, Optional
 
 from agents.base import BaseAgent, create_agent_by_skills
-from config.settings import MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL
+from config.settings import MODEL_PROVIDER, AIGATEWAY_API_KEY, AIGATEWAY_BASE_URL, AIGATEWAY_MODEL, ZHIPU_API_KEY, ZHIPU_BASE_URL, ZHIPU_MODEL
 from agents.simple import SimpleAgent
 from agents.policy_qa_agent import PolicyQAAgent
 from agents.code_agent import CodeAgent
@@ -34,6 +34,8 @@ class AgentManager:
         if cls._api_key is None:
             if MODEL_PROVIDER == "aigateway":
                 cls._api_key = AIGATEWAY_API_KEY
+            elif MODEL_PROVIDER == "zhipu":
+                cls._api_key = ZHIPU_API_KEY
             else:
                 cls._api_key = os.environ.get("DASHSCOPE_API_KEY", "")
         return cls._api_key
@@ -47,6 +49,13 @@ class AgentManager:
                 "api_key": AIGATEWAY_API_KEY,
                 "model_name": AIGATEWAY_MODEL,
                 "base_url": AIGATEWAY_BASE_URL,
+            }
+        elif MODEL_PROVIDER == "zhipu":
+            return {
+                "provider": "zhipu",
+                "api_key": ZHIPU_API_KEY,
+                "model_name": ZHIPU_MODEL,
+                "base_url": ZHIPU_BASE_URL,
             }
         else:
             return {
