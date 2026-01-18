@@ -55,6 +55,7 @@ class PassportOCRService:
 注意：
 - 日期统一转换为 YYYY-MM-DD 格式
 - 姓名统一大写
+- 姓名可能使用的是当地语言，需要转换为英文
 - 如果是克罗地亚等国护照，nationality 填写对应国家名
 - confidence 表示整体识别置信度（0-1）
 """

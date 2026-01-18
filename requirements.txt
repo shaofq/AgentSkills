@@ -36,3 +36,6 @@ PyMuPDF>=1.23.0
 
 # OpenAI 兼容 API
 openai>=1.0.0
+
+# JWT 认证
+PyJWT>=2.8.0

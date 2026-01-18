@@ -98,7 +98,8 @@
             "apiUrl": "http://localhost:8000/api/workflow/run",
            "workflowName": "skill_create_flow",
           "description": "技能创建助手,帮助创建新的 Skill 技能包，设计技能结构和编写 SKILL.md 文档。",
-          "model": "qwen3-max"
+          "model": "qwen3-max",
+          "requiredRole": ["admin"]
         },
         {
           "id": "workflow",
@@ -109,7 +110,8 @@
           "apiUrl": null,
           "workflowName": null,
           "description": "可视化工作流编排工具",
-          "model": null
+          "model": null,
+          "requiredRole": ["admin", "operator"]
         },
         {
           "id": "workflow-list",
@@ -120,7 +122,8 @@
           "apiUrl": null,
           "workflowName": null,
           "description": "查询和管理已加载的工作流",
-          "model": null
+          "model": null,
+          "requiredRole": ["admin", "operator"]
         },
         {
           "id": "email-trigger",

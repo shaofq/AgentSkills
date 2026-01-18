@@ -50,8 +50,9 @@ app.add_middleware(
 
 
 # 注册路由
-from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking, token_stats, upload, email_trigger, sandbox, vl_ocr, replay, crew_compare
+from api.routers import agents, workflows, menu, policy_qa, ocr, skill_creator, code_assistant, booking, token_stats, upload, email_trigger, sandbox, vl_ocr, replay, crew_compare, auth
 
+app.include_router(auth.router)  # 认证路由优先
 app.include_router(agents.router)
 app.include_router(workflows.router)
 app.include_router(execution.router)

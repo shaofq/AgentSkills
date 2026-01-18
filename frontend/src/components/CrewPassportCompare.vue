@@ -863,16 +863,21 @@ async function startCompare() {
   }
 }
 
-// 获取字段状态
+// 获取字段状态 - 使用后端LLM比对结果
 function getFieldStatus(result, field) {
   if (!result.passport) return 'no-data'
   
-  const excelVal = String(result.crew[field.excel_field] || '').toUpperCase()
-  const passportVal = String(result.passport[field.passport_field] || '').toUpperCase()
+  const excelVal = String(result.crew[field.excel_field] || '')
+  const passportVal = String(result.passport[field.passport_field] || '')
   
   if (!excelVal || !passportVal) return 'no-data'
-  if (excelVal === passportVal) return 'match'
-  return 'mismatch'
+  
+  // 检查该字段是否在差异列表中（后端LLM已判断）
+  const hasDifference = result.differences?.some(
+    diff => diff.field === field.label
+  )
+  
+  return hasDifference ? 'mismatch' : 'match'
 }
 
 function getFieldStatusText(result, field) {

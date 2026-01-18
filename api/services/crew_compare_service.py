@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 from datetime import datetime
 from difflib import SequenceMatcher
+from openai import OpenAI
 
 from api.services.passport_ocr_service import get_passport_ocr_service
 
@@ -72,6 +73,13 @@ class CrewCompareService:
         self.sessions: Dict[str, Dict] = {}  # session_id -> session_data
         self.history: List[Dict] = []  # 操作历史记录
         self._load_history()
+        
+        # 初始化LLM客户端用于智能比对
+        self.llm_client = OpenAI(
+            api_key=os.getenv("DASHSCOPE_API_KEY"),
+            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+        )
+        self.llm_model = "qwen-plus"  # 使用qwen-plus进行语义比对
     
     def create_session(self) -> str:
         """创建新的比对会话"""
@@ -463,18 +471,45 @@ class CrewCompareService:
         return crew
     
     def _format_date(self, value) -> str:
-        """格式化日期"""
+        """格式化日期，统一转为 YYYY-MM-DD 格式"""
+        if not value:
+            return ""
+        
         if isinstance(value, datetime):
             return value.strftime('%Y-%m-%d')
-        if isinstance(value, str):
-            # 尝试解析常见格式
-            for fmt in ['%Y-%m-%d', '%Y/%m/%d', '%d/%m/%Y', '%Y%m%d']:
-                try:
-                    dt = datetime.strptime(value.strip(), fmt)
-                    return dt.strftime('%Y-%m-%d')
-                except:
-                    continue
-        return str(value)
+        
+        # 处理整数类型的日期（如 19751022）
+        if isinstance(value, (int, float)):
+            value = str(int(value))
+        
+        value = str(value).strip()
+        
+        # 尝试解析常见格式
+        formats = [
+            '%Y-%m-%d',      # 1975-10-22
+            '%Y/%m/%d',      # 1975/10/22
+            '%d/%m/%Y',      # 22/10/1975
+            '%Y%m%d',        # 19751022
+            '%d %b %Y',      # 22 OCT 1975
+            '%d %B %Y',      # 22 October 1975
+        ]
+        
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(value.upper(), fmt)
+                return dt.strftime('%Y-%m-%d')
+            except:
+                continue
+        
+        # 尝试处理 8 位数字格式
+        if len(value) == 8 and value.isdigit():
+            try:
+                dt = datetime.strptime(value, '%Y%m%d')
+                return dt.strftime('%Y-%m-%d')
+            except:
+                pass
+        
+        return value
     
     def _normalize_sex(self, value: str) -> str:
         """标准化性别"""
@@ -641,15 +676,78 @@ class CrewCompareService:
         """计算字符串相似度"""
         return SequenceMatcher(None, a, b).ratio()
     
+    def _llm_semantic_compare(self, fields_to_compare: List[Dict]) -> Dict[str, Dict]:
+        """
+        使用语言模型进行语义比对。
+        
+        Args:
+            fields_to_compare: 待比对的字段列表，每项包含 field_name, excel_value, passport_value
+            
+        Returns:
+            比对结果字典，key为field_name，value包含 is_match, reason
+        """
+        if not fields_to_compare:
+            return {}
+        
+        # 构建比对prompt
+        compare_items = []
+        for item in fields_to_compare:
+            compare_items.append(f"- {item['field_name']}: Excel值=\"{item['excel_value']}\" vs 护照值=\"{item['passport_value']}\"")
+        
+        prompt = f"""你是一个数据比对专家。请判断以下Excel数据和护照数据是否语义上一致。
+
+需要考虑以下情况：
+1. 语言差异：如"中国"与"CHINA"、"菲律宾"与"PHILIPPINES"是一致的
+2. 缩写差异：如"男"与"M"、"女"与"F"是一致的
+3. 姓名顺序：如"ZHANG SAN"与"SAN ZHANG"可能是同一个人
+4. 日期格式：如"1990-01-15"与"15 JAN 1990"是一致的
+5. 大小写差异：忽略大小写差异
+
+待比对字段：
+{chr(10).join(compare_items)}
+
+请以JSON格式返回每个字段的比对结果，格式如下：
+{{
+  "字段名": {{"is_match": true/false, "reason": "判断理由"}},
+  ...
+}}
+
+只返回JSON，不要其他内容。"""
+
+        try:
+            response = self.llm_client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1000
+            )
+            
+            result_text = response.choices[0].message.content.strip()
+            print(f"[CrewCompare] LLM语义比对结果: {result_text}")
+            # 提取JSON
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0].strip()
+            
+            return json.loads(result_text)
+            
+        except Exception as e:
+            print(f"[CrewCompare] LLM语义比对失败: {e}")
+            return {}
+    
     def _compare_fields(self, crew: Dict, passport: Dict, compare_fields: List[Dict] = None) -> List[Dict]:
-        """比对字段差异，使用可配置的比对字段"""
+        """比对字段差异，使用LLM智能语义比对"""
         differences = []
         
         # 使用传入的字段配置，否则使用默认配置
         if compare_fields is None:
             compare_fields = self.DEFAULT_COMPARE_FIELDS
         
-        # 只比对启用的字段
+        # 收集需要比对的字段
+        fields_to_compare = []
+        field_info_map = {}  # 存储字段原始信息
+        
         for field_config in compare_fields:
             if not field_config.get("enabled", True):
                 continue
@@ -660,34 +758,53 @@ class CrewCompareService:
             
             if not excel_field or not passport_field:
                 continue
-            excel_val = str(crew.get(excel_field, "")).strip().upper()
-            passport_val = str(passport.get(passport_field, "")).strip().upper()
+                
+            excel_val = str(crew.get(excel_field, "")).strip()
+            passport_val = str(passport.get(passport_field, "")).strip()
             
             if not excel_val or not passport_val:
                 continue
             
-            # 日期特殊处理
-            if "date" in excel_field:
-                excel_val = self._format_date(crew.get(excel_field, ""))
-                passport_val = self._format_date(passport.get(passport_field, ""))
+            # 完全匹配（忽略大小写）则跳过
+            if excel_val.upper() == passport_val.upper():
+                continue
             
-            # 性别标准化
-            if excel_field == "sex":
-                excel_val = self._normalize_sex(excel_val)
-                passport_val = self._normalize_sex(passport_val)
+            # 不完全匹配的字段，交给LLM进行语义比对
+            fields_to_compare.append({
+                "field_name": label,
+                "excel_value": excel_val,
+                "passport_value": passport_val
+            })
+            field_info_map[label] = {
+                "excel_field": excel_field,
+                "passport_field": passport_field,
+                "excel_val": excel_val,
+                "passport_val": passport_val
+            }
+        
+        # 使用LLM进行语义比对
+        print(f"[Compare] 需要LLM比对的字段数: {len(fields_to_compare)}, 字段: {[f['field_name'] for f in fields_to_compare]}")
+        if fields_to_compare:
+            llm_results = self._llm_semantic_compare(fields_to_compare)
+            print(f"[Compare] LLM比对结果: {llm_results}")
             
-            # 比较
-            if excel_val != passport_val:
-                # 计算相似度
-                similarity = self._similar(excel_val, passport_val)
+            for field_name, info in field_info_map.items():
+                llm_result = llm_results.get(field_name, {})
+                is_match = llm_result.get("is_match", False)
+                reason = llm_result.get("reason", "")
                 
-                differences.append({
-                    "field": label,
-                    "excel_value": crew.get(excel_field, ""),
-                    "passport_value": passport.get(passport_field, ""),
-                    "similarity": round(similarity, 2),
-                    "severity": "high" if similarity < 0.5 else "medium" if similarity < 0.8 else "low"
-                })
+                if not is_match:
+                    # 计算字符串相似度
+                    similarity = self._similar(info["excel_val"].upper(), info["passport_val"].upper())
+                    
+                    differences.append({
+                        "field": field_name,
+                        "excel_value": info["excel_val"],
+                        "passport_value": info["passport_val"],
+                        "similarity": round(similarity, 2),
+                        "severity": "high" if similarity < 0.5 else "medium" if similarity < 0.8 else "low",
+                        "ai_reason": reason  # 添加AI判断理由
+                    })
         
         return differences
     

@@ -9,7 +9,8 @@ import Toolbar from './components/Toolbar.vue'
 import LeftMenu from './components/LeftMenu.vue'
 import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
-import LoginDialog from './components/LoginDialog.vue'
+import LoginPage from './components/LoginPage.vue'
+import UserManagement from './components/UserManagement.vue'
 import CodeAssistantView from './components/CodeAssistantView.vue'
 import AIExpertHome from './components/AIExpertHome.vue'
 import TokenStatsDialog from './components/TokenStatsDialog.vue'
@@ -164,41 +165,24 @@ const currentAgent = computed(() => {
   }
 })
 
-// 登录状态
-const isLoggedIn = ref(false)
-const currentUser = ref<{ username: string } | null>(null)
+// 用户状态管理
+import { useUserStore } from './stores/user'
+const userStore = useUserStore()
 
-// 检查登录状态
-function checkLoginStatus() {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr)
-      currentUser.value = user
-      isLoggedIn.value = true
-    } catch {
-      isLoggedIn.value = false
-    }
-  }
-}
+// 登录状态
+const isLoggedIn = computed(() => userStore.isAuthenticated.value)
+const currentUser = computed(() => userStore.user.value)
+const isUserManagementMode = computed(() => activeMenu.value === 'user-management')
 
 // 登录成功处理
-function handleLoginSuccess(user: { username: string }) {
-  currentUser.value = user
-  isLoggedIn.value = true
+function handleLoginSuccess() {
+  // userStore 已自动更新
 }
 
 // 退出登录
 function handleLogout() {
-  localStorage.removeItem('user')
-  currentUser.value = null
-  isLoggedIn.value = false
+  userStore.logout()
 }
-
-// 组件挂载时检查登录状态
-onMounted(() => {
-  checkLoginStatus()
-})
 
 // 对话相关状态
 const startPage = ref(true)
@@ -646,8 +630,8 @@ async function onSubmit(evt: string) {
 </script>
 
 <template>
-  <!-- 登录对话框 -->
-  <LoginDialog v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
+  <!-- 登录页面 -->
+  <LoginPage v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
   
   <div v-else class="h-screen w-screen flex">
     <!-- 左侧菜单 -->
@@ -655,8 +639,11 @@ async function onSubmit(evt: string) {
     
     <!-- 右侧主内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden main-content">
+      <!-- 用户管理模式（仅管理员可见） -->
+      <UserManagement v-if="isUserManagementMode && userStore.isAdmin.value" class="flex-1" />
+      
       <!-- Manus AI 模式 -->
-      <ManusView v-if="isManusMode" class="flex-1" />
+      <ManusView v-else-if="isManusMode" class="flex-1" />
       
       <!-- VL OCR 识别模式 -->
       <VLOCRView v-else-if="isVLOCRMode" class="flex-1" />

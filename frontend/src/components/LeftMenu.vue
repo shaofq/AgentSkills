@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useTheme } from '../composables/useTheme'
+import { useUserStore } from '../stores/user'
 
 const { currentTheme, toggleTheme } = useTheme()
+const userStore = useUserStore()
 
 const emit = defineEmits<{
   (e: 'select', menu: string): void
@@ -29,6 +31,8 @@ export interface MenuItem {
   workflowName?: string | null
   description?: string
   model?: string | null
+  requiredPermission?: string  // 所需权限，如 'workflow:execute', 'crew_compare:read'
+  requiredRole?: string[]      // 所需角色，如 ['admin', 'operator']
 }
 
 export interface MenuGroup {
@@ -51,11 +55,67 @@ const menuGroups = ref<MenuGroup[]>([
     id: 'system-functions',
     name: '系统功能',
     menus: [
-      { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow' },
-      { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow' },
+      { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', requiredPermission: 'workflow:create', requiredRole: ['admin', 'operator'] },
+      { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', requiredPermission: 'workflow:read' },
     ]
   }
 ])
+
+// 管理员专属菜单
+const adminMenuGroup: MenuGroup = {
+  id: 'admin-functions',
+  name: '系统管理',
+  menus: [
+    { id: 'user-management', name: '用户管理', icon: 'icon-set-role', type: 'agent' },
+  ]
+}
+
+// 检查用户是否有某个菜单的访问权限
+function hasMenuAccess(menu: MenuItem): boolean {
+  // 没有权限要求，默认允许访问
+  if (!menu.requiredPermission && !menu.requiredRole) {
+    return true
+  }
+  
+  let roleOk = true
+  let permissionOk = true
+  
+  // 检查角色（如果配置了）
+  if (menu.requiredRole && menu.requiredRole.length > 0) {
+    const userRole = userStore.user.value?.role
+    roleOk = !!(userRole && menu.requiredRole.includes(userRole))
+  }
+  
+  // 检查权限（如果配置了）
+  if (menu.requiredPermission) {
+    permissionOk = userStore.hasPermission(menu.requiredPermission)
+  }
+  
+  // 同时配置时必须都满足，只配置一个时只检查该条件
+  if (menu.requiredRole && menu.requiredPermission) {
+    return roleOk && permissionOk  // 都配置：必须都满足
+  }
+  return roleOk && permissionOk    // 只配置一个：检查配置的那个
+}
+
+// 根据权限过滤菜单
+const filteredMenuGroups = computed(() => {
+  const result: MenuGroup[] = []
+  
+  for (const group of menuGroups.value) {
+    const filteredMenus = group.menus.filter(menu => hasMenuAccess(menu))
+    if (filteredMenus.length > 0) {
+      result.push({ ...group, menus: filteredMenus })
+    }
+  }
+  
+  // 管理员显示用户管理菜单
+  if (userStore.isAdmin.value) {
+    result.push(adminMenuGroup)
+  }
+  
+  return result
+})
 
 // 扁平化的菜单列表，用于向父组件传递
 const allMenuItems = computed(() => {
@@ -82,6 +142,8 @@ async function loadMenuBindings() {
             workflowName: menu.workflowName,
             description: menu.description,
             model: menu.model,
+            requiredPermission: menu.requiredPermission,
+            requiredRole: menu.requiredRole,
           }))
         }))
         emit('menuLoaded', allMenuItems.value)
@@ -101,6 +163,8 @@ async function loadMenuBindings() {
             workflowName: menu.workflowName,
             description: menu.description,
             model: menu.model,
+            requiredPermission: menu.requiredPermission,
+            requiredRole: menu.requiredRole,
           }))
         }]
         emit('menuLoaded', allMenuItems.value)
@@ -138,6 +202,16 @@ function selectMenu(item: MenuItem) {
 function handleOpenSettings() {
   emit('openSettings')
 }
+
+// 获取角色显示名称
+function getRoleLabel(role: string | undefined): string {
+  const labels: Record<string, string> = {
+    'admin': '管理员',
+    'operator': '操作员',
+    'viewer': '查看者'
+  }
+  return role ? labels[role] || role : ''
+}
 </script>
 
 <template>
@@ -157,7 +231,7 @@ function handleOpenSettings() {
 
     <!-- 菜单列表 -->
     <div class="menu-list flex-1 py-2 overflow-y-auto">
-      <template v-for="group in menuGroups" :key="group.id">
+      <template v-for="group in filteredMenuGroups" :key="group.id">
         <!-- 分组标题 -->
         <div 
           v-if="group.name && (!collapsed || isHovering)" 
@@ -187,6 +261,18 @@ function handleOpenSettings() {
 
     <!-- 底部操作区 -->
     <div class="menu-footer p-3">
+      <!-- 当前用户信息 -->
+      <div class="user-info flex items-center gap-2 px-2 py-2 mb-2 rounded-lg" :class="{ 'justify-center': collapsed && !isHovering }">
+        <div class="user-avatar w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+             :style="{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }">
+          {{ userStore.user.value?.display_name?.charAt(0) || userStore.user.value?.username?.charAt(0) || 'U' }}
+        </div>
+        <div v-if="!collapsed || isHovering" class="user-details flex-1 min-w-0">
+          <div class="user-name text-sm font-medium truncate">{{ userStore.user.value?.display_name || userStore.user.value?.username }}</div>
+          <div class="user-role text-xs opacity-60">{{ getRoleLabel(userStore.user.value?.role) }}</div>
+        </div>
+      </div>
+      
       <div 
         @click="toggleCollapse"
         class="collapse-btn flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all"
@@ -313,6 +399,18 @@ function handleOpenSettings() {
 
 .menu-footer {
   border-top: 1px solid var(--menu-border);
+}
+
+.user-info {
+  background: var(--menu-item-hover);
+}
+
+.user-name {
+  color: var(--menu-text);
+}
+
+.user-role {
+  color: var(--menu-text-muted);
 }
 
 .collapse-btn {
