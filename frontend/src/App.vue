@@ -18,6 +18,7 @@ import EmailTriggerConfig from './components/EmailTriggerConfig.vue'
 import ManusView from './components/ManusView.vue'
 import VLOCRView from './components/VLOCRView.vue'
 import ChatReplayPlayer from './components/ChatReplayPlayer.vue'
+import CrewPassportCompare from './components/CrewPassportCompare.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -60,6 +61,7 @@ const defaultMenuConfigs: MenuConfig[] = [
   { id: 'workflow', name: '流程编排', icon: 'icon-application', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '可视化工作流编排工具', model: null },
   { id: 'workflow-list', name: '流程查询', icon: 'icon-merge-request2', type: 'workflow', apiType: null, apiUrl: null, workflowName: null, description: '查询和管理已加载的工作流', model: null },
   { id: 'manus', name: 'Manus AI', icon: 'icon-laptop', type: 'agent', apiType: 'sandbox', apiUrl: 'http://localhost:8000/sandbox/agents/sandbox/execute', workflowName: null, description: 'AI 电脑助手，可在沙箱中执行代码、文件操作和浏览器自动化', model: 'qwen3-max' },
+  { id: 'crew-compare', name: '船员比对', icon: 'icon-user-group', type: 'agent', apiType: 'crew-compare', apiUrl: 'http://localhost:8000/api/crew-compare', workflowName: null, description: '船员护照信息比对系统，上传Excel名单和护照图片进行自动比对', model: 'qwen-vl-max-latest' },
 ]
 const menuConfigs = ref<MenuConfig[]>(defaultMenuConfigs)
 
@@ -71,6 +73,7 @@ const isOCRMode = computed(() => activeMenu.value === 'ocr-agent')
 const isVLOCRMode = computed(() => activeMenu.value === 'vl-ocr')
 const isEmailTriggerMode = computed(() => activeMenu.value === 'email-trigger')
 const isManusMode = computed(() => activeMenu.value === 'manus')
+const isCrewCompareMode = computed(() => activeMenu.value === 'crew-compare')
 
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -657,6 +660,9 @@ async function onSubmit(evt: string) {
       
       <!-- VL OCR 识别模式 -->
       <VLOCRView v-else-if="isVLOCRMode" class="flex-1" />
+      
+      <!-- 船员护照比对模式 -->
+      <CrewPassportCompare v-else-if="isCrewCompareMode" class="flex-1" />
       
       <!-- 邮件触发配置模式 -->
       <EmailTriggerConfig v-else-if="isEmailTriggerMode" />

@@ -143,6 +143,17 @@
           "workflowName": null,
           "description": "基于视觉语言模型的OCR识别，支持定位信息和文件夹监控。",
           "model": "qwen-vl-max-latest"
+        },
+        {
+          "id": "crew-compare",
+          "name": "船员比对",
+          "icon": "icon-beginner-guidance",
+          "type": "agent",
+          "apiType": "crew-compare",
+          "apiUrl": "http://localhost:8000/api/crew-compare",
+          "workflowName": null,
+          "description": "船员护照信息比对系统，上传Excel名单和护照图片进行自动比对",
+          "model": "qwen-vl-max-latest"
         }
       ]
     }
