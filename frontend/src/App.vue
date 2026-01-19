@@ -22,6 +22,7 @@ import ChatReplayPlayer from './components/ChatReplayPlayer.vue'
 import CrewPassportCompare from './components/CrewPassportCompare.vue'
 import HazmatIdentify from './components/HazmatIdentify.vue'
 import DocumentLearning from './components/DocumentLearning.vue'
+import LandingPage from './components/LandingPage.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -42,6 +43,14 @@ const showConfigPanel = ref(false)
 const showPolicyQA = ref(false)
 const showTokenStats = ref(false)
 const showReplayPlayer = ref(false)
+
+// 宣传页面模式（默认显示首页，#app 进入应用）
+const showLandingPage = ref(window.location.hash !== '#app')
+
+// 监听hash变化
+window.addEventListener('hashchange', () => {
+  showLandingPage.value = window.location.hash !== '#app'
+})
 
 // 控制台日志
 interface ConsoleLog {
@@ -644,8 +653,11 @@ async function onSubmit(evt: string) {
 </script>
 
 <template>
+  <!-- 宣传页面 -->
+  <LandingPage v-if="showLandingPage" />
+  
   <!-- 登录页面 -->
-  <LoginPage v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
+  <LoginPage v-else-if="!isLoggedIn" @login-success="handleLoginSuccess" />
   
   <div v-else class="h-screen w-screen flex">
     <!-- 左侧菜单 -->
