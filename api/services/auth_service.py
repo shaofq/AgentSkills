@@ -240,3 +240,58 @@ def get_user_service() -> UserService:
     if _user_service is None:
         _user_service = UserService()
     return _user_service
+
+
+# ========== FastAPI 依赖注入 ==========
+from fastapi import Depends, HTTPException, Header
+from typing import Optional
+
+async def get_current_user(authorization: str = Header(None)) -> dict:
+    """获取当前登录用户（必须登录）"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="未登录或token无效")
+    
+    token = authorization.replace("Bearer ", "")
+    token_data = decode_access_token(token)
+    
+    if not token_data:
+        raise HTTPException(status_code=401, detail="token已过期或无效")
+    
+    user_repo = get_user_repository()
+    user = user_repo.get_by_id(token_data.user_id)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="用户不存在")
+    
+    return user
+
+
+async def get_current_user_optional(authorization: str = Header(None)) -> Optional[dict]:
+    """获取当前登录用户（可选，未登录返回None）"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    
+    token = authorization.replace("Bearer ", "")
+    token_data = decode_access_token(token)
+    
+    if not token_data:
+        return None
+    
+    user_repo = get_user_repository()
+    user = user_repo.get_by_id(token_data.user_id)
+    
+    return user
+
+
+def require_permission(permission: str):
+    """权限检查依赖"""
+    async def check_permission(current_user: dict = Depends(get_current_user)) -> dict:
+        role = RoleEnum(current_user.get('role', 'viewer'))
+        permissions = get_permissions(role)
+        
+        if "*" in permissions or permission in permissions:
+            return current_user
+        
+        raise HTTPException(status_code=403, detail=f"权限不足，需要: {permission}")
+    
+    return check_permission

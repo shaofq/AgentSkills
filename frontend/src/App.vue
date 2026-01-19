@@ -11,6 +11,7 @@ import PolicyQADialog from './components/PolicyQADialog.vue'
 import WorkflowListDialog from './components/WorkflowListDialog.vue'
 import LoginPage from './components/LoginPage.vue'
 import UserManagement from './components/UserManagement.vue'
+import CreditManagement from './components/CreditManagement.vue'
 import CodeAssistantView from './components/CodeAssistantView.vue'
 import AIExpertHome from './components/AIExpertHome.vue'
 import TokenStatsDialog from './components/TokenStatsDialog.vue'
@@ -196,6 +197,7 @@ const userStore = useUserStore()
 const isLoggedIn = computed(() => userStore.isAuthenticated.value)
 const currentUser = computed(() => userStore.user.value)
 const isUserManagementMode = computed(() => activeMenu.value === 'user-management')
+const isCreditManagementMode = computed(() => activeMenu.value === 'credit-management')
 
 // 登录成功处理
 function handleLoginSuccess() {
@@ -667,6 +669,9 @@ async function onSubmit(evt: string) {
     <div class="flex-1 flex flex-col overflow-hidden main-content">
       <!-- 用户管理模式（仅管理员可见） -->
       <UserManagement v-if="isUserManagementMode && userStore.isAdmin.value" class="flex-1" />
+      
+      <!-- 积分管理模式（仅管理员可见） -->
+      <CreditManagement v-else-if="isCreditManagementMode && userStore.isAdmin.value" class="flex-1" />
       
       <!-- Manus AI 模式 -->
       <ManusView v-else-if="isManusMode" class="flex-1" />

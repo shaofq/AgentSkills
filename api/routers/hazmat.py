@@ -511,6 +511,27 @@ async def get_pending_rule_drafts(
     return {"success": True, "data": [d.dict() for d in drafts]}
 
 
+@router.put("/rule-drafts/{rule_id}")
+async def update_rule_draft(
+    rule_id: int,
+    request: dict,
+    current_user: UserResponse = Depends(get_current_user)
+):
+    """更新规则草稿"""
+    try:
+        learning_service.update_rule_draft(
+            rule_id,
+            name=request.get('name'),
+            description=request.get('description'),
+            conditions=request.get('conditions'),
+            result=request.get('result'),
+            suggested_class=request.get('suggested_class')
+        )
+        return {"success": True, "message": "规则已更新"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/rule-drafts/{rule_id}/review")
 async def review_rule_draft(
     rule_id: int,

@@ -435,8 +435,19 @@ class LearningService:
         if not doc.annotations:
             raise ValueError("文档尚未标注")
         
+        # 辅助函数：安全获取标注属性
+        def get_ann_field(ann, key, default=''):
+            if isinstance(ann, dict):
+                return ann.get(key, default)
+            elif hasattr(ann, key):
+                return getattr(ann, key, default)
+            return default
+        
         # 获取作为判断依据的标注
-        basis_annotations = [a for a in doc.annotations if a.get('field') in basis_fields or a.get('is_basis')]
+        basis_annotations = [
+            a for a in doc.annotations 
+            if get_ann_field(a, 'field') in basis_fields or get_ann_field(a, 'is_basis')
+        ]
         
         if not basis_annotations:
             basis_annotations = doc.annotations[:3]  # 默认取前3个
@@ -445,8 +456,8 @@ class LearningService:
         rule_drafts = []
         
         for ann in basis_annotations:
-            field = ann.get('field', '')
-            value = ann.get('value', '')
+            field = get_ann_field(ann, 'field', '')
+            value = get_ann_field(ann, 'value', '')
             
             if not field or not value:
                 continue
@@ -572,6 +583,48 @@ class LearningService:
         conn.close()
         rule.id = rule_id
         return rule_id
+    
+    def update_rule_draft(self, rule_id: int, name: str = None, description: str = None,
+                         conditions: list = None, result: str = None, 
+                         suggested_class: str = None) -> bool:
+        """更新规则草稿"""
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        
+        # 构建更新语句
+        updates = []
+        values = []
+        
+        if name is not None:
+            updates.append("name = ?")
+            values.append(name)
+        if description is not None:
+            updates.append("description = ?")
+            values.append(description)
+        if conditions is not None:
+            updates.append("conditions = ?")
+            values.append(json.dumps(conditions))
+        if result is not None:
+            updates.append("result = ?")
+            values.append(result)
+        if suggested_class is not None:
+            updates.append("suggested_class = ?")
+            values.append(suggested_class)
+        
+        if not updates:
+            conn.close()
+            return False
+        
+        updates.append("updated_at = ?")
+        values.append(datetime.now().isoformat())
+        values.append(rule_id)
+        
+        cursor.execute(f'''
+            UPDATE rule_drafts SET {", ".join(updates)} WHERE id = ?
+        ''', values)
+        conn.commit()
+        conn.close()
+        return cursor.rowcount > 0
     
     # ========== 规则审核 ==========
     

@@ -984,7 +984,112 @@ class CrewCompareService:
         
         # 创建 DataFrame 并导出
         df = pd.DataFrame(report_data)
-        df.to_excel(output_path, index=False, engine='openpyxl')
+        
+        # 使用 openpyxl 创建美化的 Excel
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils.dataframe import dataframe_to_rows
+        from openpyxl.utils import get_column_letter
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "船员护照比对报告"
+        
+        # 定义样式
+        header_font = Font(name='微软雅黑', size=11, bold=True, color='FFFFFF')
+        header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        
+        data_font = Font(name='微软雅黑', size=10)
+        data_alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        center_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        
+        # 边框样式
+        thin_border = Border(
+            left=Side(style='thin', color='D9D9D9'),
+            right=Side(style='thin', color='D9D9D9'),
+            top=Side(style='thin', color='D9D9D9'),
+            bottom=Side(style='thin', color='D9D9D9')
+        )
+        
+        # 状态颜色
+        status_fills = {
+            '✓ 一致': PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid'),
+            '⚠ 有差异': PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid'),
+            '✗ 未找到护照': PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid'),
+        }
+        status_fonts = {
+            '✓ 一致': Font(name='微软雅黑', size=10, color='006100'),
+            '⚠ 有差异': Font(name='微软雅黑', size=10, color='9C5700'),
+            '✗ 未找到护照': Font(name='微软雅黑', size=10, color='9C0006'),
+        }
+        
+        # 写入数据
+        for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+            for c_idx, value in enumerate(row, 1):
+                cell = ws.cell(row=r_idx, column=c_idx, value=value)
+                cell.border = thin_border
+                
+                if r_idx == 1:
+                    # 表头样式
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+                else:
+                    # 数据行样式
+                    cell.font = data_font
+                    cell.alignment = data_alignment
+                    
+                    # 比对状态列特殊着色
+                    col_name = df.columns[c_idx - 1] if c_idx <= len(df.columns) else ""
+                    if col_name == "比对状态" and value in status_fills:
+                        cell.fill = status_fills[value]
+                        cell.font = status_fonts[value]
+                        cell.alignment = center_alignment
+                    elif col_name == "序号":
+                        cell.alignment = center_alignment
+        
+        # 自适应列宽
+        def calculate_text_width(text):
+            """计算文本显示宽度，中文字符按2倍计算"""
+            if not text:
+                return 0
+            text = str(text)
+            width = 0
+            for char in text:
+                if '\u4e00' <= char <= '\u9fff' or '\u3000' <= char <= '\u303f':
+                    width += 2.2  # 中文字符
+                elif '\uff00' <= char <= '\uffef':
+                    width += 2.2  # 全角字符
+                else:
+                    width += 1.1  # 英文/数字
+            return width
+        
+        for col_idx, column in enumerate(df.columns, 1):
+            # 计算表头宽度
+            max_width = calculate_text_width(column)
+            
+            # 计算数据列宽度
+            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if cell.value:
+                        cell_width = calculate_text_width(cell.value)
+                        max_width = max(max_width, cell_width)
+            
+            # 设置列宽，增加边距，限制范围
+            adjusted_width = max(8, min(max_width + 3, 60))
+            ws.column_dimensions[get_column_letter(col_idx)].width = adjusted_width
+        
+        # 设置行高
+        ws.row_dimensions[1].height = 32  # 表头行高
+        for row_idx in range(2, ws.max_row + 1):
+            ws.row_dimensions[row_idx].height = 24
+        
+        # 冻结首行
+        ws.freeze_panes = 'A2'
+        
+        # 保存文件
+        wb.save(output_path)
         
         # 保存报告路径到会话
         session["report_file"] = output_path

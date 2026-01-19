@@ -9,6 +9,7 @@ export interface User {
   display_name: string | null
   role: 'admin' | 'operator' | 'viewer'
   is_active: boolean
+  credits: number
   created_at: string
   last_login: string | null
 }
@@ -74,6 +75,30 @@ function hasRole(role: string): boolean {
 // 是否管理员
 const isAdmin = computed(() => user.value?.role === 'admin')
 
+// 用户积分
+const credits = computed(() => user.value?.credits ?? 0)
+
+// 刷新积分
+async function refreshCredits() {
+  if (!token.value) return
+  try {
+    const response = await fetch('/api/credits/me', {
+      headers: {
+        'Authorization': `Bearer ${token.value}`
+      }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && user.value) {
+        user.value.credits = data.data.credits
+        localStorage.setItem('user', JSON.stringify(user.value))
+      }
+    }
+  } catch (e) {
+    console.error('刷新积分失败:', e)
+  }
+}
+
 // 导出
 export function useUserStore() {
   return {
@@ -82,11 +107,13 @@ export function useUserStore() {
     permissions,
     isAuthenticated,
     isAdmin,
+    credits,
     init,
     setAuth,
     logout,
     hasPermission,
-    hasRole
+    hasRole,
+    refreshCredits
   }
 }
 

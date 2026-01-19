@@ -67,6 +67,7 @@ const adminMenuGroup: MenuGroup = {
   name: '系统管理',
   menus: [
     { id: 'user-management', name: '用户管理', icon: 'icon-set-role', type: 'agent' },
+    { id: 'credit-management', name: '积分管理', icon: 'icon-star', type: 'agent' },
   ]
 }
 
@@ -269,7 +270,10 @@ function getRoleLabel(role: string | undefined): string {
         </div>
         <div v-if="!collapsed || isHovering" class="user-details flex-1 min-w-0">
           <div class="user-name text-sm font-medium truncate">{{ userStore.user.value?.display_name || userStore.user.value?.username }}</div>
-          <div class="user-role text-xs opacity-60">{{ getRoleLabel(userStore.user.value?.role) }}</div>
+          <div class="user-meta flex items-center gap-2 text-xs opacity-60">
+            <span>{{ getRoleLabel(userStore.user.value?.role) }}</span>
+            <span class="credits-badge">💎 {{ userStore.credits.value }}</span>
+          </div>
         </div>
       </div>
       

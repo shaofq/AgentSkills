@@ -356,6 +356,130 @@
         <p class="text-slate-700 font-medium">{{ processingMessage }}</p>
       </div>
     </div>
+
+    <!-- 规则编辑对话框 -->
+    <div v-if="showRuleEditor" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-slate-800">编辑规则逻辑</h3>
+          <button @click="showRuleEditor = false" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <!-- 规则名称 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-1">规则名称</label>
+            <input 
+              v-model="editingRule.name" 
+              type="text" 
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+              placeholder="请输入规则名称"
+            />
+          </div>
+          
+          <!-- 规则描述 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-1">规则描述</label>
+            <textarea 
+              v-model="editingRule.description" 
+              rows="2"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none resize-none"
+              placeholder="请输入规则描述"
+            ></textarea>
+          </div>
+
+          <!-- 条件列表 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-2">IF 条件</label>
+            <div class="space-y-3">
+              <div v-for="(cond, index) in editingRule.conditions" :key="index" class="bg-blue-50 rounded-lg p-3">
+                <div class="grid grid-cols-12 gap-2 items-center">
+                  <div class="col-span-3">
+                    <select v-model="cond.field" class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm">
+                      <option v-for="f in annotationFields" :key="f.name" :value="f.name">{{ f.label }}</option>
+                    </select>
+                  </div>
+                  <div class="col-span-3">
+                    <select v-model="cond.operator" class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm">
+                      <option value="contains">包含</option>
+                      <option value="equals">等于</option>
+                      <option value="exists">存在</option>
+                      <option value="regex">正则匹配</option>
+                      <option value="lt">小于</option>
+                      <option value="le">小于等于</option>
+                      <option value="gt">大于</option>
+                      <option value="ge">大于等于</option>
+                    </select>
+                  </div>
+                  <div class="col-span-4">
+                    <input 
+                      v-model="cond.value" 
+                      type="text" 
+                      class="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                      placeholder="匹配值"
+                      :disabled="cond.operator === 'exists'"
+                    />
+                  </div>
+                  <div class="col-span-2 text-right">
+                    <button @click="removeCondition(index)" class="text-red-500 hover:text-red-600 text-sm">删除</button>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <input 
+                    v-model="cond.description" 
+                    type="text" 
+                    class="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white"
+                    placeholder="条件描述（可读说明）"
+                  />
+                </div>
+              </div>
+            </div>
+            <button @click="addCondition" class="mt-2 text-sm text-primary hover:text-primary-600">+ 添加条件</button>
+          </div>
+
+          <!-- 判断结果 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-2">THEN 判断结果</label>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="editingRule.result" value="hazardous" class="text-primary" />
+                <span class="text-red-600 font-medium">是危险品</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="editingRule.result" value="non_hazardous" class="text-primary" />
+                <span class="text-green-600 font-medium">非危险品</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 建议危险类别 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-1">建议危险类别（可选）</label>
+            <input 
+              v-model="editingRule.suggested_class" 
+              type="text" 
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+              placeholder="如: Class 3 (易燃液体)"
+            />
+          </div>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+          <button 
+            @click="showRuleEditor = false"
+            class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button 
+            @click="saveRuleEdit"
+            class="px-4 py-2 bg-primary hover:bg-primary-600 text-white rounded-lg transition-colors"
+          >
+            保存修改
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -402,6 +526,17 @@ const showFieldMenu = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 const pendingSelection = ref('')
 const ruleDrafts = ref<any[]>([])
+
+// 规则编辑相关
+const showRuleEditor = ref(false)
+const editingRuleIndex = ref(-1)
+const editingRule = ref({
+  name: '',
+  description: '',
+  conditions: [] as { field: string; operator: string; value: string; description: string }[],
+  result: 'hazardous' as 'hazardous' | 'non_hazardous',
+  suggested_class: ''
+})
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const docTextRef = ref<HTMLDivElement | null>(null)
@@ -701,9 +836,71 @@ async function generateRules() {
   }
 }
 
-function editRule(rule: any) {
-  // TODO: 打开规则编辑对话框
-  alert('规则编辑功能开发中...')
+function editRule(rule: any, index?: number) {
+  // 打开规则编辑对话框
+  editingRuleIndex.value = index !== undefined ? index : ruleDrafts.value.indexOf(rule)
+  editingRule.value = {
+    name: rule.name || '',
+    description: rule.description || '',
+    conditions: (rule.conditions || []).map((c: any) => ({
+      field: c.field || '',
+      operator: c.operator || 'contains',
+      value: c.value || '',
+      description: c.description || ''
+    })),
+    result: rule.result || 'hazardous',
+    suggested_class: rule.suggested_class || ''
+  }
+  showRuleEditor.value = true
+}
+
+function addCondition() {
+  editingRule.value.conditions.push({
+    field: 'cas_number',
+    operator: 'contains',
+    value: '',
+    description: ''
+  })
+}
+
+function removeCondition(index: number) {
+  editingRule.value.conditions.splice(index, 1)
+}
+
+async function saveRuleEdit() {
+  if (editingRuleIndex.value < 0) return
+  
+  // 更新本地规则草稿
+  const rule = ruleDrafts.value[editingRuleIndex.value]
+  rule.name = editingRule.value.name
+  rule.description = editingRule.value.description
+  rule.conditions = editingRule.value.conditions
+  rule.result = editingRule.value.result
+  rule.suggested_class = editingRule.value.suggested_class
+  
+  // 如果有规则ID，同步到后端
+  if (rule.id) {
+    try {
+      await fetch(`${API_BASE}/rule-drafts/${rule.id}`, {
+        method: 'PUT',
+        headers: {
+          ...getHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: rule.name,
+          description: rule.description,
+          conditions: rule.conditions,
+          result: rule.result,
+          suggested_class: rule.suggested_class
+        })
+      })
+    } catch (error) {
+      console.error('保存规则失败:', error)
+    }
+  }
+  
+  showRuleEditor.value = false
 }
 
 function removeRule(index: number) {

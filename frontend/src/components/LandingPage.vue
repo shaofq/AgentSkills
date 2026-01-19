@@ -110,8 +110,11 @@
           <div class="business-preview">
             <div class="business-preview-bg"></div>
             <div class="business-preview-card">
-              <component :is="currentBusiness.previewIcon" class="business-preview-icon" />
-              <div class="business-preview-text">{{ currentBusiness.previewText }}</div>
+              <img v-if="currentBusiness.previewImage" :src="currentBusiness.previewImage" :alt="currentBusiness.title" class="business-preview-img" />
+              <template v-else>
+                <component :is="currentBusiness.previewIcon" class="business-preview-icon" />
+                <div class="business-preview-text">{{ currentBusiness.previewText }}</div>
+              </template>
             </div>
           </div>
         </div>
@@ -342,11 +345,10 @@ const businessFeatures = [
     icon: UserGroupIcon,
     badge: '船员护照比对',
     title: '船员护照比对',
-    desc: '自动识别护照信息，与Excel名单智能比对，快速发现差异，确保船员资料准确无误，功能包括：Excel名单智能解析，护照OCR自动识别，AI语义比对匹配，差异报告一键导出。',
+    desc: '把名单核验，交给更聪明的方式。导入 Excel 名单与护照图片，系统自动 OCR 提取关键信息，并进行智能匹配与一致性校验。拼写差异、日期格式、缺失项、疑似错配，一目了然。差异结果清晰呈现，支持一键导出报告用于复核与留档。更少手工核对，更少遗漏，更快完成船员资料核验',
     points: ['Excel名单智能解析', '护照OCR自动识别', 'AI语义比对匹配', '差异报告一键导出'],
     cta: '开始使用',
-    previewIcon: UserGroupIcon,
-    previewText: '护照OCR + 智能比对'
+    previewImage: '/ship.png'
   },
   {
     key: 'hazmat',
@@ -354,11 +356,11 @@ const businessFeatures = [
     icon: ShieldCheckIcon,
     badge: '危险品识别',
     title: '危险品智能识别',
-    desc: 'SDS/MSDS危险品智能识别系统是一款基于人工智能技术的危险品自动识别平台。系统支持解析SDS（Safety Data Sheet）和MSDS（Material Safety Data Sheet）文件，自动提取关键危险性信息，并基于内置规则库和大模型智能分析，快速判断货物是否属于危险品。',
+    desc: '危险品判定，不再靠经验堆叠。上传 SDS/MSDS，系统自动解析并抽取产品名称、CAS/UN、闪点、类别等核心信息，结合规则库与智能分析快速给出是否危险品的结论与依据。更重要的是，你的每一次确认与标注，都能沉淀为可复用规则草稿，支持审核与编辑，让识别越用越准、越用越可解释',
     points: ['多格式文件解析', '危险品智能判定', '规则库灵活配置', '批量审核确认'],
     cta: '开始使用',
-    previewIcon: ShieldCheckIcon,
-    previewText: 'IMDG规则 + 智能判定'
+    // previewIcon: ShieldCheckIcon,
+    previewImage: '/aiDanger.png'
   },
   {
     key: 'docs',
@@ -366,7 +368,7 @@ const businessFeatures = [
     icon: DocumentTextIcon,
     badge: '单证处理',
     title: '单证智能审核',
-    desc: '基于视觉语言模型的OCR识别系统，支持文件夹监控，自动处理业务单证。',
+    desc: '让单证处理变得轻松且可控。无论图片还是 PDF，系统自动识别版面与字段，提取单号、品名、数量、日期等关键信息，低置信度自动提示，便于快速复核。批量导入、统一汇总、结果直观呈现，减少重复录入与逐张核对。你把时间留给判断与决策，把繁琐交给自动化',
     points: ['视觉语言模型识别', '文件夹自动监控', '定位信息提取', '实时处理反馈'],
     cta: '开始使用',
     previewIcon: DocumentTextIcon,
@@ -378,7 +380,7 @@ const businessFeatures = [
     icon: DocumentTextIcon,
     badge: 'EMAIL自动派单',
     title: 'EMAIL自动派单',
-    desc: '基于视觉语言模型的OCR识别系统，支持文件夹监控，自动处理业务单证。',
+    desc: '从邮件到任务，零延迟流转。系统自动接收指定邮箱的邮件与附件，识别主题与关键内容，按业务规则或智能分类完成分拣与派发。自动生成待办、记录处理状态、全程可追踪。减少转发与人工分配，避免遗漏与滞后。每一封邮件，都能更快到达正确的人与流程',
     points: ['视觉语言模型识别', '文件夹自动监控', '定位信息提取', '实时处理反馈'],
     cta: '开始使用',
     previewIcon: DocumentTextIcon,
@@ -950,15 +952,10 @@ function scrollTo(id) {
 .business-preview {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   aspect-ratio: 4 / 3;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(30, 25, 20, 0.9) 0%, rgba(15, 12, 10, 0.95) 100%);
-  box-shadow: 
-    0 25px 80px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
 .business-preview-bg {
@@ -978,7 +975,7 @@ function scrollTo(id) {
   flex-direction: column;
   gap: 16px;
   text-align: center;
-  padding: 24px;
+  padding: 0px;
 }
 
 .business-preview-icon {
@@ -993,6 +990,18 @@ function scrollTo(id) {
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
+}
+
+.business-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  transition: all 0.4s ease;
+}
+
+.business-preview-card:hover .business-preview-img {
+  transform: scale(1.02);
 }
 
 .business-card {

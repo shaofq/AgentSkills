@@ -49,15 +49,53 @@ class Database:
                     display_name TEXT,
                     role TEXT DEFAULT 'operator',
                     is_active INTEGER DEFAULT 1,
+                    credits INTEGER DEFAULT 100,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     last_login TEXT
                 )
             ''')
             
+            # 积分记录表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS credit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    amount INTEGER NOT NULL,
+                    balance INTEGER NOT NULL,
+                    action TEXT NOT NULL,
+                    description TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            ''')
+            
+            # 用户设置表（存储列映射等配置）
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    setting_key TEXT NOT NULL,
+                    setting_value TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    UNIQUE(user_id, setting_key)
+                )
+            ''')
+            
             # 创建索引
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_credit_logs_user_id ON credit_logs(user_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id)')
+            
+            # 数据库迁移：为现有用户表添加credits字段（如果不存在）
+            cursor.execute("PRAGMA table_info(users)")
+            columns = [col[1] for col in cursor.fetchall()]
+            if 'credits' not in columns:
+                cursor.execute('ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 100')
+                print("[Database] 已为用户表添加 credits 字段")
             
             # 检查是否有管理员用户，如果没有则创建默认管理员
             cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")

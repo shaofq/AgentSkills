@@ -564,6 +564,9 @@
         </div>
         <div class="modal-footer">
           <button class="cancel-btn" @click="showColumnMapping = false">取消</button>
+          <button class="save-preset-btn" @click="saveColumnMappingPreset" title="保存为我的默认配置">
+            💾 保存配置
+          </button>
           <button class="save-btn" @click="saveColumnMapping">应用映射</button>
         </div>
       </div>
@@ -623,6 +626,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { useUserStore } from '../stores/user'
+
+const userStore = useUserStore()
 
 const API_BASE = 'http://localhost:8000/api/crew-compare'
 
@@ -912,6 +918,17 @@ async function openColumnMapping() {
     if (response.data.success) {
       columnMapping.value = response.data.column_mapping || {}
       originalColumns.value = response.data.original_columns || []
+      
+      // 尝试加载用户保存的配置并自动应用
+      const savedMapping = await loadColumnMappingPreset()
+      if (savedMapping && Object.keys(savedMapping).length > 0) {
+        // 只应用与当前列匹配的映射
+        for (const original in columnMapping.value) {
+          if (savedMapping[original]) {
+            columnMapping.value[original] = savedMapping[original]
+          }
+        }
+      }
     }
     showColumnMapping.value = true
   } catch (error) {
@@ -933,6 +950,42 @@ async function saveColumnMapping() {
   } catch (error) {
     console.error('保存列映射配置失败:', error)
     alert('保存失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 保存列映射配置到用户设置
+async function saveColumnMappingPreset() {
+  if (!userStore.token.value) {
+    alert('请先登录后再保存配置')
+    return
+  }
+  
+  try {
+    await axios.put(
+      'http://localhost:8000/api/user-settings/crew-compare/column-mapping',
+      { value: columnMapping.value },
+      { headers: { 'Authorization': `Bearer ${userStore.token.value}` } }
+    )
+    alert('列映射配置已保存到您的账户')
+  } catch (error) {
+    console.error('保存配置失败:', error)
+    alert('保存失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 加载用户保存的列映射配置
+async function loadColumnMappingPreset() {
+  if (!userStore.token.value) return null
+  
+  try {
+    const response = await axios.get(
+      'http://localhost:8000/api/user-settings/crew-compare/column-mapping',
+      { headers: { 'Authorization': `Bearer ${userStore.token.value}` } }
+    )
+    return response.data.mapping || null
+  } catch (error) {
+    console.error('加载用户配置失败:', error)
+    return null
   }
 }
 
@@ -1171,10 +1224,18 @@ function getFieldStatusText(result, field) {
 // 导出报告
 async function exportReport() {
   try {
+    const headers = {}
+    if (userStore.token.value) {
+      headers['Authorization'] = `Bearer ${userStore.token.value}`
+    }
+    
     const response = await axios.get(
       `${API_BASE}/export/${sessionId.value}`,
-      { responseType: 'blob' }
+      { responseType: 'blob', headers }
     )
+    
+    // 刷新用户积分
+    userStore.refreshCredits()
     
     // 创建下载链接
     const url = URL.createObjectURL(response.data)
@@ -1185,7 +1246,20 @@ async function exportReport() {
     URL.revokeObjectURL(url)
   } catch (error) {
     console.error('导出失败:', error)
-    alert('导出失败: ' + (error.response?.data?.detail || error.message))
+    // 处理 blob 响应中的错误信息
+    let errorMsg = error.message
+    if (error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text()
+        const json = JSON.parse(text)
+        errorMsg = json.detail || errorMsg
+      } catch (e) {
+        // 无法解析 blob
+      }
+    } else if (error.response?.data?.detail) {
+      errorMsg = error.response.data.detail
+    }
+    alert('导出失败: ' + errorMsg)
   }
 }
 </script>
@@ -1313,6 +1387,20 @@ async function exportReport() {
   background: #3b82f6;
   color: white;
   border: none;
+}
+
+.save-preset-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #22c55e;
+  color: white;
+  border: none;
+}
+
+.save-preset-btn:hover {
+  background: #16a34a;
 }
 
 /* 字段配置 */

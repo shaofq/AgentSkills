@@ -4,11 +4,13 @@ import os
 import shutil
 from pathlib import Path
 from typing import List
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from api.services.crew_compare_service import get_crew_compare_service
+from api.services.auth_service import get_current_user_optional
+from api.routers.credits import get_credit_service
 
 
 router = APIRouter(prefix="/api/crew-compare", tags=["船员护照比对"])
@@ -273,13 +275,28 @@ async def get_results(session_id: str):
 
 
 @router.get("/export/{session_id}")
-async def export_report(session_id: str):
-    """导出比对报告"""
+async def export_report(
+    session_id: str,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """导出比对报告（消耗1积分）"""
     service = get_crew_compare_service()
     session = service.get_session(session_id)
     
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
+    
+    # 扣减积分（如果用户已登录）
+    if current_user:
+        credit_service = get_credit_service()
+        success, balance, error = credit_service.consume_credits(
+            user_id=current_user['id'],
+            amount=1,
+            action="crew_compare_export",
+            description="导出船员护照比对报告"
+        )
+        if not success:
+            raise HTTPException(status_code=400, detail=f"积分不足: {error}")
     
     # 生成报告文件
     output_path = UPLOAD_DIR / session_id / f"比对报告_{session_id}.xlsx"
