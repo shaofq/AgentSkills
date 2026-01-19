@@ -7,7 +7,7 @@
       </div>
       <div class="toolbar-right">
         <button class="tool-btn" @click="showFieldConfig = true" title="比对字段配置">
-          ⚙️ 字段配置
+          ⚙️ 比对字段配置
         </button>
         <button class="tool-btn" @click="loadHistory" title="操作历史">
           📋 历史记录
@@ -102,12 +102,12 @@
         <div class="upload-card passport-upload">
           <div class="upload-icon">🛂</div>
           <h3>上传护照图片</h3>
-          <p>支持批量上传 JPG、PNG 格式图片</p>
+          <p>支持批量上传 JPG、PNG 格式图片，或 PDF 文件</p>
           
           <input 
             type="file" 
             ref="passportInput"
-            accept=".jpg,.jpeg,.png,.bmp,.webp"
+            accept=".jpg,.jpeg,.png,.bmp,.webp,.pdf"
             multiple
             @change="handlePassportSelect"
             style="display: none"
@@ -382,25 +382,153 @@
           <button class="close-btn" @click="showHistory = false">×</button>
         </div>
         <div class="modal-body">
-          <div v-if="historyList.length === 0" class="empty-history">
+          <div v-if="Object.keys(groupedHistory).length === 0" class="empty-history">
             暂无历史记录
           </div>
-          <div v-else class="history-list">
-            <div v-for="item in historyList" :key="item.id" class="history-item">
-              <div class="history-time">{{ formatTime(item.timestamp) }}</div>
-              <div class="history-action">
-                <span class="action-badge" :class="item.action">
-                  {{ getActionLabel(item.action) }}
-                </span>
+          <div v-else class="history-groups">
+            <div v-for="(group, sessionId) in groupedHistory" :key="sessionId" class="history-group">
+              <div class="group-header">
+                <div class="group-info">
+                  <span class="group-session">会话 {{ sessionId }}</span>
+                  <span class="group-time">{{ formatTime(group.startTime) }}</span>
+                  <span class="group-status" :class="group.finalStatus">
+                    {{ getStatusLabel(group.finalStatus) }}
+                  </span>
+                </div>
+                <div class="group-summary">
+                  <span v-if="group.crewCount">👥 {{ group.crewCount }}人</span>
+                  <span v-if="group.passportCount">🛂 {{ group.passportCount }}张</span>
+                  <span v-if="group.stats">
+                    ✓{{ group.stats.matched }} ⚠{{ group.stats.mismatched }} ✗{{ group.stats.not_found }}
+                  </span>
+                </div>
+                <div class="group-actions">
+                  <button 
+                    class="history-view-btn" 
+                    @click.stop="viewSessionFiles(sessionId)"
+                    title="查看文件"
+                  >
+                    📁 查看文件
+                  </button>
+                </div>
               </div>
-              <div class="history-detail">{{ item.detail }}</div>
-              <div class="history-session">会话: {{ item.session_id }}</div>
+              <div class="group-timeline">
+                <div v-for="item in group.items" :key="item.id" class="timeline-item">
+                  <span class="timeline-time">{{ formatTime(item.timestamp) }}</span>
+                  <span class="action-badge" :class="item.action">{{ getActionLabel(item.action) }}</span>
+                  <span class="timeline-detail">{{ item.detail }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="cancel-btn" @click="showHistory = false">关闭</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 会话文件详情弹窗 -->
+    <div v-if="showSessionFiles" class="modal-overlay" @click.self="showSessionFiles = false">
+      <div class="modal-content session-files-modal">
+        <div class="modal-header">
+          <h3>📁 会话文件详情 ({{ sessionFilesData.sessionId }})</h3>
+          <button class="close-btn" @click="showSessionFiles = false">×</button>
+        </div>
+        <div class="modal-body">
+          <!-- 会话摘要 -->
+          <div v-if="sessionFilesData.snapshot" class="session-summary">
+            <div class="summary-item">
+              <span class="summary-label">创建时间:</span>
+              <span>{{ formatTime(sessionFilesData.snapshot.created_at) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">状态:</span>
+              <span class="status-badge" :class="sessionFilesData.snapshot.status">
+                {{ getStatusLabel(sessionFilesData.snapshot.status) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">船员数:</span>
+              <span>{{ sessionFilesData.snapshot.crew_count || 0 }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">护照数:</span>
+              <span>{{ sessionFilesData.snapshot.passport_count || 0 }}</span>
+            </div>
+          </div>
+
+          <!-- Excel文件 -->
+          <div class="files-section">
+            <h4>📊 Excel文件</h4>
+            <div v-if="sessionFilesData.files?.excel_files?.length === 0" class="no-files">
+              暂无Excel文件
+            </div>
+            <div v-else class="file-list">
+              <div v-for="file in sessionFilesData.files?.excel_files" :key="file.filename" class="file-item">
+                <span class="file-icon">📄</span>
+                <span class="file-name">{{ file.filename }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                <button class="download-btn" @click="downloadExcel(sessionFilesData.sessionId, file.filename)">
+                  ⬇️ 下载
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 护照图片 -->
+          <div class="files-section">
+            <h4>🛂 护照文件</h4>
+            <div v-if="sessionFilesData.files?.passport_files?.length === 0" class="no-files">
+              暂无护照文件
+            </div>
+            <div v-else class="passport-grid">
+              <div 
+                v-for="file in sessionFilesData.files?.passport_files" 
+                :key="file.filename" 
+                class="passport-thumb"
+                @click="previewPassportImage(sessionFilesData.sessionId, file)"
+              >
+                <img 
+                  v-if="file.type !== 'pdf'"
+                  :src="`${API_BASE}/passport-image/${sessionFilesData.sessionId}/${file.filename}`"
+                  :alt="file.filename"
+                />
+                <div v-else class="pdf-icon">📑 PDF</div>
+                <span class="thumb-name">{{ file.filename }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 报告文件 -->
+          <div class="files-section">
+            <h4>📋 比对报告</h4>
+            <div v-if="sessionFilesData.files?.report_files?.length === 0" class="no-files">
+              暂无报告文件
+            </div>
+            <div v-else class="file-list">
+              <div v-for="file in sessionFilesData.files?.report_files" :key="file.filename" class="file-item">
+                <span class="file-icon">📊</span>
+                <span class="file-name">{{ file.filename }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                <button class="download-btn" @click="downloadReport(sessionFilesData.sessionId, file.filename)">
+                  ⬇️ 下载报告
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="showSessionFiles = false">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图片预览弹窗 -->
+    <div v-if="previewImage" class="modal-overlay image-preview-overlay" @click.self="previewImage = null">
+      <div class="image-preview-container">
+        <button class="close-preview-btn" @click="previewImage = null">×</button>
+        <img :src="previewImage" alt="护照预览" />
       </div>
     </div>
 
@@ -555,11 +683,72 @@ const compareFields = ref([
 
 // 历史记录
 const historyList = ref([])
+const showSessionFiles = ref(false)
+const sessionFilesData = ref({ sessionId: '', files: null, snapshot: null })
+const previewImage = ref(null)
 
 // 过滤后的结果
 const filteredResults = computed(() => {
   if (resultFilter.value === 'all') return compareResults.value
   return compareResults.value.filter(r => r.match_status === resultFilter.value)
+})
+
+// 按会话分组的历史记录
+const groupedHistory = computed(() => {
+  const groups = {}
+  
+  for (const item of historyList.value) {
+    const sid = item.session_id
+    if (!groups[sid]) {
+      groups[sid] = {
+        items: [],
+        startTime: item.timestamp,
+        finalStatus: 'created',
+        crewCount: 0,
+        passportCount: 0,
+        stats: null
+      }
+    }
+    groups[sid].items.push(item)
+    
+    // 更新时间范围
+    if (item.timestamp < groups[sid].startTime) {
+      groups[sid].startTime = item.timestamp
+    }
+    
+    // 根据操作更新状态
+    if (item.action === 'upload_excel') {
+      groups[sid].finalStatus = 'excel_loaded'
+      const match = item.detail.match(/(\d+)\s*条记录/)
+      if (match) groups[sid].crewCount = parseInt(match[1])
+    } else if (item.action === 'upload_passports' || item.action === 'recognize_passport') {
+      groups[sid].finalStatus = 'passports_added'
+    } else if (item.action === 'compare') {
+      groups[sid].finalStatus = 'compared'
+      const matchResult = item.detail.match(/匹配(\d+).*差异(\d+).*未找到(\d+)/)
+      if (matchResult) {
+        groups[sid].stats = {
+          matched: parseInt(matchResult[1]),
+          mismatched: parseInt(matchResult[2]),
+          not_found: parseInt(matchResult[3])
+        }
+      }
+    } else if (item.action === 'export_report') {
+      groups[sid].finalStatus = 'exported'
+    }
+  }
+  
+  // 按开始时间倒序排列
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    return new Date(groups[b].startTime) - new Date(groups[a].startTime)
+  })
+  
+  const sortedGroups = {}
+  for (const key of sortedKeys) {
+    sortedGroups[key] = groups[key]
+  }
+  
+  return sortedGroups
 })
 
 // 初始化会话
@@ -617,6 +806,66 @@ async function loadHistory() {
   } catch (error) {
     console.error('加载历史记录失败:', error)
   }
+}
+
+// 查看会话文件
+async function viewSessionFiles(sid) {
+  try {
+    const response = await axios.get(`${API_BASE}/session-files/${sid}`)
+    if (response.data.success) {
+      sessionFilesData.value = {
+        sessionId: sid,
+        files: response.data.files,
+        snapshot: response.data.snapshot
+      }
+      showSessionFiles.value = true
+    }
+  } catch (error) {
+    console.error('加载会话文件失败:', error)
+    alert('加载文件列表失败')
+  }
+}
+
+// 下载Excel文件
+function downloadExcel(sid, filename) {
+  const url = `${API_BASE}/download-excel/${sid}/${filename}`
+  window.open(url, '_blank')
+}
+
+// 下载报告
+function downloadReport(sid, filename) {
+  const url = `${API_BASE}/download-report/${sid}/${filename}`
+  window.open(url, '_blank')
+}
+
+// 预览护照图片
+function previewPassportImage(sid, file) {
+  if (file.type === 'pdf') {
+    // PDF不支持直接预览，提示下载
+    alert('PDF文件请下载后查看')
+    return
+  }
+  previewImage.value = `${API_BASE}/passport-image/${sid}/${file.filename}`
+}
+
+// 获取状态标签
+function getStatusLabel(status) {
+  const labels = {
+    'created': '已创建',
+    'excel_loaded': '已上传Excel',
+    'passports_added': '已上传护照',
+    'compared': '已完成比对'
+  }
+  return labels[status] || status
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
 // 格式化时间
@@ -778,8 +1027,21 @@ async function handlePassportSelect(event) {
   const files = Array.from(event.target.files)
   if (files.length === 0) return
   
-  // 创建预览
+  // 分离图片和PDF文件
+  const imageFiles = []
+  const pdfFiles = []
+  
   for (const file of files) {
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (ext === 'pdf') {
+      pdfFiles.push(file)
+    } else {
+      imageFiles.push(file)
+    }
+  }
+  
+  // 为图片文件创建预览
+  for (const file of imageFiles) {
     const preview = URL.createObjectURL(file)
     passportFiles.value.push({
       file,
@@ -790,17 +1052,36 @@ async function handlePassportSelect(event) {
     })
   }
   
-  // 上传文件
+  // 上传所有文件
   isLoading.value = true
   try {
     const formData = new FormData()
     files.forEach(file => formData.append('files', file))
     
-    await axios.post(
+    const response = await axios.post(
       `${API_BASE}/upload-passports/${sessionId.value}`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
+    
+    // 处理PDF转换后的图片
+    if (response.data.files) {
+      for (const fileInfo of response.data.files) {
+        // 跳过已添加的图片文件和转换失败的文件
+        if (fileInfo.source_pdf && fileInfo.status === 'uploaded') {
+          // 这是从PDF转换的图片，需要添加到列表
+          const previewUrl = `${API_BASE}/passport-image/${sessionId.value}/${fileInfo.filename}`
+          passportFiles.value.push({
+            file: { name: fileInfo.filename },
+            preview: previewUrl,
+            recognized: false,
+            recognizing: false,
+            result: null,
+            fromPdf: fileInfo.source_pdf
+          })
+        }
+      }
+    }
   } catch (error) {
     console.error('上传护照失败:', error)
     alert('上传失败: ' + (error.response?.data?.detail || error.message))
@@ -906,13 +1187,6 @@ async function exportReport() {
     console.error('导出失败:', error)
     alert('导出失败: ' + (error.response?.data?.detail || error.message))
   }
-}
-
-// 格式化文件大小
-function formatFileSize(bytes) {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 </script>
 
@@ -1105,25 +1379,113 @@ function formatFileSize(bytes) {
   color: var(--text-secondary, #64748b);
 }
 
-.history-list {
+.history-modal {
+  width: 700px;
+}
+
+.history-groups {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.history-item {
-  display: grid;
-  grid-template-columns: 100px 100px 1fr 80px;
-  gap: 12px;
-  padding: 12px;
+.history-group {
   background: var(--bg-tertiary, #f8fafc);
-  border-radius: 8px;
-  align-items: center;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.history-time {
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-secondary, #fff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.group-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-session {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary, #1e293b);
+}
+
+.group-time {
   font-size: 12px;
   color: var(--text-secondary, #64748b);
+}
+
+.group-status {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.group-status.created { background: #dbeafe; color: #1d4ed8; }
+.group-status.excel_loaded { background: #dcfce7; color: #16a34a; }
+.group-status.passports_added { background: #fef3c7; color: #d97706; }
+.group-status.compared { background: #d1fae5; color: #059669; }
+.group-status.exported { background: #ccfbf1; color: #0d9488; }
+
+.group-summary {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+}
+
+.group-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.group-timeline {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.timeline-time {
+  color: var(--text-tertiary, #94a3b8);
+  min-width: 80px;
+}
+
+.timeline-detail {
+  color: var(--text-secondary, #64748b);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-view-btn {
+  padding: 6px 12px;
+  background: var(--primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.history-view-btn:hover {
+  background: var(--primary-hover, #2563eb);
 }
 
 .action-badge {
@@ -1149,10 +1511,195 @@ function formatFileSize(bytes) {
   text-overflow: ellipsis;
 }
 
-.history-session {
-  font-size: 11px;
-  color: var(--text-tertiary, #94a3b8);
-  font-family: monospace;
+/* 会话文件弹窗样式 */
+.session-files-modal {
+  width: 700px;
+  max-height: 80vh;
+}
+
+.session-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-tertiary, #f8fafc);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-badge.created { background: #dbeafe; color: #1d4ed8; }
+.status-badge.excel_loaded { background: #dcfce7; color: #16a34a; }
+.status-badge.passports_added { background: #fef3c7; color: #d97706; }
+.status-badge.compared { background: #d1fae5; color: #059669; }
+
+.files-section {
+  margin-bottom: 20px;
+}
+
+.files-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--text-primary, #1e293b);
+}
+
+.no-files {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary, #64748b);
+  background: var(--bg-tertiary, #f8fafc);
+  border-radius: 8px;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary, #f8fafc);
+  border-radius: 8px;
+}
+
+.file-icon {
+  font-size: 20px;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+
+.download-btn {
+  padding: 6px 12px;
+  background: var(--primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.download-btn:hover {
+  background: var(--primary-hover, #2563eb);
+}
+
+.passport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.passport-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: var(--bg-tertiary, #f8fafc);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.passport-thumb:hover {
+  background: var(--bg-hover, #e2e8f0);
+  transform: scale(1.02);
+}
+
+.passport-thumb img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.passport-thumb .pdf-icon {
+  width: 80px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef3c7;
+  border-radius: 4px;
+  font-size: 24px;
+}
+
+.thumb-name {
+  font-size: 10px;
+  color: var(--text-secondary, #64748b);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* 图片预览弹窗 */
+.image-preview-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.image-preview-container img {
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 8px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 步骤指示器 */

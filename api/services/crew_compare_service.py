@@ -142,6 +142,128 @@ class CrewCompareService:
         self.history.append(record)
         self._save_history()
     
+    def _save_session_snapshot(self, session_id: str):
+        """保存会话快照到磁盘（用于历史记录恢复）"""
+        session = self.sessions.get(session_id)
+        if not session:
+            return
+        
+        snapshot_dir = HISTORY_DIR / "sessions"
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
+        snapshot_file = snapshot_dir / f"{session_id}.json"
+        
+        # 保存会话摘要（不包含大数据）
+        snapshot = {
+            "id": session["id"],
+            "created_at": session.get("created_at"),
+            "status": session.get("status"),
+            "excel_file": session.get("excel_file"),
+            "excel_filename": Path(session.get("excel_file", "")).name if session.get("excel_file") else None,
+            "crew_count": len(session.get("excel_data", [])),
+            "passport_count": len(session.get("passports", {})),
+            "passport_files": list(session.get("passports", {}).keys()),
+            "compare_results_count": len(session.get("compare_results", [])),
+            "stats": session.get("stats"),
+            "report_file": session.get("report_file"),
+        }
+        
+        try:
+            with open(snapshot_file, 'w', encoding='utf-8') as f:
+                json.dump(snapshot, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[CrewCompare] 保存会话快照失败: {e}")
+    
+    def get_session_snapshot(self, session_id: str) -> Optional[Dict]:
+        """获取会话快照"""
+        # 先尝试从内存获取
+        session = self.sessions.get(session_id)
+        if session:
+            return {
+                "id": session["id"],
+                "created_at": session.get("created_at"),
+                "status": session.get("status"),
+                "excel_file": session.get("excel_file"),
+                "excel_filename": Path(session.get("excel_file", "")).name if session.get("excel_file") else None,
+                "crew_count": len(session.get("excel_data", [])),
+                "passport_count": len(session.get("passports", {})),
+                "passport_files": list(session.get("passports", {}).keys()),
+                "compare_results_count": len(session.get("compare_results", [])),
+                "stats": session.get("stats"),
+                "report_file": session.get("report_file"),
+            }
+        
+        # 从磁盘加载
+        snapshot_file = HISTORY_DIR / "sessions" / f"{session_id}.json"
+        if snapshot_file.exists():
+            try:
+                with open(snapshot_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"[CrewCompare] 加载会话快照失败: {e}")
+        
+        return None
+    
+    def get_session_files(self, session_id: str) -> Dict[str, Any]:
+        """获取会话的所有文件列表"""
+        upload_dir = Path(f"/tmp/crew_compare_uploads/{session_id}")
+        
+        result = {
+            "excel_files": [],
+            "passport_files": [],
+            "report_files": []
+        }
+        
+        if not upload_dir.exists():
+            return result
+        
+        # Excel文件
+        for f in upload_dir.glob("*.xlsx"):
+            result["excel_files"].append({
+                "filename": f.name,
+                "path": str(f),
+                "size": f.stat().st_size,
+                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+            })
+        for f in upload_dir.glob("*.xls"):
+            result["excel_files"].append({
+                "filename": f.name,
+                "path": str(f),
+                "size": f.stat().st_size,
+                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+            })
+        
+        # 护照文件（图片和PDF转换的图片）
+        passport_dir = upload_dir / "passports"
+        if passport_dir.exists():
+            for ext in ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.webp"]:
+                for f in passport_dir.glob(ext):
+                    result["passport_files"].append({
+                        "filename": f.name,
+                        "path": str(f),
+                        "size": f.stat().st_size,
+                        "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+                    })
+            # PDF源文件
+            for f in passport_dir.glob("*.pdf"):
+                result["passport_files"].append({
+                    "filename": f.name,
+                    "path": str(f),
+                    "size": f.stat().st_size,
+                    "type": "pdf",
+                    "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+                })
+        
+        # 报告文件
+        for f in upload_dir.glob("*report*.xlsx"):
+            result["report_files"].append({
+                "filename": f.name,
+                "path": str(f),
+                "size": f.stat().st_size,
+                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+            })
+        
+        return result
+    
     def get_history(self, limit: int = 50) -> List[Dict]:
         """获取历史记录"""
         return self.history[-limit:][::-1]  # 返回最近的记录，倒序
@@ -374,6 +496,7 @@ class CrewCompareService:
             
             # 记录历史
             self._add_history(session_id, "upload_excel", f"上传Excel: {Path(file_path).name}, {len(crew_list)} 条记录")
+            self._save_session_snapshot(session_id)
             
             print(f"[CrewCompare] 解析 Excel 完成: {len(crew_list)} 条记录")
             
@@ -598,6 +721,9 @@ class CrewCompareService:
         session["compare_results"] = results
         session["stats"] = stats
         session["status"] = "compared"
+        
+        self._add_history(session_id, "compare", f"比对完成: 匹配{stats['matched']}, 差异{stats['mismatched']}, 未找到{stats['not_found']}")
+        self._save_session_snapshot(session_id)
         
         print(f"[CrewCompare] 比对完成: 匹配 {stats['matched']}, 差异 {stats['mismatched']}, 未找到 {stats['not_found']}")
         
@@ -859,6 +985,12 @@ class CrewCompareService:
         # 创建 DataFrame 并导出
         df = pd.DataFrame(report_data)
         df.to_excel(output_path, index=False, engine='openpyxl')
+        
+        # 保存报告路径到会话
+        session["report_file"] = output_path
+        
+        self._add_history(session_id, "export_report", f"导出报告: {Path(output_path).name}")
+        self._save_session_snapshot(session_id)
         
         print(f"[CrewCompare] 报告已导出: {output_path}")
         

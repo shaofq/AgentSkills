@@ -104,7 +104,7 @@ async def upload_passports(
     session_id: str,
     files: List[UploadFile] = File(...)
 ):
-    """批量上传护照图片"""
+    """批量上传护照图片（支持PDF）"""
     service = get_crew_compare_service()
     session = service.get_session(session_id)
     
@@ -119,26 +119,71 @@ async def upload_passports(
     for file in files:
         # 验证文件类型
         ext = Path(file.filename).suffix.lower()
-        if ext not in ['.jpg', '.jpeg', '.png', '.bmp', '.webp']:
+        if ext not in ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.pdf']:
             continue
         
         file_path = session_dir / file.filename
+        content = await file.read()
         
         with open(file_path, "wb") as f:
-            content = await file.read()
             f.write(content)
         
-        saved_files.append({
-            "filename": file.filename,
-            "path": str(file_path),
-            "status": "uploaded"
-        })
+        # 如果是PDF，转换为图片
+        if ext == '.pdf':
+            try:
+                extracted_images = convert_pdf_to_images(str(file_path), str(session_dir))
+                for img_path in extracted_images:
+                    saved_files.append({
+                        "filename": Path(img_path).name,
+                        "path": img_path,
+                        "status": "uploaded",
+                        "source_pdf": file.filename
+                    })
+            except Exception as e:
+                print(f"PDF转换失败: {e}")
+                # 即使转换失败也记录
+                saved_files.append({
+                    "filename": file.filename,
+                    "path": str(file_path),
+                    "status": "pdf_convert_failed",
+                    "error": str(e)
+                })
+        else:
+            saved_files.append({
+                "filename": file.filename,
+                "path": str(file_path),
+                "status": "uploaded"
+            })
     
     return {
         "success": True,
         "count": len(saved_files),
         "files": saved_files
     }
+
+
+def convert_pdf_to_images(pdf_path: str, output_dir: str) -> List[str]:
+    """将PDF文件转换为图片列表"""
+    import fitz  # PyMuPDF
+    
+    doc = fitz.open(pdf_path)
+    image_paths = []
+    pdf_name = Path(pdf_path).stem
+    
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        # 使用较高的分辨率渲染
+        mat = fitz.Matrix(2.0, 2.0)  # 2x缩放
+        pix = page.get_pixmap(matrix=mat)
+        
+        # 保存为PNG
+        img_filename = f"{pdf_name}_page{page_num + 1}.png"
+        img_path = str(Path(output_dir) / img_filename)
+        pix.save(img_path)
+        image_paths.append(img_path)
+    
+    doc.close()
+    return image_paths
 
 
 @router.post("/recognize/{session_id}/{filename}")
@@ -307,6 +352,45 @@ async def get_session_history(session_id: str):
     service = get_crew_compare_service()
     history = service.get_session_history(session_id)
     return {"success": True, "data": history, "count": len(history)}
+
+
+@router.get("/session-files/{session_id}")
+async def get_session_files(session_id: str):
+    """获取会话的所有文件列表（Excel、护照图片、报告）"""
+    service = get_crew_compare_service()
+    files = service.get_session_files(session_id)
+    snapshot = service.get_session_snapshot(session_id)
+    return {
+        "success": True,
+        "files": files,
+        "snapshot": snapshot
+    }
+
+
+@router.get("/download-excel/{session_id}/{filename}")
+async def download_excel(session_id: str, filename: str):
+    """下载Excel文件"""
+    file_path = UPLOAD_DIR / session_id / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@router.get("/download-report/{session_id}/{filename}")
+async def download_report(session_id: str, filename: str):
+    """下载比对报告"""
+    file_path = UPLOAD_DIR / session_id / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="报告文件不存在")
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 # ============= 比对字段配置接口 =============

@@ -20,6 +20,8 @@ import ManusView from './components/ManusView.vue'
 import VLOCRView from './components/VLOCRView.vue'
 import ChatReplayPlayer from './components/ChatReplayPlayer.vue'
 import CrewPassportCompare from './components/CrewPassportCompare.vue'
+import HazmatIdentify from './components/HazmatIdentify.vue'
+import DocumentLearning from './components/DocumentLearning.vue'
 
 // 菜单配置类型
 interface MenuConfig {
@@ -75,6 +77,8 @@ const isVLOCRMode = computed(() => activeMenu.value === 'vl-ocr')
 const isEmailTriggerMode = computed(() => activeMenu.value === 'email-trigger')
 const isManusMode = computed(() => activeMenu.value === 'manus')
 const isCrewCompareMode = computed(() => activeMenu.value === 'crew-compare')
+const isHazmatMode = computed(() => activeMenu.value === 'hazmat-identify')
+const isLearningMode = ref(false)  // 智能文档学习模式
 
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -139,6 +143,16 @@ function handleMenuLoaded(menus: MenuConfig[]) {
   menuConfigs.value = menus
   console.log('[App] 菜单配置已加载:', menus.length, '个菜单项')
 }
+
+// 监听智能文档学习模式切换事件
+window.addEventListener('openLearningMode', () => {
+  isLearningMode.value = true
+})
+
+// 监听关闭学习模式事件
+window.addEventListener('closeLearningMode', () => {
+  isLearningMode.value = false
+})
 
 // 获取当前菜单配置（优先从加载的配置中查找，否则使用默认配置）
 const currentMenuConfig = computed(() => {
@@ -650,6 +664,12 @@ async function onSubmit(evt: string) {
       
       <!-- 船员护照比对模式 -->
       <CrewPassportCompare v-else-if="isCrewCompareMode" class="flex-1" />
+      
+      <!-- 危险品识别模式 -->
+      <HazmatIdentify v-else-if="isHazmatMode && !isLearningMode" class="flex-1" />
+      
+      <!-- 智能文档学习模式 -->
+      <DocumentLearning v-else-if="isHazmatMode && isLearningMode" class="flex-1" />
       
       <!-- 邮件触发配置模式 -->
       <EmailTriggerConfig v-else-if="isEmailTriggerMode" />
