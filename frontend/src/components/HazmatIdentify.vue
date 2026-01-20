@@ -34,7 +34,7 @@
             class="w-full py-2 px-4 text-primary hover:bg-primary/5 border border-dashed border-primary/50 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
             @click="openLearningMode"
           >
-            🧠 智能学习
+            🤖 智能学习
           </button>
           <input 
             ref="fileInput" 

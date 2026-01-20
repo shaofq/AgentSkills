@@ -372,7 +372,8 @@ const businessFeatures = [
     points: ['视觉语言模型识别', '文件夹自动监控', '定位信息提取', '实时处理反馈'],
     cta: '开始使用',
     previewIcon: DocumentTextIcon,
-    previewText: 'VL-OCR + 自动化处理'
+    // previewText: 'VL-OCR + 自动化处理'
+     previewImage: '/billaudit.png'
   },
   {
     key: 'docsEmail',

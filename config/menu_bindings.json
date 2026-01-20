@@ -164,7 +164,7 @@
           "workflowName": null,
           "description": "船员护照信息比对系统，上传Excel名单和护照图片进行自动比对",
           "model": "qwen-vl-max-latest",
-          "requiredRole": ["crewrole"]
+          "requiredRole": ["crewrole","admin"]
         },
         {
           "id": "hazmat-identify",
@@ -176,7 +176,7 @@
           "workflowName": null,
           "description": "危险品智能识别系统，上传文件自动判断是否为危险品",
           "model": "qwen-plus",
-           "requiredRole": ["dangerrole"]
+           "requiredRole": ["dangerrole","admin"]
         }
       ]
     }
