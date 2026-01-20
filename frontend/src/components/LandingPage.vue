@@ -791,13 +791,13 @@ function scrollTo(id) {
 }
 
 .business-tabs-inner {
-  /* display: flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  width: auto; */
+  width: auto;
   background: rgba(255, 255, 255, 0.03);
   /* border: 1px solid var(--border); */
   /* backdrop-filter: blur(10px); */
@@ -1076,7 +1076,7 @@ function scrollTo(id) {
 
 /* Features Section */
 .features-section {
-  background: linear-gradient(180deg, transparent 0%, rgba(120, 53, 15, 0.08) 50%, transparent 100%);
+  /* background: linear-gradient(180deg, transparent 0%, rgba(120, 53, 15, 0.08) 50%, transparent 100%); */
 }
 
 .features-grid {
@@ -1086,24 +1086,26 @@ function scrollTo(id) {
 }
 
 .feature-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  /* border-radius: 16px; */
-  padding: 28px;
-  /* text-align: center; */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 24px 16px;
   transition: all 0.3s;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(217, 119, 6, 0.5);
+  transform: translateY(-3px);
 }
 
 .feature-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 10px;
+  margin-bottom: 20px;
   color: var(--primary);
+  background: rgba(217, 119, 6, 0.12);
+  border-radius: 50%;
 }
 
 .feature-card h3 {
@@ -1128,24 +1130,27 @@ function scrollTo(id) {
 .ai-tool-card {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 20px 12px;
   transition: all 0.3s;
+  box-shadow: none;
 }
 
 .ai-tool-card:hover {
-  border-color: var(--secondary);
-  background: rgba(34, 197, 94, 0.05);
+  transform: translateY(-3px);
 }
 
 .tool-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
+  padding: 8px;
   flex-shrink: 0;
   color: var(--secondary);
+  background: rgba(34, 197, 94, 0.12);
+  border-radius: 50%;
 }
 
 .tool-content h4 {

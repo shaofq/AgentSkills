@@ -147,11 +147,76 @@
       </Teleport>
 
       <!-- 主内容区 -->
-      <div class="flex-1 flex gap-4 p-4 overflow-hidden">
-        <!-- 左侧：文档原文 -->
-        <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="flex-1 flex p-4 overflow-hidden">
+        <!-- 左侧：原文档PDF -->
+        <div 
+          class="flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+          :style="{ width: leftPanelWidth + 'px', flexShrink: 0 }"
+        >
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">原文档</h3>
+            <div v-if="pdfTotalPages > 0" class="flex items-center gap-2">
+              <button 
+                @click="zoomOut" 
+                class="w-7 h-7 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 text-slate-600 text-sm font-bold"
+                title="缩小"
+              >−</button>
+              <span class="text-xs text-slate-500 min-w-[3rem] text-center">{{ Math.round(pdfScale * 100) }}%</span>
+              <button 
+                @click="zoomIn" 
+                class="w-7 h-7 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 text-slate-600 text-sm font-bold"
+                title="放大"
+              >+</button>
+              <button 
+                @click="zoomReset" 
+                class="px-2 h-7 flex items-center justify-center rounded bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs"
+                title="重置"
+              >重置</button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-auto bg-slate-100">
+            <!-- PDF渲染 -->
+            <div v-if="docFileType === 'pdf'" ref="pdfContainerRef" class="pdf-container p-4 flex flex-col items-center gap-4">
+              <canvas 
+                v-for="pageNum in pdfTotalPages" 
+                :key="pageNum" 
+                :id="'pdf-canvas-' + pageNum"
+                class="shadow-lg bg-white"
+              ></canvas>
+              <div v-if="pdfTotalPages === 0" class="text-slate-400 text-sm py-8">
+                加载中...
+              </div>
+            </div>
+            
+            <!-- 图片显示 -->
+            <div v-else-if="docFileType === 'image'" class="p-4 flex flex-col items-center gap-4">
+              <img 
+                :src="docImageUrl" 
+                :style="{ transform: 'scale(' + pdfScale + ')' }"
+                class="shadow-lg bg-white origin-top transition-transform"
+                alt="原文档"
+              />
+            </div>
+            
+            <!-- 未上传 -->
+            <div v-else class="flex items-center justify-center h-full text-slate-400 text-sm">
+              上传文档后将在此显示原文档
+            </div>
+          </div>
+        </div>
+        
+        <!-- 拖动分隔条 -->
+        <div 
+          class="w-2 mx-1 cursor-col-resize hover:bg-primary/20 rounded transition-colors flex items-center justify-center group"
+          @mousedown="startResize"
+        >
+          <div class="w-1 h-8 bg-slate-300 group-hover:bg-primary rounded-full"></div>
+        </div>
+        
+        <!-- 中间：文本模式（用于标注） -->
+        <div class="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-w-[300px]">
           <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-            <h3 class="text-sm font-semibold text-slate-800">文档原文</h3>
+            <h3 class="text-sm font-semibold text-slate-800">文本内容</h3>
             <span class="text-xs text-slate-400">(选择文本后可标注)</span>
           </div>
           <div 
@@ -169,6 +234,9 @@
               >{{ segment.text }}</span>
               <span v-else class="select-text">{{ segment.text }}</span>
             </template>
+            <div v-if="!rawText" class="text-slate-400 text-sm py-8">
+              上传文档后将在此显示提取的文本
+            </div>
           </div>
         </div>
 
@@ -484,7 +552,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
@@ -540,6 +608,136 @@ const editingRule = ref({
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const docTextRef = ref<HTMLDivElement | null>(null)
+const pdfContainerRef = ref<HTMLDivElement | null>(null)
+
+// 文档预览相关
+const docFileType = ref<'pdf' | 'image' | ''>('')
+const docImageUrl = ref('')
+const pdfTotalPages = ref(0)
+const pdfScale = ref(1.0)
+let pdfDoc: any = null
+
+// 面板宽度拖动
+const leftPanelWidth = ref(450)
+let isResizing = false
+
+function startResize(e: MouseEvent) {
+  isResizing = true
+  const startX = e.clientX
+  const startWidth = leftPanelWidth.value
+  
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isResizing) return
+    const delta = e.clientX - startX
+    const newWidth = Math.max(300, Math.min(800, startWidth + delta))
+    leftPanelWidth.value = newWidth
+  }
+  
+  const onMouseUp = () => {
+    isResizing = false
+    window.document.removeEventListener('mousemove', onMouseMove)
+    window.document.removeEventListener('mouseup', onMouseUp)
+  }
+  
+  window.document.addEventListener('mousemove', onMouseMove)
+  window.document.addEventListener('mouseup', onMouseUp)
+}
+
+function zoomIn() {
+  if (pdfScale.value < 3) {
+    pdfScale.value = Math.min(3, pdfScale.value + 0.25)
+    renderAllPages()
+  }
+}
+
+function zoomOut() {
+  if (pdfScale.value > 0.5) {
+    pdfScale.value = Math.max(0.5, pdfScale.value - 0.25)
+    renderAllPages()
+  }
+}
+
+function zoomReset() {
+  pdfScale.value = 1.0
+  renderAllPages()
+}
+
+
+function loadImageDocument(docId: number) {
+  const token = userStore.token.value || localStorage.getItem('token')
+  docImageUrl.value = `${API_BASE}/learning/${docId}/file?token=${token}`
+}
+
+async function loadPdfDocument(docId: number) {
+  try {
+    const token = userStore.token.value || localStorage.getItem('token')
+    const pdfUrl = `${API_BASE}/learning/${docId}/file`
+    
+    // 先获取PDF文件数据
+    const response = await fetch(pdfUrl, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!response.ok) {
+      throw new Error('获取PDF文件失败')
+    }
+    const pdfData = await response.arrayBuffer()
+    
+    const pdfjsLib = await import('pdfjs-dist')
+    // 使用本地worker文件
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.mjs',
+        import.meta.url
+      ).toString()
+    }
+    
+    const loadingTask = pdfjsLib.getDocument({ data: pdfData })
+    
+    pdfDoc = await loadingTask.promise
+    pdfTotalPages.value = pdfDoc.numPages
+    
+    // 等待DOM更新后渲染所有页面
+    await nextTick()
+    // 等待DOM更新后渲染
+    await nextTick()
+    setTimeout(() => renderAllPages(), 300)
+  } catch (error) {
+    console.error('加载PDF失败:', error)
+  }
+}
+
+async function renderAllPages() {
+  if (!pdfDoc) return
+  
+  for (let pageNum = 1; pageNum <= pdfTotalPages.value; pageNum++) {
+    await renderPage(pageNum)
+  }
+}
+
+
+async function renderPage(pageNum: number) {
+  if (!pdfDoc) return
+  
+  // 通过DOM直接获取canvas元素
+  const canvas = window.document.getElementById(`pdf-canvas-${pageNum}`) as HTMLCanvasElement
+  if (!canvas) {
+    console.log(`Canvas ${pageNum} 未找到`)
+    return
+  }
+  
+  const page = await pdfDoc.getPage(pageNum)
+  const scale = pdfScale.value * 1.5  // 基础缩放1.5倍
+  const viewport = page.getViewport({ scale })
+  
+  canvas.height = viewport.height
+  canvas.width = viewport.width
+  
+  const context = canvas.getContext('2d')
+  await page.render({
+    canvasContext: context,
+    viewport: viewport
+  }).promise
+}
 
 // 标注字段定义
 const annotationFields = ref([
@@ -693,6 +891,18 @@ async function uploadAndProcess() {
     
     // 进入标注步骤
     currentStep.value = 2
+    
+    // 根据文件类型加载原文档预览
+    const ext = selectedFile.value.name.split('.').pop()?.toLowerCase()
+    if (ext === 'pdf') {
+      docFileType.value = 'pdf'
+      loadPdfDocument(docId)
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
+      docFileType.value = 'image'
+      loadImageDocument(docId)
+    } else {
+      docFileType.value = ''
+    }
     
   } catch (error: any) {
     alert('处理失败: ' + error.message)

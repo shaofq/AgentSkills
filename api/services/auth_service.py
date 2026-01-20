@@ -150,7 +150,8 @@ class AuthService:
             role=RoleEnum(user['role']),
             is_active=bool(user['is_active']),
             created_at=datetime.fromisoformat(user['created_at']) if user['created_at'] else datetime.now(),
-            last_login=datetime.fromisoformat(user['last_login']) if user['last_login'] else None
+            last_login=datetime.fromisoformat(user['last_login']) if user['last_login'] else None,
+            credits=user.get('credits', 0) or 0
         )
 
 
@@ -217,7 +218,8 @@ class UserService:
             role=RoleEnum(user['role']),
             is_active=bool(user['is_active']),
             created_at=datetime.fromisoformat(user['created_at']) if user['created_at'] else datetime.now(),
-            last_login=datetime.fromisoformat(user['last_login']) if user['last_login'] else None
+            last_login=datetime.fromisoformat(user['last_login']) if user['last_login'] else None,
+            credits=user.get('credits', 0) or 0
         )
 
 

@@ -11,6 +11,8 @@ class RoleEnum(str, Enum):
     ADMIN = "admin"          # 管理员 - 所有权限
     OPERATOR = "operator"    # 操作员 - 基础操作权限
     VIEWER = "viewer"        # 查看者 - 只读权限
+    DANAGERROLE = "dangerrole"  # 危险品对比
+    CREWROLE     = "crewrole"    # 船员对比
 
 
 class UserBase(BaseModel):
@@ -50,6 +52,7 @@ class UserResponse(UserBase):
     id: int
     created_at: datetime
     last_login: Optional[datetime] = None
+    credits: int = 0
 
     class Config:
         from_attributes = True

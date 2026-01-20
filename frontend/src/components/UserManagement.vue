@@ -120,6 +120,8 @@
               <option value="admin">管理员</option>
               <option value="operator">操作员</option>
               <option value="viewer">查看者</option>
+              <option value="dangerrole">危险品对比</option>
+              <option value="crewrole">船员对比</option>
             </select>
           </div>
           

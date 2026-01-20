@@ -209,7 +209,9 @@ function getRoleLabel(role: string | undefined): string {
   const labels: Record<string, string> = {
     'admin': '管理员',
     'operator': '操作员',
-    'viewer': '查看者'
+    'viewer': '查看者',
+    'dangerrole': '危险品对比',
+    'crewrole': '船员对比'
   }
   return role ? labels[role] || role : ''
 }

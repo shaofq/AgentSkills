@@ -447,6 +447,42 @@ async def get_learning_document_text(
     }
 
 
+@router.get("/learning/{doc_id}/file")
+async def get_learning_document_file(
+    doc_id: int,
+    token: str = Query(default=None, description="认证令牌"),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    """获取学习文档原始文件"""
+    from fastapi.responses import FileResponse
+    
+    file_path = learning_service.get_document_file_path(doc_id)
+    if not file_path:
+        raise HTTPException(status_code=404, detail="文件不存在")
+    
+    import os
+    filename = os.path.basename(file_path)
+    ext = os.path.splitext(filename)[1].lower()
+    
+    # 根据文件类型设置正确的media_type
+    media_types = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.bmp': 'image/bmp',
+        '.webp': 'image/webp'
+    }
+    media_type = media_types.get(ext, 'application/octet-stream')
+    
+    return FileResponse(
+        file_path,
+        media_type=media_type,
+        filename=filename
+    )
+
+
 @router.post("/learning/{doc_id}/annotations")
 async def save_annotations(
     doc_id: int,

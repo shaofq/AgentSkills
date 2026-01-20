@@ -126,6 +126,22 @@ class LearningService:
         
         return self._row_to_document(row)
     
+    def get_document_file_path(self, doc_id: int) -> str:
+        """获取文档文件路径"""
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute('SELECT file_path FROM learning_documents WHERE id = ?', (doc_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row or not row[0]:
+            return None
+        
+        file_path = row[0]
+        if os.path.exists(file_path):
+            return file_path
+        return None
+    
     def _row_to_document(self, row) -> LearningDocumentResponse:
         """将数据库行转换为文档响应"""
         return LearningDocumentResponse(
